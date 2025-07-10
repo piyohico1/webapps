@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #03a7fe 0%, #fce0e9 100%);
     min-height: 100vh;
     color: #333;
 }
@@ -24,6 +24,10 @@ body {
 }
 
 .header h1 {
+    font-family: "Space Grotesk", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: <weight>;
+    font-style: normal;
     font-size: 3.5rem;
     color: white;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
@@ -45,7 +49,7 @@ body {
 }
 
 .header a:hover {
-    color: #FFF700;
+    color: #fff700;
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
     text-decoration: none;
 }
@@ -100,7 +104,7 @@ body {
 
 .app-link {
     display: inline-block;
-    background: linear-gradient(45deg, #667eea, #764ba2);
+    background: linear-gradient(45deg, #8952ff, #764ba2);
     color: white;
     padding: 12px 24px;
     border-radius: 8px;
