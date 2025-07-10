@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>piyohico apps - Webのアプリまとめ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>piyohico apps</h1>
+            <p>Webのアプリまとめ <a href="https://x.com/piyo621" target="_blank">@piyohico</a></p>
+        </header>
+        
+        <main>
+            <div class="apps-grid" id="apps-grid">
+                <!-- アプリリストはJavaScriptで動的に読み込まれます -->
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2025 piyohico apps. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // アプリリスト（Markdown形式）を読み込んで表示
+        async function loadApps() {
+            try {
+                console.log('apps.mdファイルを読み込み中...');
+                const response = await fetch('./apps.md');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const markdownText = await response.text();
+                console.log('Markdownファイル読み込み完了');
+                
+                // 簡単なMarkdownパーサー（アプリリスト用）
+                const apps = parseAppsMarkdown(markdownText);
+                console.log(`${apps.length}個のアプリを解析しました`);
+                
+                if (apps.length === 0) {
+                    throw new Error('アプリリストが空です');
+                }
+                
+                renderApps(apps);
+            } catch (error) {
+                console.error('アプリリストの読み込みに失敗しました:', error);
+                showError('apps.mdファイルの読み込みに失敗しました。ファイルが存在するか確認してください。');
+            }
+        }
+
+        function parseAppsMarkdown(markdown) {
+            const apps = [];
+            const lines = markdown.split('\n');
+            let currentApp = null;
+            
+            for (const line of lines) {
+                const trimmed = line.trim();
+                
+                if (trimmed.startsWith('## ')) {
+                    // 新しいアプリの開始
+                    if (currentApp) {
+                        apps.push(currentApp);
+                    }
+                    
+                    const titleMatch = trimmed.match(/^## (.+?) (.+)/);
+                    if (titleMatch) {
+                        currentApp = {
+                            icon: titleMatch[1],
+                            title: titleMatch[2],
+                            description: '',
+                            date: '',
+                            link: ''
+                        };
+                    }
+                } else if (trimmed.startsWith('**説明:**')) {
+                    if (currentApp) {
+                        currentApp.description = trimmed.replace('**説明:**', '').trim();
+                    }
+                } else if (trimmed.startsWith('**制作日:**')) {
+                    if (currentApp) {
+                        currentApp.date = trimmed.replace('**制作日:**', '').trim();
+                    }
+                } else if (trimmed.startsWith('**リンク:**')) {
+                    if (currentApp) {
+                        const linkMatch = trimmed.match(/\[(.+?)\]\((.+?)\)/);
+                        if (linkMatch) {
+                            currentApp.link = linkMatch[2];
+                        }
+                    }
+                }
+            }
+            
+            // 最後のアプリを追加
+            if (currentApp) {
+                apps.push(currentApp);
+            }
+            
+            return apps;
+        }
+
+        function showError(message) {
+            const appsGrid = document.getElementById('apps-grid');
+            appsGrid.innerHTML = `
+                <div class="error-message">
+                    <h3>⚠️ エラー</h3>
+                    <p>${message}</p>
+                    <p>以下を確認してください：</p>
+                    <ul>
+                        <li>apps.mdファイルがindex.htmlと同じディレクトリにあるか</li>
+                        <li>Webサーバー経由でアクセスしているか（file://プロトコルでは動作しません）</li>
+                        <li>apps.mdファイルの形式が正しいか</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        function renderApps(apps) {
+            const appsGrid = document.getElementById('apps-grid');
+            appsGrid.innerHTML = '';
+            
+            apps.forEach(app => {
+                const appCard = document.createElement('div');
+                appCard.className = 'app-card';
+                appCard.innerHTML = `
+                    <h3>
+                        <span class="app-icon">${app.icon}</span>
+                        ${app.title}
+                    </h3>
+                    <p>${app.description}</p>
+                    <div class="app-date">制作日: ${app.date}</div>
+                    <a href="${app.link}" class="app-link">アプリを開く</a>
+                `;
+                appsGrid.appendChild(appCard);
+            });
+        }
+
+        // ページ読み込み時にアプリリストを読み込む
+        document.addEventListener('DOMContentLoaded', loadApps);
+    </script>
+</body>
+</html>
