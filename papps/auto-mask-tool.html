@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像自動マスク・透過ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(102, 126, 234, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .upload-area:hover,
+        .upload-area.drag-over {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.2);
+            transform: scale(1.02);
+        }
+
+        .upload-area p {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .controls {
+            display: none;
+            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .control-group {
+            background: rgba(40, 40, 40, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .arrow-btn {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            font-size: 0.9em;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid #667eea;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .arrow-btn:hover {
+            background: rgba(102, 126, 234, 0.4);
+        }
+
+        input[type="range"] {
+            flex: 1;
+            appearance: none;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            text-align: right;
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+        }
+
+        .preview-container {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .preview-box {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .preview-box h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .canvas-container {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+            border-radius: 5px;
+            max-width: 100%;
+        }
+
+        .preview-box canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            background-image: 
+                linear-gradient(45deg, #333 25%, transparent 25%),
+                linear-gradient(-45deg, #333 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #333 75%),
+                linear-gradient(-45deg, transparent 75%, #333 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        #resultCanvas {
+            cursor: grab;
+            transition: none;
+        }
+
+        #resultCanvas.grabbing {
+            cursor: grabbing;
+        }
+
+        .zoom-controls {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .zoom-controls button {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid #667eea;
+        }
+
+        .zoom-controls button:hover {
+            background: rgba(102, 126, 234, 0.4);
+        }
+
+        .zoom-display {
+            font-size: 0.9em;
+            color: #999;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .button-container {
+            display: none;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(102, 126, 234, 0.5);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .processing {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            display: none;
+            z-index: 10;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>画像自動マスク・透過ツール</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>画像をドラッグ&ドロップまたはクリックして選択</p>
+            <small>対応形式: JPG, PNG, GIF, WebP</small>
+        </div>
+        <input type="file" id="fileInput" accept="image/*">
+
+        <div class="controls" id="controls">
+            <div class="control-group">
+                <label>検出感度</label>
+                <div class="slider-container">
+                    <button class="arrow-btn" data-target="sensitivity" data-delta="-1">◀</button>
+                    <input type="range" id="sensitivity" min="0" max="100" value="20">
+                    <button class="arrow-btn" data-target="sensitivity" data-delta="1">▶</button>
+                </div>
+                <div class="value-display" id="sensitivityValue">20</div>
+            </div>
+            
+            <div class="control-group">
+                <label>エッジのスムージング</label>
+                <div class="slider-container">
+                    <button class="arrow-btn" data-target="smoothing" data-delta="-1">◀</button>
+                    <input type="range" id="smoothing" min="0" max="10" value="2">
+                    <button class="arrow-btn" data-target="smoothing" data-delta="1">▶</button>
+                </div>
+                <div class="value-display" id="smoothingValue">2</div>
+            </div>
+            
+            <div class="control-group">
+                <label>背景色の基準</label>
+                <select id="bgMode">
+                    <option value="auto">自動検出</option>
+                    <option value="topleft">左上隅</option>
+                    <option value="white">白色</option>
+                    <option value="black">黒色</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>エッジの削り込み</label>
+                <div class="slider-container">
+                    <button class="arrow-btn" data-target="edgeErosion" data-delta="-1">◀</button>
+                    <input type="range" id="edgeErosion" min="0" max="10" value="0">
+                    <button class="arrow-btn" data-target="edgeErosion" data-delta="1">▶</button>
+                </div>
+                <div class="value-display" id="edgeErosionValue">0</div>
+            </div>
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <div class="preview-box">
+                <h3>元の画像</h3>
+                <div class="canvas-container">
+                    <canvas id="originalCanvas"></canvas>
+                </div>
+            </div>
+            <div class="preview-box">
+                <h3>透過処理後</h3>
+                <div class="canvas-container" id="resultContainer">
+                    <canvas id="resultCanvas"></canvas>
+                    <div class="processing" id="processing">
+                        <div class="spinner"></div>
+                        <p>処理中...</p>
+                    </div>
+                </div>
+                <div class="zoom-controls">
+                    <button id="zoomOut">－</button>
+                    <span class="zoom-display" id="zoomDisplay">100%</span>
+                    <button id="zoomIn">＋</button>
+                    <button id="resetZoom">リセット</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-container" id="buttonContainer">
+            <button id="downloadBtn">ダウンロード</button>
+            <button id="resetBtn">リセット</button>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const controls = document.getElementById('controls');
+        const previewContainer = document.getElementById('previewContainer');
+        const buttonContainer = document.getElementById('buttonContainer');
+        const processing = document.getElementById('processing');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const resultCanvas = document.getElementById('resultCanvas');
+        const resultContainer = document.getElementById('resultContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const zoomDisplay = document.getElementById('zoomDisplay');
+        
+        let originalImage = null;
+        let processedImageData = null;
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let processTimeout = null;
+
+        // 矢印ボタンでの数値調整
+        document.querySelectorAll('.arrow-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.target.dataset.target;
+                const delta = parseInt(e.target.dataset.delta);
+                const slider = document.getElementById(target);
+                const newValue = parseInt(slider.value) + delta;
+                
+                if (newValue >= parseInt(slider.min) && newValue <= parseInt(slider.max)) {
+                    slider.value = newValue;
+                    document.getElementById(target + 'Value').textContent = newValue;
+                    scheduleProcess();
+                }
+            });
+        });
+
+        // スライダーの値表示更新とリアルタイム処理
+        document.getElementById('sensitivity').addEventListener('input', (e) => {
+            document.getElementById('sensitivityValue').textContent = e.target.value;
+            scheduleProcess();
+        });
+        
+        document.getElementById('smoothing').addEventListener('input', (e) => {
+            document.getElementById('smoothingValue').textContent = e.target.value;
+            scheduleProcess();
+        });
+        
+        document.getElementById('edgeErosion').addEventListener('input', (e) => {
+            document.getElementById('edgeErosionValue').textContent = e.target.value;
+            scheduleProcess();
+        });
+
+        document.getElementById('bgMode').addEventListener('change', () => {
+            scheduleProcess();
+        });
+
+        // 処理のスケジューリング（連続変更時の負荷軽減）
+        function scheduleProcess() {
+            if (!originalImage) return;
+            
+            if (processTimeout) {
+                clearTimeout(processTimeout);
+            }
+            
+            processing.style.display = 'block';
+            processTimeout = setTimeout(() => {
+                removeBackground();
+            }, 300);
+        }
+
+        // ファイル選択
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                loadImage(e.target.files[0]);
+            }
+        });
+
+        // ドラッグ&ドロップ
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            
+            if (e.dataTransfer.files.length > 0) {
+                loadImage(e.dataTransfer.files[0]);
+            }
+        });
+
+        // 画像読み込み
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    displayOriginal();
+                    controls.style.display = 'grid';
+                    previewContainer.style.display = 'grid';
+                    buttonContainer.style.display = 'flex';
+                    resetZoomAndPan();
+                    removeBackground();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 元画像表示
+        function displayOriginal() {
+            const ctx = originalCanvas.getContext('2d');
+            originalCanvas.width = originalImage.width;
+            originalCanvas.height = originalImage.height;
+            ctx.drawImage(originalImage, 0, 0);
+        }
+
+        // 背景色を自動検出
+        function detectBackgroundColor(imageData) {
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            const corners = [
+                0,
+                (width - 1) * 4,
+                (height - 1) * width * 4,
+                ((height - 1) * width + width - 1) * 4
+            ];
+            
+            let r = 0, g = 0, b = 0;
+            corners.forEach(index => {
+                r += data[index];
+                g += data[index + 1];
+                b += data[index + 2];
+            });
+            
+            return {
+                r: Math.round(r / 4),
+                g: Math.round(g / 4),
+                b: Math.round(b / 4)
+            };
+        }
+
+        // 色の差を計算
+        function colorDistance(r1, g1, b1, r2, g2, b2) {
+            return Math.sqrt(
+                Math.pow(r1 - r2, 2) +
+                Math.pow(g1 - g2, 2) +
+                Math.pow(b1 - b2, 2)
+            );
+        }
+
+        // 背景除去処理
+        function removeBackground() {
+            const ctx = resultCanvas.getContext('2d');
+            resultCanvas.width = originalImage.width;
+            resultCanvas.height = originalImage.height;
+            
+            ctx.drawImage(originalImage, 0, 0);
+            const imageData = ctx.getImageData(0, 0, resultCanvas.width, resultCanvas.height);
+            const data = imageData.data;
+            
+            const sensitivity = parseInt(document.getElementById('sensitivity').value);
+            const smoothing = parseInt(document.getElementById('smoothing').value);
+            const edgeErosion = parseInt(document.getElementById('edgeErosion').value);
+            const bgMode = document.getElementById('bgMode').value;
+            
+            let bgColor;
+            if (bgMode === 'auto') {
+                bgColor = detectBackgroundColor(imageData);
+            } else if (bgMode === 'topleft') {
+                bgColor = {
+                    r: data[0],
+                    g: data[1],
+                    b: data[2]
+                };
+            } else if (bgMode === 'white') {
+                bgColor = { r: 255, g: 255, b: 255 };
+            } else if (bgMode === 'black') {
+                bgColor = { r: 0, g: 0, b: 0 };
+            }
+            
+            const threshold = sensitivity * 2.55;
+            
+            // 背景除去
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                const distance = colorDistance(r, g, b, bgColor.r, bgColor.g, bgColor.b);
+                
+                if (distance < threshold) {
+                    data[i + 3] = 0;
+                }
+            }
+            
+            // エッジの削り込み処理
+            if (edgeErosion > 0) {
+                const width = imageData.width;
+                const height = imageData.height;
+                const tempAlpha = new Uint8ClampedArray(width * height);
+                
+                // 現在のアルファチャンネルをコピー
+                for (let i = 0; i < width * height; i++) {
+                    tempAlpha[i] = data[i * 4 + 3];
+                }
+                
+                // エロージョン処理（収縮）
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const idx = y * width + x;
+                        
+                        // 現在のピクセルが不透明な場合のみ処理
+                        if (tempAlpha[idx] > 0) {
+                            let shouldErode = false;
+                            
+                            // 周囲のピクセルをチェック
+                            for (let dy = -edgeErosion; dy <= edgeErosion; dy++) {
+                                for (let dx = -edgeErosion; dx <= edgeErosion; dx++) {
+                                    const nx = x + dx;
+                                    const ny = y + dy;
+                                    
+                                    // 円形の範囲内かチェック
+                                    if (dx * dx + dy * dy <= edgeErosion * edgeErosion) {
+                                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                            const nidx = ny * width + nx;
+                                            if (tempAlpha[nidx] === 0) {
+                                                shouldErode = true;
+                                                break;
+                                            }
+                                        } else {
+                                            // 画像の境界外は透明として扱う
+                                            shouldErode = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (shouldErode) break;
+                            }
+                            
+                            // エッジのピクセルを透明にする
+                            if (shouldErode) {
+                                data[idx * 4 + 3] = 0;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // エッジスムージング
+            if (smoothing > 0) {
+                const width = imageData.width;
+                const height = imageData.height;
+                const tempAlpha = new Float32Array(width * height);
+                
+                // アルファチャンネルを抽出
+                for (let i = 0; i < width * height; i++) {
+                    tempAlpha[i] = data[i * 4 + 3];
+                }
+                
+                // ガウシアンカーネルの生成
+                const kernelSize = smoothing * 2 + 1;
+                const kernel = new Float32Array(kernelSize * kernelSize);
+                const sigma = smoothing / 2;
+                let kernelSum = 0;
+                
+                for (let y = -smoothing; y <= smoothing; y++) {
+                    for (let x = -smoothing; x <= smoothing; x++) {
+                        const idx = (y + smoothing) * kernelSize + (x + smoothing);
+                        kernel[idx] = Math.exp(-(x * x + y * y) / (2 * sigma * sigma));
+                        kernelSum += kernel[idx];
+                    }
+                }
+                
+                // カーネルの正規化
+                for (let i = 0; i < kernel.length; i++) {
+                    kernel[i] /= kernelSum;
+                }
+                
+                // ブラー適用
+                const blurredAlpha = new Float32Array(width * height);
+                
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        let sum = 0;
+                        let weightSum = 0;
+                        
+                        for (let ky = -smoothing; ky <= smoothing; ky++) {
+                            for (let kx = -smoothing; kx <= smoothing; kx++) {
+                                const nx = x + kx;
+                                const ny = y + ky;
+                                
+                                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                    const kidx = (ky + smoothing) * kernelSize + (kx + smoothing);
+                                    const nidx = ny * width + nx;
+                                    sum += tempAlpha[nidx] * kernel[kidx];
+                                    weightSum += kernel[kidx];
+                                }
+                            }
+                        }
+                        
+                        blurredAlpha[y * width + x] = sum / weightSum;
+                    }
+                }
+                
+                // ブラーしたアルファ値を適用
+                for (let i = 0; i < width * height; i++) {
+                    data[i * 4 + 3] = Math.round(blurredAlpha[i]);
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            processedImageData = imageData;
+            
+            processing.style.display = 'none';
+            updateTransform();
+        }
+
+        // 変形の更新
+        function updateTransform() {
+            resultCanvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            zoomDisplay.textContent = Math.round(scale * 100) + '%';
+        }
+
+        // ズーム機能
+        function zoom(delta) {
+            const newScale = Math.max(0.1, Math.min(5, scale + delta));
+            if (newScale !== scale) {
+                scale = newScale;
+                updateTransform();
+            }
+        }
+
+        // ズームとパンのリセット
+        function resetZoomAndPan() {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+        }
+
+        // マウスホイールでズーム
+        resultCanvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            zoom(delta);
+        });
+
+        // ドラッグでパン
+        resultCanvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            resultCanvas.classList.add('grabbing');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateTransform();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            resultCanvas.classList.remove('grabbing');
+        });
+
+        // ズームボタン
+        document.getElementById('zoomIn').addEventListener('click', () => zoom(0.2));
+        document.getElementById('zoomOut').addEventListener('click', () => zoom(-0.2));
+        document.getElementById('resetZoom').addEventListener('click', resetZoomAndPan);
+
+        // ダウンロード
+        function downloadImage() {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = originalImage.width;
+            tempCanvas.height = originalImage.height;
+            const ctx = tempCanvas.getContext('2d');
+            ctx.putImageData(processedImageData, 0, 0);
+            
+            tempCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'transparent_image.png';
+                a.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+
+        // リセット
+        function reset() {
+            originalImage = null;
+            processedImageData = null;
+            controls.style.display = 'none';
+            previewContainer.style.display = 'none';
+            buttonContainer.style.display = 'none';
+            fileInput.value = '';
+            
+            const ctx1 = originalCanvas.getContext('2d');
+            const ctx2 = resultCanvas.getContext('2d');
+            ctx1.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+            ctx2.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
+            
+            resetZoomAndPan();
+        }
+
+        downloadBtn.addEventListener('click', downloadImage);
+        resetBtn.addEventListener('click', reset);
+    </script>
+</body>
+</html>
