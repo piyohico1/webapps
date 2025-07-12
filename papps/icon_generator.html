@@ -697,6 +697,7 @@
                     <div class="upload-text" id="uploadText">
                         <p>📁 クリックして画像を選択</p>
                         <p>または画像をドラッグ&ドロップ</p>
+                        <p><strong>📋 Ctrl+V でクリップボードから貼り付け</strong></p>
                         <p style="font-size: 14px; color: #888;">対応形式: PNG, JPG, GIF, WebP など</p>
                     </div>
                     <div class="image-preview" id="imagePreview" style="display: none;"></div>
@@ -821,6 +822,8 @@
             <div class="instructions-content" id="instructionsContent">
                 <ol>
                     <li><strong>ソースを選択:</strong> 絵文字または画像ファイルを選択してください</li>
+                    <li><strong>絵文字の場合:</strong> お好みの絵文字を選択または入力してください</li>
+                    <li><strong>画像の場合:</strong> ファイル選択、ドラッグ&ドロップ、またはCtrl+Vで貼り付けしてください</li>
                     <li><strong>背景を設定:</strong> 単色、グラデーション、透明から選択してください</li>
                     <li><strong>サイズを選択:</strong> 必要なアイコンサイズにチェックを入れてください</li>
                     <li><strong>生成:</strong> 「アイコンを生成」ボタンをクリックしてください</li>
@@ -832,6 +835,7 @@
                     <ul class="feature-list">
                         <li>🎨 豊富な絵文字サンプル</li>
                         <li>🖼️ 画像アップロード対応</li>
+                        <li>📋 クリップボード貼り付け</li>
                         <li>🌈 グラデーション背景</li>
                         <li>📐 8つのサイズ対応</li>
                         <li>📦 ZIP一括ダウンロード</li>
@@ -839,6 +843,10 @@
                         <li>📱 レスポンシブデザイン</li>
                         <li>⚡ リアルタイムプレビュー</li>
                     </ul>
+                    <div style="background: rgba(255, 255, 255, 0.7); padding: 15px; border-radius: 10px; margin-top: 15px; font-size: 14px;">
+                        <strong>📋 クリップボード貼り付けについて:</strong><br>
+                        スクリーンショットをコピーした後、ページ上で<strong>Ctrl+V</strong>（Mac: Cmd+V）を押すと、自動的に画像タブに切り替わり画像が読み込まれます。
+                    </div>
                 </div>
                 
                 <div style="background: rgba(232, 245, 233, 0.9); padding: 25px; border-radius: 18px; margin-top: 25px; border: 2px solid rgba(46, 204, 113, 0.3); box-shadow: 0 6px 20px rgba(46, 204, 113, 0.15); backdrop-filter: blur(10px);">
@@ -923,16 +931,41 @@
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        uploadedImage = img;
-                        showImagePreview(e.target.result);
-                    };
-                    img.src = e.target.result;
+                processImageFile(file);
+            }
+        }
+        
+        function processImageFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    uploadedImage = img;
+                    showImagePreview(e.target.result);
                 };
-                reader.readAsDataURL(file);
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function handleClipboardPaste(event) {
+            const items = event.clipboardData.items;
+            
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                
+                if (item.type.indexOf('image') !== -1) {
+                    event.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) {
+                        // 画像タブに自動切り替え
+                        if (currentSource !== 'image') {
+                            toggleSource('image');
+                        }
+                        processImageFile(file);
+                    }
+                    break;
+                }
             }
         }
         
@@ -1284,6 +1317,13 @@ ${Array.from(canvases).map(canvas => `- icon${canvas.width}.png (${canvas.width}
             setupDragDrop();
             updateColorInputs();
             generateIcons();
+            
+            // クリップボード貼り付け機能を追加
+            document.addEventListener('paste', handleClipboardPaste);
+            
+            // フォーカス可能にするためにtabindexを設定
+            document.body.tabIndex = -1;
+            document.body.focus();
         };
     </script>
 </body>
