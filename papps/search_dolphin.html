@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-MSTVN0KCF9');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>検索イルカ</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "MS UI Gothic", "MS Sans Serif", sans-serif;
+            background: #8da6cf;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .dialog-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dialog-box {
+            background: #ffffcd;
+            border: 2px solid #000;
+            border-radius: 20px;
+            padding: 20px;
+            width: 280px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            font-size: 11px;
+            position: relative;
+        }
+
+        .dialog-box::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            right: 40px;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 12px solid #ffffcd;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .dialog-content {
+            padding: 12px 8px;
+        }
+
+        .question-text {
+            margin-bottom: 12px;
+            font-size: 24px;
+            color: #000;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 36px;
+            border: 2px solid #e1e5e9;
+            border-radius: 9px;
+            padding: 8px 16px;
+            font-size: 12px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            position: relative;
+        }
+
+        .dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #ffffcd;
+            border: 2px solid #c4bfba;
+            border-radius: 8px;
+            min-width: 120px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #fff2a6;
+        }
+
+        .dropdown-item.selected {
+            background: #f5f5a6;
+            font-weight: bold;
+        }
+
+        .search-engine-indicator {
+            font-size: 9px;
+            color: #666;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .dialog-button {
+            background: #ffffcd;
+            border: 2px solid #c4bfba;
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-size: 11px;
+            color: #000;
+            cursor: pointer;
+            min-width: 70px;
+            transition: all 0.3s ease;
+        }
+
+        .dialog-button:hover {
+            background: #fff2a6;
+        }
+
+        .dialog-button:active {
+            background: #f5f5a6;
+        }
+
+        .dolphin {
+            position: absolute;
+            bottom: -160px;
+            right: -50px;
+            font-size: 96px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .thought-bubble {
+            position: absolute;
+            top: -80px;
+            left: -100px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 12px;
+            color: #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            max-width: 200px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .thought-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 80px;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+        }
+
+        .thought-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 90px;
+            width: 5px;
+            height: 5px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+        }
+
+        .thought-bubble.show {
+            display: block;
+            animation: thoughtFadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes thoughtFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(-5deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .dolphin.disappearing {
+            animation: disappear 3s ease-in-out forwards;
+        }
+
+        @keyframes disappear {
+            0% { 
+                opacity: 1; 
+                transform: translateY(0px) rotate(-5deg) scale(1);
+            }
+            50% { 
+                opacity: 0.5; 
+                transform: translateY(-20px) rotate(10deg) scale(0.8);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translateY(100px) rotate(45deg) scale(0.3);
+                display: none;
+            }
+        }
+
+        @keyframes disappear {
+            0% { 
+                opacity: 1; 
+                transform: translateY(0px) rotate(-5deg) scale(1);
+            }
+            50% { 
+                opacity: 0.5; 
+                transform: translateY(-20px) rotate(10deg) scale(0.8);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translateY(100px) rotate(45deg) scale(0.3);
+                display: none;
+            }
+        }
+
+        .sad-message {
+            position: absolute;
+            top: -80px;
+            left: -100px;
+            background: rgba(255, 200, 200, 0.95);
+            border: 2px solid #ff9999;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 12px;
+            color: #cc0000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            max-width: 200px;
+            text-align: center;
+            z-index: 1000;
+            animation: sadFadeIn 1s ease-in-out;
+        }
+
+        .sad-message.show {
+            display: block;
+        }
+
+        @keyframes sadFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="dialog-container">
+        <div class="dialog-box">
+            <div class="dialog-content">
+                <div class="question-text">何について調べますか？</div>
+                <input type="text" class="search-input" id="searchInput" placeholder="">
+                <div class="search-engine-indicator" id="searchEngineIndicator">検索エンジン: Google</div>
+                <div class="button-row">
+                    <div class="dropdown-container">
+                        <button class="dialog-button" onclick="toggleDropdown()">オプション</button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <div class="dropdown-item selected" onclick="selectSearchEngine('google')">Google</div>
+                            <div class="dropdown-item" onclick="selectSearchEngine('bing')">Bing</div>
+                            <div class="dropdown-item" onclick="selectSearchEngine('yahoo')">Yahoo</div>
+                        </div>
+                    </div>
+                    <button class="dialog-button" onclick="performSearch()">検索</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dolphin" id="dolphin">
+            🐬
+            <div class="thought-bubble" id="thoughtBubble"></div>
+            <div class="sad-message" id="sadMessage">僕はいらない子だったんだね...</div>
+        </div>
+    </div>
+
+    <script>
+        let currentSearchEngine = 'google';
+        let idleTimer;
+        let thoughtTimer;
+        let currentThoughtIndex = 0;
+
+        const thoughts = [
+            "僕の名前はカイルだよ",
+            "今日もいい天気だなぁ",
+            "海の水って塩辛いんだよね",
+            "何か面白いこと検索してよ",
+            "実は僕、泳ぐのが得意なんだ",
+            "人間って不思議な生き物だね",
+            "検索って便利だよね〜",
+            "たまには休憩も大切だよ",
+            "お腹すいたな...",
+            "雲の形って面白いよね",
+            "音楽聞きたいなぁ",
+            "友達に会いたいな",
+            "新しい発見があるかも",
+            "時間ってあっという間だね",
+            "みんな元気かな？",
+            "今度一緒に遊ぼうよ",
+            "知識って無限だよね",
+            "好奇心って大切だと思う",
+            "笑顔でいることが一番",
+            "今日は何を学ぼうかな",
+            "世界は広いなぁ",
+            "夢って素敵だよね",
+            "チャレンジって楽しい",
+            "みんな違ってみんないい",
+            "感謝の気持ちを忘れずに",
+            "一期一会って言葉好きだな",
+            "明日も楽しみだ",
+            "小さな幸せを大切に",
+            "いつもありがとう",
+            "僕は一人なんだ",
+            "君となら何でも楽しそう"
+        ];
+
+        function showThought() {
+            const thoughtBubble = document.getElementById('thoughtBubble');
+            // ランダムに独り言を選択
+            const randomIndex = Math.floor(Math.random() * thoughts.length);
+            thoughtBubble.textContent = thoughts[randomIndex];
+            thoughtBubble.classList.add('show');
+
+            // 3秒後に次の独り言
+            thoughtTimer = setTimeout(() => {
+                thoughtBubble.classList.remove('show');
+                setTimeout(showThought, 3000); // 3秒間隔で次の独り言
+            }, 3000);
+        }
+
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            clearTimeout(thoughtTimer);
+            
+            const thoughtBubble = document.getElementById('thoughtBubble');
+            thoughtBubble.classList.remove('show');
+
+            // 3秒後に独り言開始
+            idleTimer = setTimeout(() => {
+                showThought();
+            }, 3000);
+        }
+
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            
+            // 特殊な検索語をチェック
+            if (searchTerm.trim() === 'お前を消す方法') {
+                triggerDolphinDisappear();
+                return;
+            }
+            
+            if (searchTerm.trim()) {
+                let searchUrl;
+                
+                switch(currentSearchEngine) {
+                    case 'google':
+                        searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`;
+                        break;
+                    case 'bing':
+                        searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(searchTerm)}`;
+                        break;
+                    case 'yahoo':
+                        searchUrl = `https://search.yahoo.co.jp/search?p=${encodeURIComponent(searchTerm)}`;
+                        break;
+                }
+                
+                window.open(searchUrl, '_blank');
+                resetIdleTimer(); // 検索したらタイマーリセット
+            } else {
+                alert('検索キーワードを入力してください。');
+            }
+        }
+
+        function triggerDolphinDisappear() {
+            clearTimeout(idleTimer);
+            clearTimeout(thoughtTimer);
+            
+            const dolphin = document.getElementById('dolphin');
+            const thoughtBubble = document.getElementById('thoughtBubble');
+            const sadMessage = document.getElementById('sadMessage');
+            
+            // 通常の独り言を隠す
+            thoughtBubble.classList.remove('show');
+            
+            // 悲しいメッセージを表示
+            sadMessage.classList.add('show');
+            
+            // 2秒後にイルカを消す
+            setTimeout(() => {
+                dolphin.classList.add('disappearing');
+                sadMessage.classList.remove('show');
+            }, 2000);
+            
+            // 15秒後にイルカを復活させる
+            setTimeout(() => {
+                dolphin.classList.remove('disappearing');
+                dolphin.style.display = 'block';
+                resetIdleTimer();
+            }, 15000);
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.classList.toggle('show');
+            resetIdleTimer(); // 操作があったらタイマーリセット
+        }
+
+        function selectSearchEngine(engine) {
+            currentSearchEngine = engine;
+            
+            // インジケータを更新
+            const indicator = document.getElementById('searchEngineIndicator');
+            let engineName;
+            switch(engine) {
+                case 'google': engineName = 'Google'; break;
+                case 'bing': engineName = 'Bing'; break;
+                case 'yahoo': engineName = 'Yahoo'; break;
+            }
+            indicator.textContent = `検索エンジン: ${engineName}`;
+            
+            // ドロップダウンアイテムの選択状態を更新
+            const items = document.querySelectorAll('.dropdown-item');
+            items.forEach(item => item.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            // ドロップダウンを閉じる
+            document.getElementById('dropdownMenu').classList.remove('show');
+            resetIdleTimer(); // 操作があったらタイマーリセット
+        }
+
+        // ドロップダウン外をクリックしたら閉じる
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('dropdownMenu');
+            const button = event.target.closest('.dropdown-container');
+            
+            if (!button && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+            resetIdleTimer(); // クリックがあったらタイマーリセット
+        });
+
+        // 入力があったらタイマーリセット
+        document.getElementById('searchInput').addEventListener('input', resetIdleTimer);
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+            resetIdleTimer();
+        });
+
+        // マウス移動でもタイマーリセット
+        document.addEventListener('mousemove', resetIdleTimer);
+        document.addEventListener('keydown', resetIdleTimer);
+
+        // ページ読み込み時にフォーカスとタイマー開始
+        window.onload = function() {
+            document.getElementById('searchInput').focus();
+            resetIdleTimer();
+        };
+    </script>
+</body>
+</html>
