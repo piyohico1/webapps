@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-MSTVN0KCF9');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>絵文字検索 - emoji search</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            z-index: -2;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(1px);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .header h1 .emoji-icon {
+            display: inline-block;
+            margin-right: 8px;
+            color: #FFD93D;
+            filter: drop-shadow(0 2px 4px rgba(255, 217, 61, 0.3));
+        }
+
+        .header h1 .char {
+            display: inline-block;
+            position: relative;
+            margin: 0 2px;
+            line-height: 1;
+        }
+
+        .header h1 .char:nth-child(2) { color: #FF6B6B; }
+        .header h1 .char:nth-child(3) { color: #4ECDC4; }
+        .header h1 .char:nth-child(4) { color: #45B7D1; }
+        .header h1 .char:nth-child(5) { color: #96CEB4; }
+        .header h1 .char:nth-child(6) { color: #FFEAA7; }
+
+        .header h1 .char::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -4px;
+            right: -4px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                rgba(255, 107, 107, 0.2) 0%,
+                rgba(78, 205, 196, 0.2) 20%,
+                rgba(69, 183, 209, 0.2) 40%,
+                rgba(150, 206, 180, 0.2) 60%,
+                rgba(255, 234, 167, 0.2) 80%,
+                rgba(255, 107, 107, 0.2) 100%
+            );
+            border-radius: 6px;
+            z-index: -1;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.8;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .search-container {
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 20px 60px 20px 24px;
+            font-size: 1.2em;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-input:focus {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            opacity: 0.7;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 80px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1em;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats {
+            padding: 24px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 140px);
+            gap: 20px;
+            padding: 40px;
+            min-height: 500px;
+            justify-content: center;
+        }
+
+        .emoji-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            width: 140px;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .emoji-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .emoji-card:hover::before {
+            opacity: 1;
+        }
+
+        .emoji-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .emoji-display {
+            font-size: 2.8em;
+            margin-bottom: 8px;
+            transition: transform 0.3s ease;
+            line-height: 1;
+            font-family: 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', sans-serif;
+        }
+
+        .emoji-card:hover .emoji-display {
+            transform: scale(1.2);
+        }
+
+        .emoji-name {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.9);
+            word-break: break-word;
+            font-weight: 500;
+            line-height: 1.2;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            max-height: 2.4em;
+        }
+
+        .emoji-name-jp {
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.7);
+            word-break: break-word;
+            font-weight: 400;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            max-height: 2.4em;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.02);
+            gap: 16px;
+        }
+
+        .pagination-top {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+        }
+
+        .pagination-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .page-btn {
+            padding: 12px 24px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            margin: 0 20px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 80px 40px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .no-results h3 {
+            font-size: 2em;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .no-results p {
+            font-size: 1.1em;
+            font-weight: 300;
+        }
+
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(34, 197, 94, 0.9);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            z-index: 1000;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+            transform: translateX(400px);
+            animation: slideIn 0.4s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 20px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+                letter-spacing: 1px;
+            }
+            
+            .header h1 .emoji-icon {
+                margin-right: 6px;
+            }
+            
+            .header h1 .char {
+                margin: 0 1px;
+            }
+            
+            .header h1 .char::before {
+                top: -1px;
+                left: -3px;
+                right: -3px;
+                bottom: -1px;
+                border-radius: 4px;
+            }
+            
+            .header p {
+                font-size: 0.95em;
+            }
+            
+            .search-container {
+                padding: 30px 20px;
+            }
+            
+            .emoji-grid {
+                grid-template-columns: repeat(auto-fill, 110px);
+                gap: 15px;
+                padding: 30px 20px;
+                justify-content: center;
+            }
+            
+            .emoji-card {
+                width: 110px;
+                height: 140px;
+                padding: 15px;
+            }
+            
+            .emoji-display {
+                font-size: 2.2em;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+                padding: 20px;
+            }
+            
+            .pagination {
+                padding: 20px;
+            }
+            
+            .pagination-top {
+                padding: 15px 20px;
+            }
+            
+            .pagination-bottom {
+                padding: 25px 20px;
+            }
+            
+            .page-info {
+                margin: 0 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-overlay"></div>
+    <div class="floating-particles" id="particles"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="emoji-icon">✨</span>
+                <span class="char">絵</span>
+                <span class="char">文</span>
+                <span class="char">字</span>
+                <span class="char">検</span>
+                <span class="char">索</span>
+            </h1>
+            <p>400+個の絵文字を検索してコピー</p>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    placeholder="絵文字を検索... (例: smile, heart, star, 笑顔, ハート, 星, 動物, スポーツ)"
+                    id="searchInput"
+                >
+                <div class="search-icon">🔍</div>
+            </div>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div>
+                <span id="totalCount">0</span>件の絵文字が見つかりました
+            </div>
+            <div>
+                <span id="currentPage">1</span> / <span id="totalPages">1</span> ページ
+            </div>
+        </div>
+
+        <div class="pagination pagination-top" id="paginationTop" style="display: none;">
+            <button class="page-btn" id="prevBtnTop">← 前へ</button>
+            <div class="page-info">
+                <span id="pageInfoTop">1 / 1</span>
+            </div>
+            <button class="page-btn" id="nextBtnTop">次へ →</button>
+        </div>
+
+        <div class="loading" id="loading">
+            絵文字データを読み込み中...
+        </div>
+
+        <div class="emoji-grid" id="emojiGrid" style="display: none;">
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <h3>😕 検索結果がありません</h3>
+            <p>別のキーワードで検索してみてください</p>
+        </div>
+
+        <div class="pagination pagination-bottom" id="pagination" style="display: none;">
+            <button class="page-btn" id="prevBtn">← 前へ</button>
+            <div class="page-info">
+                <span id="pageInfo">1 / 1</span>
+            </div>
+            <button class="page-btn" id="nextBtn">次へ →</button>
+        </div>
+    </div>
+
+    <script>
+        class EmojiSearchApp {
+            constructor() {
+                this.config = {
+                    emojisPerPage: 24,
+                    searchDelay: 300,
+                    particleCount: 50,
+                    animationDuration: { min: 3, max: 6 }
+                };
+
+                this.state = {
+                    allEmojis: [],
+                    filteredEmojis: [],
+                    currentPage: 1,
+                    searchTimeout: null
+                };
+
+                this.elements = {};
+                
+                this.init();
+            }
+
+            async init() {
+                this.cacheElements();
+                this.createParticles();
+                await this.loadEmojis();
+                this.setupEventListeners();
+                this.displayEmojis();
+            }
+
+            cacheElements() {
+                const elementIds = [
+                    'searchInput', 'loading', 'stats', 'totalCount', 'currentPage', 'totalPages',
+                    'emojiGrid', 'noResults', 'pagination', 'paginationTop',
+                    'prevBtn', 'nextBtn', 'pageInfo', 'prevBtnTop', 'nextBtnTop', 'pageInfoTop'
+                ];
+
+                elementIds.forEach(id => {
+                    this.elements[id] = document.getElementById(id);
+                });
+            }
+
+            createParticles() {
+                const container = document.getElementById('particles');
+                for (let i = 0; i < this.config.particleCount; i++) {
+                    const particle = this.createParticleElement();
+                    container.appendChild(particle);
+                }
+            }
+
+            createParticleElement() {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const styles = {
+                    left: Math.random() * 100 + '%',
+                    top: Math.random() * 100 + '%',
+                    animationDelay: Math.random() * this.config.animationDuration.max + 's',
+                    animationDuration: (Math.random() * 3 + this.config.animationDuration.min) + 's'
+                };
+
+                Object.assign(particle.style, styles);
+                return particle;
+            }
+
+            async loadEmojis() {
+                try {
+                    this.state.allEmojis = this.getEmojiData();
+                    this.state.filteredEmojis = [...this.state.allEmojis];
+                    this.hideLoading();
+                } catch (error) {
+                    console.error('絵文字データの読み込みに失敗しました:', error);
+                    this.hideLoading();
+                    this.showNoResults('データの読み込みに失敗しました');
+                }
+            }
+
+            getEmojiData() {
+                return [
+                    // 表情・顔 (Faces & Expressions)
+                    { name: 'grinning', emoji: '😀', japanese: 'にっこり', keywords: ['smile', 'happy', 'joy', '笑顔'] },
+                    { name: 'smiley', emoji: '😃', japanese: 'スマイリー', keywords: ['smile', 'happy', 'joy', '笑顔'] },
+                    { name: 'smile', emoji: '😄', japanese: 'スマイル', keywords: ['smile', 'happy', 'joy', '笑顔'] },
+                    { name: 'grin', emoji: '😁', japanese: 'にやり', keywords: ['smile', 'happy', 'joy', '笑顔'] },
+                    { name: 'laughing', emoji: '😆', japanese: '笑い', keywords: ['smile', 'happy', 'joy', 'laugh', '笑い'] },
+                    { name: 'sweat_smile', emoji: '😅', japanese: '汗をかいた笑顔', keywords: ['smile', 'happy', 'sweat', '汗'] },
+                    { name: 'joy', emoji: '😂', japanese: '大笑い', keywords: ['smile', 'happy', 'joy', 'laugh', 'tear', '笑い', '涙'] },
+                    { name: 'slightly_smiling_face', emoji: '🙂', japanese: '少し笑顔', keywords: ['smile', 'happy', '笑顔'] },
+                    { name: 'upside_down_face', emoji: '🙃', japanese: '逆さま顔', keywords: ['smile', 'silly', '変'] },
+                    { name: 'wink', emoji: '😉', japanese: 'ウィンク', keywords: ['smile', 'wink', 'ウィンク'] },
+                    { name: 'blush', emoji: '😊', japanese: '照れ笑い', keywords: ['smile', 'happy', 'blush', '照れ'] },
+                    { name: 'innocent', emoji: '😇', japanese: '天使の笑顔', keywords: ['smile', 'angel', 'innocent', '天使'] },
+                    { name: 'smiling_face_with_three_hearts', emoji: '🥰', japanese: '三つのハート', keywords: ['smile', 'love', 'heart', 'ハート', '愛'] },
+                    { name: 'heart_eyes', emoji: '😍', japanese: 'ハートの瞳', keywords: ['love', 'heart', 'eyes', 'ハート', '愛'] },
+                    { name: 'star_struck', emoji: '🤩', japanese: 'スター', keywords: ['star', 'eyes', 'excited', '星', '興奮'] },
+                    { name: 'kissing_heart', emoji: '😘', japanese: 'キスとハート', keywords: ['kiss', 'heart', 'love', 'キス', 'ハート'] },
+                    { name: 'kissing', emoji: '😗', japanese: 'キス', keywords: ['kiss', 'キス'] },
+                    { name: 'relaxed', emoji: '☺️', japanese: 'リラックス', keywords: ['smile', 'relaxed', 'リラックス'] },
+                    { name: 'kissing_closed_eyes', emoji: '😚', japanese: '目を閉じてキス', keywords: ['kiss', 'closed', 'eyes', 'キス'] },
+                    { name: 'kissing_smiling_eyes', emoji: '😙', japanese: '笑顔でキス', keywords: ['kiss', 'smile', 'eyes', 'キス', '笑顔'] },
+                    { name: 'smiling_face_with_tear', emoji: '🥲', japanese: '涙の笑顔', keywords: ['smile', 'tear', 'happy', 'sad', '涙', '笑顔'] },
+                    { name: 'yum', emoji: '😋', japanese: '美味しい', keywords: ['tongue', 'lick', 'yum', '美味しい', '舌'] },
+                    { name: 'stuck_out_tongue', emoji: '😛', japanese: '舌を出す', keywords: ['tongue', 'silly', '舌'] },
+                    { name: 'stuck_out_tongue_winking_eye', emoji: '😜', japanese: 'ウィンクして舌出し', keywords: ['tongue', 'wink', 'silly', '舌', 'ウィンク'] },
+                    { name: 'zany_face', emoji: '🤪', japanese: 'おふざけ顔', keywords: ['crazy', 'silly', 'tongue', '変', '舌'] },
+                    { name: 'stuck_out_tongue_closed_eyes', emoji: '😝', japanese: '目を閉じて舌出し', keywords: ['tongue', 'closed', 'eyes', '舌'] },
+                    { name: 'money_mouth_face', emoji: '🤑', japanese: 'お金の口', keywords: ['money', 'rich', 'お金', '金持ち'] },
+                    { name: 'hugs', emoji: '🤗', japanese: 'ハグ', keywords: ['hug', 'embrace', 'ハグ', '抱擁'] },
+                    { name: 'hand_over_mouth', emoji: '🤭', japanese: '口を手で隠す', keywords: ['quiet', 'secret', '静か', '秘密'] },
+                    { name: 'shushing_face', emoji: '🤫', japanese: 'シーッ', keywords: ['quiet', 'shush', '静か', 'シーッ'] },
+                    { name: 'thinking', emoji: '🤔', japanese: '考え中', keywords: ['think', 'consider', '考える', '思考'] },
+                    { name: 'zipper_mouth_face', emoji: '🤐', japanese: 'ジッパー口', keywords: ['quiet', 'secret', '静か', '秘密'] },
+                    { name: 'raised_eyebrow', emoji: '🤨', japanese: '眉をひそめる', keywords: ['suspicious', 'doubt', '疑う', '怪しい'] },
+                    { name: 'neutral_face', emoji: '😐', japanese: '無表情', keywords: ['neutral', 'meh', '無表情'] },
+                    { name: 'expressionless', emoji: '😑', japanese: '表情なし', keywords: ['blank', 'meh', '無表情'] },
+                    { name: 'no_mouth', emoji: '😶', japanese: '口なし', keywords: ['quiet', 'silent', '静か'] },
+                    { name: 'smirk', emoji: '😏', japanese: 'ニヤリ', keywords: ['smirk', 'smug', 'ニヤリ'] },
+                    { name: 'unamused', emoji: '😒', japanese: '面白くない', keywords: ['annoyed', 'meh', 'つまらない'] },
+                    { name: 'roll_eyes', emoji: '🙄', japanese: '目をクルクル', keywords: ['annoyed', 'eye', 'roll', 'うざい'] },
+                    { name: 'grimacing', emoji: '😬', japanese: '顔をしかめる', keywords: ['awkward', 'grimace', '気まずい'] },
+                    { name: 'lying_face', emoji: '🤥', japanese: '嘘つき', keywords: ['lie', 'pinocchio', '嘘'] },
+                    { name: 'relieved', emoji: '😌', japanese: '安心', keywords: ['relieved', 'calm', '安心', '安堵'] },
+                    { name: 'pensive', emoji: '😔', japanese: '物思い', keywords: ['sad', 'pensive', '悲しい', '物思い'] },
+                    { name: 'sleepy', emoji: '😪', japanese: '眠い', keywords: ['sleepy', 'tired', '眠い', '疲れ'] },
+                    { name: 'drooling_face', emoji: '🤤', japanese: 'よだれ', keywords: ['drool', 'hungry', 'よだれ', 'お腹空いた'] },
+                    { name: 'sleeping', emoji: '😴', japanese: '寝る', keywords: ['sleep', 'tired', '眠る', '疲れ'] },
+                    { name: 'mask', emoji: '😷', japanese: 'マスク', keywords: ['mask', 'sick', 'マスク', '病気'] },
+                    { name: 'face_with_thermometer', emoji: '🤒', japanese: '体温計', keywords: ['sick', 'fever', '病気', '熱'] },
+                    { name: 'face_with_head_bandage', emoji: '🤕', japanese: '包帯', keywords: ['hurt', 'bandage', '怪我', '包帯'] },
+                    { name: 'nauseated_face', emoji: '🤢', japanese: '吐き気', keywords: ['sick', 'nauseous', '病気', '吐き気'] },
+                    { name: 'vomiting_face', emoji: '🤮', japanese: '嘔吐', keywords: ['sick', 'vomit', '病気', '嘔吐'] },
+                    { name: 'sneezing_face', emoji: '🤧', japanese: 'くしゃみ', keywords: ['sneeze', 'sick', 'くしゃみ', '病気'] },
+                    { name: 'hot_face', emoji: '🥵', japanese: '暑い', keywords: ['hot', 'sweat', '暑い', '汗'] },
+                    { name: 'cold_face', emoji: '🥶', japanese: '寒い', keywords: ['cold', 'freeze', '寒い', '凍る'] },
+                    { name: 'woozy_face', emoji: '🥴', japanese: 'ふらふら', keywords: ['dizzy', 'drunk', 'ふらふら', '酔っ払い'] },
+                    { name: 'dizzy_face', emoji: '😵', japanese: 'めまい', keywords: ['dizzy', 'confused', 'めまい', '混乱'] },
+                    { name: 'exploding_head', emoji: '🤯', japanese: '爆発する頭', keywords: ['mind', 'blown', 'shocked', '驚き', '爆発'] },
+                    { name: 'cowboy_hat_face', emoji: '🤠', japanese: 'カウボーイ', keywords: ['cowboy', 'hat', 'カウボーイ', '帽子'] },
+                    { name: 'partying_face', emoji: '🥳', japanese: 'パーティー', keywords: ['party', 'celebrate', 'パーティー', 'お祝い'] },
+                    { name: 'disguised_face', emoji: '🥸', japanese: '変装', keywords: ['disguise', 'glasses', '変装', 'メガネ'] },
+                    { name: 'sunglasses', emoji: '😎', japanese: 'サングラス', keywords: ['cool', 'sunglasses', 'かっこいい', 'サングラス'] },
+                    { name: 'nerd_face', emoji: '🤓', japanese: 'オタク', keywords: ['nerd', 'glasses', 'オタク', 'メガネ'] },
+                    { name: 'monocle_face', emoji: '🧐', japanese: '片眼鏡', keywords: ['monocle', 'fancy', '片眼鏡', '上品'] },
+                    { name: 'confused', emoji: '😕', japanese: '困惑', keywords: ['confused', 'worried', '困惑', '心配'] },
+                    { name: 'worried', emoji: '😟', japanese: '心配', keywords: ['worried', 'concerned', '心配'] },
+                    { name: 'slightly_frowning_face', emoji: '🙁', japanese: '少し悲しい', keywords: ['sad', 'frown', '悲しい'] },
+                    { name: 'frowning_face', emoji: '☹️', japanese: '悲しい顔', keywords: ['sad', 'frown', '悲しい'] },
+                    { name: 'open_mouth', emoji: '😮', japanese: '驚き', keywords: ['surprised', 'wow', '驚き'] },
+                    { name: 'hushed', emoji: '😯', japanese: '静かな驚き', keywords: ['quiet', 'surprise', '驚き'] },
+                    { name: 'astonished', emoji: '😲', japanese: '仰天', keywords: ['shocked', 'surprised', '驚き', 'ショック'] },
+                    { name: 'flushed', emoji: '😳', japanese: '赤面', keywords: ['embarrassed', 'blush', '恥ずかしい', '赤面'] },
+                    { name: 'pleading_face', emoji: '🥺', japanese: '懇願', keywords: ['puppy', 'eyes', 'pleading', 'お願い'] },
+                    { name: 'frowning', emoji: '😦', japanese: '眉をひそめる', keywords: ['sad', 'frown', '悲しい'] },
+                    { name: 'anguished', emoji: '😧', japanese: '苦悶', keywords: ['anguish', 'pain', '苦痛'] },
+                    { name: 'fearful', emoji: '😨', japanese: '恐怖', keywords: ['fear', 'scared', '怖い', '恐怖'] },
+                    { name: 'cold_sweat', emoji: '😰', japanese: '冷や汗', keywords: ['nervous', 'sweat', '緊張', '冷や汗'] },
+                    { name: 'disappointed_relieved', emoji: '😥', japanese: '失望と安堵', keywords: ['disappointed', 'sad', '失望'] },
+                    { name: 'cry', emoji: '😢', japanese: '泣く', keywords: ['cry', 'sad', 'tear', '泣く', '涙'] },
+                    { name: 'sob', emoji: '😭', japanese: '号泣', keywords: ['cry', 'sob', 'sad', '泣く', '号泣'] },
+                    { name: 'scream', emoji: '😱', japanese: '叫ぶ', keywords: ['scream', 'scared', '叫ぶ', '怖い'] },
+                    { name: 'confounded', emoji: '😖', japanese: '困惑', keywords: ['confused', 'frustrated', '困惑', 'イライラ'] },
+                    { name: 'persevere', emoji: '😣', japanese: '頑張る', keywords: ['struggle', 'persevere', '頑張る', '努力'] },
+                    { name: 'disappointed', emoji: '😞', japanese: '失望', keywords: ['disappointed', 'sad', '失望', '悲しい'] },
+                    { name: 'sweat', emoji: '😓', japanese: '汗', keywords: ['sweat', 'tired', '汗', '疲れ'] },
+                    { name: 'weary', emoji: '😩', japanese: '疲れ', keywords: ['tired', 'weary', '疲れ'] },
+                    { name: 'tired_face', emoji: '😫', japanese: '疲れた顔', keywords: ['tired', 'exhausted', '疲れ', '疲労'] },
+                    { name: 'yawning_face', emoji: '🥱', japanese: 'あくび', keywords: ['yawn', 'tired', 'あくび', '眠い'] },
+                    { name: 'triumph', emoji: '😤', japanese: '勝利', keywords: ['triumph', 'huff', '勝利', '怒り'] },
+                    { name: 'rage', emoji: '😡', japanese: '怒り', keywords: ['anger', 'rage', '怒り'] },
+                    { name: 'angry', emoji: '😠', japanese: '怒る', keywords: ['angry', 'mad', '怒る'] },
+                    { name: 'cursing_face', emoji: '🤬', japanese: '悪口', keywords: ['curse', 'angry', '悪口', '怒り'] },
+                    { name: 'smiling_imp', emoji: '😈', japanese: '笑う悪魔', keywords: ['devil', 'evil', '悪魔', '邪悪'] },
+                    { name: 'imp', emoji: '👿', japanese: '悪魔', keywords: ['devil', 'evil', '悪魔', '邪悪'] },
+                    { name: 'skull', emoji: '💀', japanese: '骸骨', keywords: ['skull', 'death', '骸骨', '死'] },
+                    { name: 'skull_and_crossbones', emoji: '☠️', japanese: '海賊旗', keywords: ['skull', 'death', 'danger', '危険', '骸骨'] },
+                    { name: 'hankey', emoji: '💩', japanese: 'うんち', keywords: ['poop', 'shit', 'うんち'] },
+                    { name: 'clown_face', emoji: '🤡', japanese: 'ピエロ', keywords: ['clown', 'circus', 'ピエロ', 'サーカス'] },
+                    { name: 'japanese_ogre', emoji: '👹', japanese: '鬼', keywords: ['ogre', 'monster', '鬼', '化け物'] },
+                    { name: 'japanese_goblin', emoji: '👺', japanese: '天狗', keywords: ['goblin', 'monster', '天狗', '化け物'] },
+                    { name: 'ghost', emoji: '👻', japanese: 'お化け', keywords: ['ghost', 'halloween', 'お化け', 'ハロウィン'] },
+                    { name: 'alien', emoji: '👽', japanese: '宇宙人', keywords: ['alien', 'ufo', '宇宙人', 'UFO'] },
+                    { name: 'space_invader', emoji: '👾', japanese: 'インベーダー', keywords: ['alien', 'game', 'インベーダー', 'ゲーム'] },
+                    { name: 'robot', emoji: '🤖', japanese: 'ロボット', keywords: ['robot', 'ai', 'ロボット', 'AI'] },
+
+                    // 猫の表情
+                    { name: 'smiley_cat', emoji: '😺', japanese: '笑顔の猫', keywords: ['cat', 'smile', '猫', '笑顔'] },
+                    { name: 'smile_cat', emoji: '😸', japanese: '笑う猫', keywords: ['cat', 'smile', '猫', '笑う'] },
+                    { name: 'joy_cat', emoji: '😹', japanese: '大笑いの猫', keywords: ['cat', 'joy', 'laugh', '猫', '笑い'] },
+                    { name: 'heart_eyes_cat', emoji: '😻', japanese: 'ハートの瞳の猫', keywords: ['cat', 'love', 'heart', '猫', 'ハート'] },
+                    { name: 'smirk_cat', emoji: '😼', japanese: 'ニヤリ猫', keywords: ['cat', 'smirk', '猫', 'ニヤリ'] },
+                    { name: 'kissing_cat', emoji: '😽', japanese: 'キス猫', keywords: ['cat', 'kiss', '猫', 'キス'] },
+                    { name: 'scream_cat', emoji: '🙀', japanese: '叫ぶ猫', keywords: ['cat', 'scream', '猫', '叫ぶ'] },
+                    { name: 'crying_cat_face', emoji: '😿', japanese: '泣く猫', keywords: ['cat', 'cry', 'sad', '猫', '泣く'] },
+                    { name: 'pouting_cat', emoji: '😾', japanese: '怒る猫', keywords: ['cat', 'angry', '猫', '怒る'] },
+
+                    // ハート・愛情
+                    { name: 'heart', emoji: '❤️', japanese: 'ハート', keywords: ['heart', 'love', 'ハート', '愛', '赤'] },
+                    { name: 'orange_heart', emoji: '🧡', japanese: 'オレンジのハート', keywords: ['heart', 'love', 'orange', 'ハート', 'オレンジ'] },
+                    { name: 'yellow_heart', emoji: '💛', japanese: '黄色のハート', keywords: ['heart', 'love', 'yellow', 'ハート', '黄色'] },
+                    { name: 'green_heart', emoji: '💚', japanese: '緑のハート', keywords: ['heart', 'love', 'green', 'ハート', '緑'] },
+                    { name: 'blue_heart', emoji: '💙', japanese: '青いハート', keywords: ['heart', 'love', 'blue', 'ハート', '青'] },
+                    { name: 'purple_heart', emoji: '💜', japanese: '紫のハート', keywords: ['heart', 'love', 'purple', 'ハート', '紫'] },
+                    { name: 'brown_heart', emoji: '🤎', japanese: '茶色のハート', keywords: ['heart', 'love', 'brown', 'ハート', '茶色'] },
+                    { name: 'black_heart', emoji: '🖤', japanese: '黒いハート', keywords: ['heart', 'love', 'black', 'ハート', '黒'] },
+                    { name: 'white_heart', emoji: '🤍', japanese: '白いハート', keywords: ['heart', 'love', 'white', 'ハート', '白'] },
+                    { name: 'broken_heart', emoji: '💔', japanese: '失恋', keywords: ['heart', 'broken', 'sad', 'ハート', '失恋', '悲しい'] },
+                    { name: 'heart_decoration', emoji: '💟', japanese: 'ハートの装飾', keywords: ['heart', 'decoration', 'ハート', '装飾'] },
+                    { name: 'heart_exclamation', emoji: '❣️', japanese: 'ハートびっくり', keywords: ['heart', 'exclamation', 'ハート', '!'] },
+                    { name: 'two_hearts', emoji: '💕', japanese: '二つのハート', keywords: ['heart', 'love', 'two', 'ハート', '二つ'] },
+                    { name: 'revolving_hearts', emoji: '💞', japanese: '回るハート', keywords: ['heart', 'love', 'revolving', 'ハート', '回る'] },
+                    { name: 'heartbeat', emoji: '💓', japanese: '鼓動するハート', keywords: ['heart', 'beat', 'love', 'ハート', '鼓動'] },
+                    { name: 'heartpulse', emoji: '💗', japanese: '脈打つハート', keywords: ['heart', 'pulse', 'love', 'ハート', '脈'] },
+                    { name: 'sparkling_heart', emoji: '💖', japanese: 'キラキラハート', keywords: ['heart', 'sparkle', 'love', 'ハート', 'キラキラ'] },
+                    { name: 'cupid', emoji: '💘', japanese: 'キューピッド', keywords: ['heart', 'arrow', 'cupid', 'love', 'キューピッド', '矢'] },
+                    { name: 'gift_heart', emoji: '💝', japanese: 'ハートのプレゼント', keywords: ['heart', 'gift', 'present', 'ハート', 'プレゼント'] },
+
+                    // 動物 (Animals)
+                    { name: 'dog', emoji: '🐶', japanese: '犬', keywords: ['dog', 'puppy', 'pet', '犬', '子犬', 'ペット'] },
+                    { name: 'cat', emoji: '🐱', japanese: '猫', keywords: ['cat', 'kitten', 'pet', '猫', '子猫', 'ペット'] },
+                    { name: 'mouse', emoji: '🐭', japanese: 'ネズミ', keywords: ['mouse', 'rodent', 'ネズミ'] },
+                    { name: 'hamster', emoji: '🐹', japanese: 'ハムスター', keywords: ['hamster', 'pet', 'ハムスター', 'ペット'] },
+                    { name: 'rabbit', emoji: '🐰', japanese: 'ウサギ', keywords: ['rabbit', 'bunny', 'ウサギ'] },
+                    { name: 'fox_face', emoji: '🦊', japanese: 'キツネ', keywords: ['fox', 'キツネ'] },
+                    { name: 'bear', emoji: '🐻', japanese: 'クマ', keywords: ['bear', 'クマ'] },
+                    { name: 'panda_face', emoji: '🐼', japanese: 'パンダ', keywords: ['panda', 'bear', 'パンダ', 'クマ'] },
+                    { name: 'koala', emoji: '🐨', japanese: 'コアラ', keywords: ['koala', 'bear', 'コアラ'] },
+                    { name: 'tiger', emoji: '🐯', japanese: 'トラ', keywords: ['tiger', 'トラ'] },
+                    { name: 'lion', emoji: '🦁', japanese: 'ライオン', keywords: ['lion', 'king', 'ライオン', '王'] },
+                    { name: 'cow', emoji: '🐮', japanese: '牛', keywords: ['cow', 'bull', '牛'] },
+                    { name: 'pig', emoji: '🐷', japanese: '豚', keywords: ['pig', '豚'] },
+                    { name: 'pig_nose', emoji: '🐽', japanese: '豚の鼻', keywords: ['pig', 'nose', '豚', '鼻'] },
+                    { name: 'frog', emoji: '🐸', japanese: 'カエル', keywords: ['frog', 'カエル'] },
+                    { name: 'monkey_face', emoji: '🐵', japanese: 'サル', keywords: ['monkey', 'ape', 'サル'] },
+                    { name: 'see_no_evil', emoji: '🙈', japanese: '見ざる', keywords: ['monkey', 'see', 'no', 'evil', 'サル', '見ざる'] },
+                    { name: 'hear_no_evil', emoji: '🙉', japanese: '聞かざる', keywords: ['monkey', 'hear', 'no', 'evil', 'サル', '聞かざる'] },
+                    { name: 'speak_no_evil', emoji: '🙊', japanese: '言わざる', keywords: ['monkey', 'speak', 'no', 'evil', 'サル', '言わざる'] },
+                    { name: 'chicken', emoji: '🐔', japanese: 'ニワトリ', keywords: ['chicken', 'rooster', 'ニワトリ'] },
+                    { name: 'penguin', emoji: '🐧', japanese: 'ペンギン', keywords: ['penguin', 'bird', 'ペンギン', '鳥'] },
+                    { name: 'bird', emoji: '🐦', japanese: '鳥', keywords: ['bird', '鳥'] },
+                    { name: 'baby_chick', emoji: '🐤', japanese: 'ひよこ', keywords: ['chick', 'baby', 'bird', 'ひよこ', '鳥'] },
+                    { name: 'hatching_chick', emoji: '🐣', japanese: '孵化するひよこ', keywords: ['chick', 'hatching', 'ひよこ', '孵化'] },
+                    { name: 'hatched_chick', emoji: '🐥', japanese: '生まれたてのひよこ', keywords: ['chick', 'hatched', 'ひよこ'] },
+                    { name: 'duck', emoji: '🦆', japanese: 'アヒル', keywords: ['duck', 'bird', 'アヒル', '鳥'] },
+                    { name: 'eagle', emoji: '🦅', japanese: 'ワシ', keywords: ['eagle', 'bird', 'ワシ', '鷲', '鳥'] },
+                    { name: 'owl', emoji: '🦉', japanese: 'フクロウ', keywords: ['owl', 'bird', 'フクロウ', '鳥'] },
+                    { name: 'wolf', emoji: '🐺', japanese: 'オオカミ', keywords: ['wolf', 'オオカミ'] },
+                    { name: 'boar', emoji: '🐗', japanese: 'イノシシ', keywords: ['boar', 'pig', 'イノシシ', '豚'] },
+                    { name: 'horse', emoji: '🐴', japanese: '馬', keywords: ['horse', '馬'] },
+                    { name: 'unicorn', emoji: '🦄', japanese: 'ユニコーン', keywords: ['unicorn', 'fantasy', 'ユニコーン', '幻想'] },
+                    { name: 'zebra', emoji: '🦓', japanese: 'シマウマ', keywords: ['zebra', 'シマウマ'] },
+                    { name: 'deer', emoji: '🦌', japanese: '鹿', keywords: ['deer', '鹿'] },
+                    { name: 'ox', emoji: '🐂', japanese: '雄牛', keywords: ['ox', 'bull', '雄牛', '牛'] },
+                    { name: 'water_buffalo', emoji: '🐃', japanese: '水牛', keywords: ['buffalo', 'water', '水牛'] },
+                    { name: 'cow2', emoji: '🐄', japanese: '乳牛', keywords: ['cow', 'dairy', '牛', '乳牛'] },
+                    { name: 'pig2', emoji: '🐖', japanese: '豚', keywords: ['pig', '豚'] },
+                    { name: 'ram', emoji: '🐏', japanese: '雄羊', keywords: ['ram', 'sheep', '雄羊', '羊'] },
+                    { name: 'sheep', emoji: '🐑', japanese: '羊', keywords: ['sheep', '羊'] },
+                    { name: 'goat', emoji: '🐐', japanese: 'ヤギ', keywords: ['goat', 'ヤギ'] },
+                    { name: 'dromedary_camel', emoji: '🐪', japanese: 'ヒトコブラクダ', keywords: ['camel', 'desert', 'ラクダ', '砂漠'] },
+                    { name: 'camel', emoji: '🐫', japanese: 'フタコブラクダ', keywords: ['camel', 'desert', 'ラクダ', '砂漠'] },
+                    { name: 'llama', emoji: '🦙', japanese: 'ラマ', keywords: ['llama', 'ラマ'] },
+                    { name: 'giraffe', emoji: '🦒', japanese: 'キリン', keywords: ['giraffe', 'キリン'] },
+                    { name: 'elephant', emoji: '🐘', japanese: 'ゾウ', keywords: ['elephant', 'ゾウ'] },
+                    { name: 'rhinoceros', emoji: '🦏', japanese: 'サイ', keywords: ['rhino', 'rhinoceros', 'サイ'] },
+                    { name: 'hippopotamus', emoji: '🦛', japanese: 'カバ', keywords: ['hippo', 'hippopotamus', 'カバ'] },
+
+                    // 海の生き物・虫
+                    { name: 'crocodile', emoji: '🐊', japanese: 'ワニ', keywords: ['crocodile', 'alligator', 'ワニ'] },
+                    { name: 'turtle', emoji: '🐢', japanese: 'カメ', keywords: ['turtle', 'カメ'] },
+                    { name: 'lizard', emoji: '🦎', japanese: 'トカゲ', keywords: ['lizard', 'トカゲ'] },
+                    { name: 'snake', emoji: '🐍', japanese: 'ヘビ', keywords: ['snake', 'ヘビ'] },
+                    { name: 'dragon_face', emoji: '🐲', japanese: '竜の顔', keywords: ['dragon', 'face', '竜', 'ドラゴン'] },
+                    { name: 'dragon', emoji: '🐉', japanese: '竜', keywords: ['dragon', '竜', 'ドラゴン'] },
+                    { name: 'sauropod', emoji: '🦕', japanese: '首長竜', keywords: ['dinosaur', 'sauropod', '恐竜', '首長竜'] },
+                    { name: 't-rex', emoji: '🦖', japanese: 'ティラノサウルス', keywords: ['dinosaur', 'trex', '恐竜', 'ティラノサウルス'] },
+                    { name: 'whale', emoji: '🐳', japanese: 'クジラ', keywords: ['whale', 'ocean', 'クジラ', '海'] },
+                    { name: 'whale2', emoji: '🐋', japanese: 'クジラ2', keywords: ['whale', 'ocean', 'クジラ', '海'] },
+                    { name: 'dolphin', emoji: '🐬', japanese: 'イルカ', keywords: ['dolphin', 'ocean', 'イルカ', '海'] },
+                    { name: 'fish', emoji: '🐟', japanese: '魚', keywords: ['fish', '魚'] },
+                    { name: 'tropical_fish', emoji: '🐠', japanese: '熱帯魚', keywords: ['fish', 'tropical', '魚', '熱帯魚'] },
+                    { name: 'blowfish', emoji: '🐡', japanese: 'フグ', keywords: ['fish', 'blowfish', '魚', 'フグ'] },
+                    { name: 'shark', emoji: '🦈', japanese: 'サメ', keywords: ['shark', 'ocean', 'サメ', '海'] },
+                    { name: 'octopus', emoji: '🐙', japanese: 'タコ', keywords: ['octopus', 'ocean', 'タコ', '海'] },
+                    { name: 'shell', emoji: '🐚', japanese: '貝殻', keywords: ['shell', 'sea', '貝殻', '海'] },
+                    { name: 'snail', emoji: '🐌', japanese: 'カタツムリ', keywords: ['snail', 'カタツムリ'] },
+                    { name: 'butterfly', emoji: '🦋', japanese: '蝶', keywords: ['butterfly', '蝶', 'ちょう'] },
+                    { name: 'bug', emoji: '🐛', japanese: '虫', keywords: ['bug', 'insect', '虫'] },
+                    { name: 'ant', emoji: '🐜', japanese: 'アリ', keywords: ['ant', 'insect', 'アリ', '虫'] },
+                    { name: 'bee', emoji: '🐝', japanese: 'ハチ', keywords: ['bee', 'honey', 'ハチ', 'はちみつ'] },
+                    { name: 'beetle', emoji: '🪲', japanese: 'カブトムシ', keywords: ['beetle', 'insect', 'カブトムシ', '虫'] },
+                    { name: 'ladybug', emoji: '🐞', japanese: 'てんとう虫', keywords: ['ladybug', 'beetle', 'てんとう虫', '虫'] },
+                    { name: 'cricket', emoji: '🦗', japanese: 'コオロギ', keywords: ['cricket', 'insect', 'コオロギ', '虫'] },
+                    { name: 'spider', emoji: '🕷️', japanese: 'クモ', keywords: ['spider', 'クモ'] },
+                    { name: 'spider_web', emoji: '🕸️', japanese: 'クモの巣', keywords: ['spider', 'web', 'クモ', '巣'] },
+                    { name: 'scorpion', emoji: '🦂', japanese: 'サソリ', keywords: ['scorpion', 'サソリ'] },
+                    { name: 'mosquito', emoji: '🦟', japanese: '蚊', keywords: ['mosquito', 'insect', '蚊', '虫'] },
+                    { name: 'microbe', emoji: '🦠', japanese: '微生物', keywords: ['microbe', 'virus', '微生物', 'ウイルス'] },
+
+                    // 花・植物 (Plants & Flowers)
+                    { name: 'bouquet', emoji: '💐', japanese: '花束', keywords: ['flowers', 'bouquet', '花', '花束'] },
+                    { name: 'cherry_blossom', emoji: '🌸', japanese: '桜', keywords: ['cherry', 'blossom', 'sakura', '桜', 'さくら'] },
+                    { name: 'white_flower', emoji: '💮', japanese: '白い花', keywords: ['flower', 'white', '花', '白'] },
+                    { name: 'rosette', emoji: '🏵️', japanese: 'ロゼット', keywords: ['flower', 'rosette', '花', 'ロゼット'] },
+                    { name: 'rose', emoji: '🌹', japanese: 'バラ', keywords: ['rose', 'flower', 'バラ', '花'] },
+                    { name: 'wilted_flower', emoji: '🥀', japanese: 'しおれた花', keywords: ['flower', 'wilted', '花', 'しおれた'] },
+                    { name: 'hibiscus', emoji: '🌺', japanese: 'ハイビスカス', keywords: ['hibiscus', 'flower', 'ハイビスカス', '花'] },
+                    { name: 'sunflower', emoji: '🌻', japanese: 'ひまわり', keywords: ['sunflower', 'flower', 'ひまわり', '花'] },
+                    { name: 'blossom', emoji: '🌼', japanese: '花', keywords: ['flower', 'blossom', '花'] },
+                    { name: 'tulip', emoji: '🌷', japanese: 'チューリップ', keywords: ['tulip', 'flower', 'チューリップ', '花'] },
+                    { name: 'seedling', emoji: '🌱', japanese: '芽', keywords: ['seedling', 'plant', '芽', '植物'] },
+                    { name: 'evergreen_tree', emoji: '🌲', japanese: '常緑樹', keywords: ['tree', 'evergreen', '木', '常緑樹'] },
+                    { name: 'deciduous_tree', emoji: '🌳', japanese: '落葉樹', keywords: ['tree', 'deciduous', '木', '落葉樹'] },
+                    { name: 'palm_tree', emoji: '🌴', japanese: 'ヤシの木', keywords: ['palm', 'tree', 'ヤシ', '木'] },
+                    { name: 'cactus', emoji: '🌵', japanese: 'サボテン', keywords: ['cactus', 'desert', 'サボテン', '砂漠'] },
+                    { name: 'herb', emoji: '🌿', japanese: 'ハーブ', keywords: ['herb', 'plant', 'ハーブ', '植物'] },
+                    { name: 'shamrock', emoji: '☘️', japanese: 'クローバー', keywords: ['shamrock', 'clover', 'luck', 'クローバー', '幸運'] },
+                    { name: 'four_leaf_clover', emoji: '🍀', japanese: '四つ葉のクローバー', keywords: ['clover', 'luck', 'four', 'leaf', 'クローバー', '幸運', '四つ葉'] },
+                    { name: 'maple_leaf', emoji: '🍁', japanese: '紅葉', keywords: ['maple', 'leaf', 'autumn', '紅葉', '葉', '秋'] },
+                    { name: 'fallen_leaf', emoji: '🍂', japanese: '落ち葉', keywords: ['leaf', 'fallen', 'autumn', '落ち葉', '葉', '秋'] },
+                    { name: 'leaves', emoji: '🍃', japanese: '葉っぱ', keywords: ['leaves', 'wind', '葉', '風'] },
+                    { name: 'mushroom', emoji: '🍄', japanese: 'キノコ', keywords: ['mushroom', 'toadstool', 'キノコ'] },
+
+                    // 食べ物 (Food & Drink)
+                    { name: 'grapes', emoji: '🍇', japanese: 'ブドウ', keywords: ['grapes', 'fruit', 'ブドウ', '果物'] },
+                    { name: 'melon', emoji: '🍈', japanese: 'メロン', keywords: ['melon', 'fruit', 'メロン', '果物'] },
+                    { name: 'watermelon', emoji: '🍉', japanese: 'スイカ', keywords: ['watermelon', 'fruit', 'スイカ', '果物'] },
+                    { name: 'tangerine', emoji: '🍊', japanese: 'みかん', keywords: ['orange', 'tangerine', 'fruit', 'みかん', 'オレンジ', '果物'] },
+                    { name: 'lemon', emoji: '🍋', japanese: 'レモン', keywords: ['lemon', 'fruit', 'レモン', '果物'] },
+                    { name: 'banana', emoji: '🍌', japanese: 'バナナ', keywords: ['banana', 'fruit', 'バナナ', '果物'] },
+                    { name: 'pineapple', emoji: '🍍', japanese: 'パイナップル', keywords: ['pineapple', 'fruit', 'パイナップル', '果物'] },
+                    { name: 'mango', emoji: '🥭', japanese: 'マンゴー', keywords: ['mango', 'fruit', 'マンゴー', '果物'] },
+                    { name: 'apple', emoji: '🍎', japanese: 'リンゴ', keywords: ['apple', 'red', 'fruit', 'リンゴ', '赤', '果物'] },
+                    { name: 'green_apple', emoji: '🍏', japanese: '青りんご', keywords: ['apple', 'green', 'fruit', 'リンゴ', '青', '果物'] },
+                    { name: 'pear', emoji: '🍐', japanese: '梨', keywords: ['pear', 'fruit', '梨', '果物'] },
+                    { name: 'peach', emoji: '🍑', japanese: '桃', keywords: ['peach', 'fruit', '桃', '果物'] },
+                    { name: 'cherries', emoji: '🍒', japanese: 'サクランボ', keywords: ['cherry', 'fruit', 'サクランボ', '果物'] },
+                    { name: 'strawberry', emoji: '🍓', japanese: 'イチゴ', keywords: ['strawberry', 'fruit', 'イチゴ', '果物'] },
+                    { name: 'kiwi_fruit', emoji: '🥝', japanese: 'キウイ', keywords: ['kiwi', 'fruit', 'キウイ', '果物'] },
+                    { name: 'tomato', emoji: '🍅', japanese: 'トマト', keywords: ['tomato', 'vegetable', 'トマト', '野菜'] },
+                    { name: 'coconut', emoji: '🥥', japanese: 'ココナッツ', keywords: ['coconut', 'fruit', 'ココナッツ', '果物'] },
+                    { name: 'avocado', emoji: '🥑', japanese: 'アボカド', keywords: ['avocado', 'fruit', 'アボカド', '果物'] },
+                    { name: 'eggplant', emoji: '🍆', japanese: 'ナス', keywords: ['eggplant', 'vegetable', 'ナス', '野菜'] },
+                    { name: 'potato', emoji: '🥔', japanese: 'ジャガイモ', keywords: ['potato', 'vegetable', 'ジャガイモ', '野菜'] },
+                    { name: 'carrot', emoji: '🥕', japanese: 'ニンジン', keywords: ['carrot', 'vegetable', 'ニンジン', '野菜'] },
+                    { name: 'corn', emoji: '🌽', japanese: 'トウモロコシ', keywords: ['corn', 'vegetable', 'トウモロコシ', '野菜'] },
+                    { name: 'hot_pepper', emoji: '🌶️', japanese: '唐辛子', keywords: ['pepper', 'hot', 'spicy', '唐辛子', '辛い'] },
+                    { name: 'cucumber', emoji: '🥒', japanese: 'キュウリ', keywords: ['cucumber', 'vegetable', 'キュウリ', '野菜'] },
+                    { name: 'leafy_greens', emoji: '🥬', japanese: '葉野菜', keywords: ['leafy', 'greens', 'vegetable', '葉野菜', '野菜'] },
+                    { name: 'broccoli', emoji: '🥦', japanese: 'ブロッコリー', keywords: ['broccoli', 'vegetable', 'ブロッコリー', '野菜'] },
+                    { name: 'garlic', emoji: '🧄', japanese: 'ニンニク', keywords: ['garlic', 'vegetable', 'ニンニク', '野菜'] },
+                    { name: 'onion', emoji: '🧅', japanese: 'タマネギ', keywords: ['onion', 'vegetable', 'タマネギ', '野菜'] },
+                    { name: 'peanuts', emoji: '🥜', japanese: 'ピーナッツ', keywords: ['peanuts', 'nuts', 'ピーナッツ', 'ナッツ'] },
+                    { name: 'bread', emoji: '🍞', japanese: 'パン', keywords: ['bread', 'loaf', 'パン'] },
+                    { name: 'croissant', emoji: '🥐', japanese: 'クロワッサン', keywords: ['croissant', 'bread', 'クロワッサン', 'パン'] },
+                    { name: 'baguette_bread', emoji: '🥖', japanese: 'バゲット', keywords: ['baguette', 'bread', 'バゲット', 'パン'] },
+                    { name: 'flatbread', emoji: '🫓', japanese: 'フラットブレッド', keywords: ['flatbread', 'bread', 'フラットブレッド', 'パン'] },
+                    { name: 'pretzel', emoji: '🥨', japanese: 'プレッツェル', keywords: ['pretzel', 'プレッツェル'] },
+                    { name: 'bagel', emoji: '🥯', japanese: 'ベーグル', keywords: ['bagel', 'ベーグル'] },
+                    { name: 'pancakes', emoji: '🥞', japanese: 'パンケーキ', keywords: ['pancakes', 'パンケーキ'] },
+                    { name: 'waffle', emoji: '🧇', japanese: 'ワッフル', keywords: ['waffle', 'ワッフル'] },
+                    { name: 'cheese', emoji: '🧀', japanese: 'チーズ', keywords: ['cheese', 'チーズ'] },
+                    { name: 'meat_on_bone', emoji: '🍖', japanese: '骨付き肉', keywords: ['meat', 'bone', '肉', '骨'] },
+                    { name: 'poultry_leg', emoji: '🍗', japanese: '鶏の足', keywords: ['chicken', 'leg', '鶏', '足'] },
+                    { name: 'cut_of_meat', emoji: '🥩', japanese: '肉', keywords: ['meat', 'steak', '肉', 'ステーキ'] },
+                    { name: 'bacon', emoji: '🥓', japanese: 'ベーコン', keywords: ['bacon', 'ベーコン'] },
+                    { name: 'hamburger', emoji: '🍔', japanese: 'ハンバーガー', keywords: ['burger', 'hamburger', 'ハンバーガー'] },
+                    { name: 'fries', emoji: '🍟', japanese: 'フライドポテト', keywords: ['fries', 'french', 'フライドポテト'] },
+                    { name: 'pizza', emoji: '🍕', japanese: 'ピザ', keywords: ['pizza', 'slice', 'ピザ'] },
+                    { name: 'hotdog', emoji: '🌭', japanese: 'ホットドッグ', keywords: ['hotdog', 'sausage', 'ホットドッグ'] },
+                    { name: 'sandwich', emoji: '🥪', japanese: 'サンドイッチ', keywords: ['sandwich', 'サンドイッチ'] },
+                    { name: 'taco', emoji: '🌮', japanese: 'タコス', keywords: ['taco', 'mexican', 'タコス'] },
+                    { name: 'burrito', emoji: '🌯', japanese: 'ブリトー', keywords: ['burrito', 'mexican', 'ブリトー'] },
+                    { name: 'tamale', emoji: '🫔', japanese: 'タマレ', keywords: ['tamale', 'mexican', 'タマレ'] },
+                    { name: 'stuffed_flatbread', emoji: '🥙', japanese: '詰め物パン', keywords: ['flatbread', 'stuffed', 'パン'] },
+                    { name: 'falafel', emoji: '🧆', japanese: 'ファラフェル', keywords: ['falafel', 'ファラフェル'] },
+                    { name: 'egg', emoji: '🥚', japanese: '卵', keywords: ['egg', '卵'] },
+                    { name: 'fried_egg', emoji: '🍳', japanese: '目玉焼き', keywords: ['egg', 'fried', '卵', '目玉焼き'] },
+                    { name: 'shallow_pan_of_food', emoji: '🥘', japanese: 'パエリア', keywords: ['pan', 'food', 'paella', 'パエリア', '料理'] },
+                    { name: 'stew', emoji: '🍲', japanese: 'シチュー', keywords: ['stew', 'pot', 'シチュー', '鍋'] },
+                    { name: 'fondue', emoji: '🫕', japanese: 'フォンデュ', keywords: ['fondue', 'フォンデュ'] },
+                    { name: 'bowl_with_spoon', emoji: '🥣', japanese: 'スプーン付きボウル', keywords: ['bowl', 'spoon', 'ボウル', 'スプーン'] },
+                    { name: 'green_salad', emoji: '🥗', japanese: 'サラダ', keywords: ['salad', 'green', 'サラダ'] },
+                    { name: 'popcorn', emoji: '🍿', japanese: 'ポップコーン', keywords: ['popcorn', 'ポップコーン'] },
+                    { name: 'butter', emoji: '🧈', japanese: 'バター', keywords: ['butter', 'バター'] },
+                    { name: 'salt', emoji: '🧂', japanese: '塩', keywords: ['salt', '塩'] },
+                    { name: 'canned_food', emoji: '🥫', japanese: '缶詰', keywords: ['can', 'food', '缶詰', '食べ物'] },
+
+                    // 日本料理・アジア料理
+                    { name: 'bento', emoji: '🍱', japanese: 'お弁当', keywords: ['bento', 'japanese', 'お弁当', '日本料理'] },
+                    { name: 'rice_cracker', emoji: '🍘', japanese: '煎餅', keywords: ['rice', 'cracker', '煎餅', '米'] },
+                    { name: 'rice_ball', emoji: '🍙', japanese: 'おにぎり', keywords: ['rice', 'ball', 'onigiri', 'おにぎり', '米'] },
+                    { name: 'rice', emoji: '🍚', japanese: 'ご飯', keywords: ['rice', 'ご飯', '米'] },
+                    { name: 'curry', emoji: '🍛', japanese: 'カレー', keywords: ['curry', 'rice', 'カレー', '米'] },
+                    { name: 'ramen', emoji: '🍜', japanese: 'ラーメン', keywords: ['ramen', 'noodle', 'ラーメン', '麺'] },
+                    { name: 'spaghetti', emoji: '🍝', japanese: 'スパゲッティ', keywords: ['spaghetti', 'pasta', 'スパゲッティ', 'パスタ'] },
+                    { name: 'sweet_potato', emoji: '🍠', japanese: '焼き芋', keywords: ['sweet', 'potato', '焼き芋', 'さつまいも'] },
+                    { name: 'oden', emoji: '🍢', japanese: 'おでん', keywords: ['oden', 'japanese', 'おでん', '日本料理'] },
+                    { name: 'sushi', emoji: '🍣', japanese: '寿司', keywords: ['sushi', 'japanese', '寿司', '日本料理'] },
+                    { name: 'fried_shrimp', emoji: '🍤', japanese: 'エビフライ', keywords: ['shrimp', 'fried', 'エビフライ', 'エビ'] },
+                    { name: 'fish_cake', emoji: '🍥', japanese: 'かまぼこ', keywords: ['fish', 'cake', 'kamaboko', 'かまぼこ'] },
+                    { name: 'moon_cake', emoji: '🥮', japanese: '月餅', keywords: ['moon', 'cake', '月餅'] },
+                    { name: 'dango', emoji: '🍡', japanese: 'だんご', keywords: ['dango', 'japanese', 'だんご', '日本料理'] },
+                    { name: 'dumpling', emoji: '🥟', japanese: '餃子', keywords: ['dumpling', 'gyoza', '餃子'] },
+                    { name: 'fortune_cookie', emoji: '🥠', japanese: 'フォーチュンクッキー', keywords: ['fortune', 'cookie', 'フォーチュンクッキー'] },
+                    { name: 'takeout_box', emoji: '🥡', japanese: 'テイクアウト', keywords: ['takeout', 'box', 'テイクアウト', '持ち帰り'] },
+
+                    // デザート・お菓子
+                    { name: 'ice_cream', emoji: '🍨', japanese: 'アイスクリーム', keywords: ['ice', 'cream', 'アイスクリーム'] },
+                    { name: 'shaved_ice', emoji: '🍧', japanese: 'かき氷', keywords: ['shaved', 'ice', 'かき氷', '氷'] },
+                    { name: 'icecream', emoji: '🍦', japanese: 'ソフトクリーム', keywords: ['ice', 'cream', 'soft', 'ソフトクリーム'] },
+                    { name: 'pie', emoji: '🥧', japanese: 'パイ', keywords: ['pie', 'パイ'] },
+                    { name: 'cake', emoji: '🍰', japanese: 'ケーキ', keywords: ['cake', 'slice', 'ケーキ'] },
+                    { name: 'cupcake', emoji: '🧁', japanese: 'カップケーキ', keywords: ['cupcake', 'カップケーキ'] },
+                    { name: 'birthday', emoji: '🎂', japanese: 'バースデーケーキ', keywords: ['birthday', 'cake', 'バースデーケーキ', '誕生日'] },
+                    { name: 'custard', emoji: '🍮', japanese: 'プリン', keywords: ['custard', 'pudding', 'プリン'] },
+                    { name: 'candy', emoji: '🍬', japanese: 'キャンディ', keywords: ['candy', 'sweet', 'キャンディ', '飴'] },
+                    { name: 'lollipop', emoji: '🍭', japanese: 'ロリポップ', keywords: ['lollipop', 'candy', 'ロリポップ', '飴'] },
+                    { name: 'chocolate_bar', emoji: '🍫', japanese: 'チョコレート', keywords: ['chocolate', 'bar', 'チョコレート'] },
+                    { name: 'doughnut', emoji: '🍩', japanese: 'ドーナツ', keywords: ['donut', 'doughnut', 'ドーナツ'] },
+                    { name: 'cookie', emoji: '🍪', japanese: 'クッキー', keywords: ['cookie', 'biscuit', 'クッキー'] },
+                    { name: 'chestnut', emoji: '🌰', japanese: '栗', keywords: ['chestnut', '栗'] },
+                    { name: 'peanuts', emoji: '🥜', japanese: 'ピーナッツ', keywords: ['peanuts', 'nuts', 'ピーナッツ', 'ナッツ'] },
+                    { name: 'honey_pot', emoji: '🍯', japanese: 'はちみつ', keywords: ['honey', 'pot', 'はちみつ', '蜂蜜'] },
+
+                    // 飲み物 (Drinks)
+                    { name: 'milk_glass', emoji: '🥛', japanese: '牛乳', keywords: ['milk', 'glass', '牛乳', 'ミルク'] },
+                    { name: 'baby_bottle', emoji: '🍼', japanese: '哺乳瓶', keywords: ['bottle', 'baby', 'milk', '哺乳瓶', 'ミルク'] },
+                    { name: 'coffee', emoji: '☕', japanese: 'コーヒー', keywords: ['coffee', 'hot', 'コーヒー'] },
+                    { name: 'tea', emoji: '🍵', japanese: 'お茶', keywords: ['tea', 'green', 'お茶', '緑茶'] },
+                    { name: 'sake', emoji: '🍶', japanese: '日本酒', keywords: ['sake', 'japanese', '日本酒', 'お酒'] },
+                    { name: 'champagne', emoji: '🍾', japanese: 'シャンパン', keywords: ['champagne', 'bottle', 'シャンパン'] },
+                    { name: 'wine_glass', emoji: '🍷', japanese: 'ワイン', keywords: ['wine', 'glass', 'ワイン'] },
+                    { name: 'cocktail', emoji: '🍸', japanese: 'カクテル', keywords: ['cocktail', 'martini', 'カクテル'] },
+                    { name: 'tropical_drink', emoji: '🍹', japanese: 'トロピカルドリンク', keywords: ['tropical', 'drink', 'トロピカル', '飲み物'] },
+                    { name: 'beer', emoji: '🍺', japanese: 'ビール', keywords: ['beer', 'mug', 'ビール'] },
+                    { name: 'beers', emoji: '🍻', japanese: '乾杯', keywords: ['beer', 'cheers', 'ビール', '乾杯'] },
+                    { name: 'clinking_glasses', emoji: '🥂', japanese: 'シャンパンで乾杯', keywords: ['champagne', 'cheers', 'シャンパン', '乾杯'] },
+                    { name: 'tumbler_glass', emoji: '🥃', japanese: 'ウイスキー', keywords: ['whiskey', 'tumbler', 'ウイスキー'] },
+                    { name: 'cup_with_straw', emoji: '🥤', japanese: 'ストロー付きカップ', keywords: ['cup', 'straw', 'カップ', 'ストロー'] },
+                    { name: 'bubble_tea', emoji: '🧋', japanese: 'タピオカ', keywords: ['bubble', 'tea', 'タピオカ', 'お茶'] },
+                    { name: 'beverage_box', emoji: '🧃', japanese: '紙パック飲料', keywords: ['juice', 'box', 'ジュース', '紙パック'] },
+                    { name: 'mate', emoji: '🧉', japanese: 'マテ茶', keywords: ['mate', 'tea', 'マテ茶'] },
+                    { name: 'ice_cube', emoji: '🧊', japanese: '氷', keywords: ['ice', 'cube', '氷'] },
+
+                    // 星・天体 (Stars & Celestial)
+                    { name: 'star', emoji: '⭐', japanese: '星', keywords: ['star', 'favorite', '星', 'お気に入り'] },
+                    { name: 'star2', emoji: '🌟', japanese: '輝く星', keywords: ['star', 'glowing', '星', '輝く'] },
+                    { name: 'dizzy', emoji: '💫', japanese: 'めまい', keywords: ['dizzy', 'star', 'めまい', '星'] },
+                    { name: 'sparkles', emoji: '✨', japanese: 'キラキラ', keywords: ['sparkle', 'magic', 'キラキラ', '魔法'] },
+                    { name: 'comet', emoji: '☄️', japanese: '彗星', keywords: ['comet', 'space', '彗星', '宇宙'] },
+                    { name: 'milky_way', emoji: '🌌', japanese: '天の川', keywords: ['milky', 'way', 'galaxy', '天の川', '銀河'] },
+                    { name: 'night_with_stars', emoji: '🌃', japanese: '星空の夜', keywords: ['night', 'stars', 'city', '夜', '星', '都市'] },
+                    { name: 'cityscape', emoji: '🏙️', japanese: '都市風景', keywords: ['city', 'buildings', '都市', 'ビル'] },
+                    { name: 'sunrise_over_mountains', emoji: '🌄', japanese: '山の日の出', keywords: ['sunrise', 'mountains', '日の出', '山'] },
+                    { name: 'sunrise', emoji: '🌅', japanese: '日の出', keywords: ['sunrise', '日の出'] },
+                    { name: 'city_sunset', emoji: '🌆', japanese: '都市の夕日', keywords: ['sunset', 'city', '夕日', '都市'] },
+                    { name: 'city_dusk', emoji: '🌇', japanese: '都市の夕暮れ', keywords: ['dusk', 'city', '夕暮れ', '都市'] },
+                    { name: 'bridge_at_night', emoji: '🌉', japanese: '夜の橋', keywords: ['bridge', 'night', '橋', '夜'] },
+
+                    // 太陽・月・天気
+                    { name: 'sunny', emoji: '☀️', japanese: '太陽', keywords: ['sun', 'sunny', '太陽', '晴れ'] },
+                    { name: 'full_moon_face', emoji: '🌝', japanese: '満月の顔', keywords: ['moon', 'full', 'face', '月', '満月', '顔'] },
+                    { name: 'new_moon_face', emoji: '🌚', japanese: '新月の顔', keywords: ['moon', 'new', 'face', '月', '新月', '顔'] },
+                    { name: 'first_quarter_moon_face', emoji: '🌛', japanese: '上弦の月の顔', keywords: ['moon', 'quarter', 'face', '月', '上弦', '顔'] },
+                    { name: 'last_quarter_moon_face', emoji: '🌜', japanese: '下弦の月の顔', keywords: ['moon', 'quarter', 'face', '月', '下弦', '顔'] },
+                    { name: 'full_moon', emoji: '🌕', japanese: '満月', keywords: ['moon', 'full', '月', '満月'] },
+                    { name: 'new_moon', emoji: '🌑', japanese: '新月', keywords: ['moon', 'new', '月', '新月'] },
+                    { name: 'waxing_crescent_moon', emoji: '🌒', japanese: '三日月（増加）', keywords: ['moon', 'waxing', '月', '三日月'] },
+                    { name: 'first_quarter_moon', emoji: '🌓', japanese: '上弦の月', keywords: ['moon', 'quarter', '月', '上弦'] },
+                    { name: 'waxing_gibbous_moon', emoji: '🌔', japanese: '十三夜', keywords: ['moon', 'waxing', '月', '十三夜'] },
+                    { name: 'waning_gibbous_moon', emoji: '🌖', japanese: '満月過ぎ', keywords: ['moon', 'waning', '月', '満月過ぎ'] },
+                    { name: 'last_quarter_moon', emoji: '🌗', japanese: '下弦の月', keywords: ['moon', 'quarter', '月', '下弦'] },
+                    { name: 'waning_crescent_moon', emoji: '🌘', japanese: '二十六夜', keywords: ['moon', 'waning', '月', '二十六夜'] },
+                    { name: 'crescent_moon', emoji: '🌙', japanese: '三日月', keywords: ['moon', 'crescent', '月', '三日月'] },
+
+                    // 天気・自然現象
+                    { name: 'partly_sunny', emoji: '⛅', japanese: '晴れ時々曇り', keywords: ['sun', 'clouds', '晴れ', '曇り'] },
+                    { name: 'cloud', emoji: '☁️', japanese: '雲', keywords: ['cloud', '雲'] },
+                    { name: 'sun_behind_cloud', emoji: '⛈️', japanese: '雷雲', keywords: ['storm', 'thunder', '雷', '嵐'] },
+                    { name: 'sun_behind_large_cloud', emoji: '🌤️', japanese: '大きな雲の後ろの太陽', keywords: ['sun', 'cloud', '太陽', '雲'] },
+                    { name: 'sun_behind_rain_cloud', emoji: '🌦️', japanese: '雨雲の後ろの太陽', keywords: ['sun', 'rain', 'cloud', '太陽', '雨', '雲'] },
+                    { name: 'cloud_with_rain', emoji: '🌧️', japanese: '雨雲', keywords: ['rain', 'cloud', '雨', '雲'] },
+                    { name: 'cloud_with_lightning_and_rain', emoji: '⛈️', japanese: '雷雨', keywords: ['storm', 'thunder', 'rain', '雷', '雨', '嵐'] },
+                    { name: 'cloud_with_snow', emoji: '🌨️', japanese: '雪雲', keywords: ['snow', 'cloud', '雪', '雲'] },
+                    { name: 'zap', emoji: '⚡', japanese: '稲妻', keywords: ['lightning', 'electric', '稲妻', '電気'] },
+                    { name: 'fire', emoji: '🔥', japanese: '炎', keywords: ['fire', 'flame', '炎', '火'] },
+                    { name: 'boom', emoji: '💥', japanese: '爆発', keywords: ['explosion', 'boom', '爆発'] },
+                    { name: 'snowflake', emoji: '❄️', japanese: '雪の結晶', keywords: ['snow', 'cold', '雪', '寒い'] },
+                    { name: 'snowman_with_snow', emoji: '☃️', japanese: '雪だるま', keywords: ['snowman', 'snow', '雪だるま', '雪'] },
+                    { name: 'snowman', emoji: '⛄', japanese: '雪だるま', keywords: ['snowman', 'snow', '雪だるま', '雪'] },
+                    { name: 'wind_face', emoji: '🌬️', japanese: '風の顔', keywords: ['wind', 'face', '風', '顔'] },
+                    { name: 'dash', emoji: '💨', japanese: '風', keywords: ['wind', 'speed', '風', 'スピード'] },
+                    { name: 'tornado', emoji: '🌪️', japanese: '竜巻', keywords: ['tornado', 'cyclone', '竜巻', '台風'] },
+                    { name: 'fog', emoji: '🌫️', japanese: '霧', keywords: ['fog', 'mist', '霧'] },
+                    { name: 'umbrella', emoji: '☔', japanese: '傘', keywords: ['umbrella', 'rain', '傘', '雨'] },
+                    { name: 'umbrella2', emoji: '☂️', japanese: '傘2', keywords: ['umbrella', '傘'] },
+                    { name: 'droplet', emoji: '💧', japanese: '水滴', keywords: ['water', 'drop', '水', '滴'] },
+                    { name: 'sweat_drops', emoji: '💦', japanese: '汗の飛沫', keywords: ['sweat', 'water', '汗', '水'] },
+                    { name: 'ocean', emoji: '🌊', japanese: '海', keywords: ['ocean', 'wave', '海', '波'] },
+
+                    // 乗り物 (Transportation)
+                    { name: 'car', emoji: '🚗', japanese: '車', keywords: ['car', 'automobile', '車', '自動車'] },
+                    { name: 'taxi', emoji: '🚕', japanese: 'タクシー', keywords: ['taxi', 'タクシー'] },
+                    { name: 'blue_car', emoji: '🚙', japanese: '青い車', keywords: ['car', 'blue', '車', '青'] },
+                    { name: 'bus', emoji: '🚌', japanese: 'バス', keywords: ['bus', 'public', 'バス', '公共'] },
+                    { name: 'trolleybus', emoji: '🚎', japanese: 'トロリーバス', keywords: ['trolley', 'bus', 'トロリーバス'] },
+                    { name: 'racing_car', emoji: '🏎️', japanese: 'レーシングカー', keywords: ['racing', 'car', 'speed', 'レーシングカー', 'スピード'] },
+                    { name: 'police_car', emoji: '🚓', japanese: 'パトカー', keywords: ['police', 'car', 'パトカー', '警察'] },
+                    { name: 'ambulance', emoji: '🚑', japanese: '救急車', keywords: ['ambulance', 'medical', '救急車', '医療'] },
+                    { name: 'fire_engine', emoji: '🚒', japanese: '消防車', keywords: ['fire', 'engine', '消防車'] },
+                    { name: 'minibus', emoji: '🚐', japanese: 'ミニバス', keywords: ['minibus', 'van', 'ミニバス'] },
+                    { name: 'truck', emoji: '🚚', japanese: 'トラック', keywords: ['truck', 'トラック'] },
+                    { name: 'articulated_lorry', emoji: '🚛', japanese: 'トレーラー', keywords: ['truck', 'trailer', 'トラック', 'トレーラー'] },
+                    { name: 'tractor', emoji: '🚜', japanese: 'トラクター', keywords: ['tractor', 'farm', 'トラクター', '農業'] },
+                    { name: 'bike', emoji: '🚲', japanese: '自転車', keywords: ['bike', 'bicycle', '自転車'] },
+                    { name: 'motor_scooter', emoji: '🛵', japanese: 'スクーター', keywords: ['scooter', 'motor', 'スクーター'] },
+                    { name: 'motorcycle', emoji: '🏍️', japanese: 'オートバイ', keywords: ['motorcycle', 'bike', 'オートバイ', 'バイク'] },
+                    { name: 'auto_rickshaw', emoji: '🛺', japanese: 'オートリキシャ', keywords: ['auto', 'rickshaw', 'オートリキシャ'] },
+
+                    // 電車・鉄道
+                    { name: 'train', emoji: '🚋', japanese: '電車', keywords: ['train', 'tram', '電車'] },
+                    { name: 'train2', emoji: '🚆', japanese: '電車2', keywords: ['train', '電車'] },
+                    { name: 'light_rail', emoji: '🚈', japanese: 'ライトレール', keywords: ['light', 'rail', 'ライトレール'] },
+                    { name: 'monorail', emoji: '🚝', japanese: 'モノレール', keywords: ['monorail', 'モノレール'] },
+                    { name: 'bullettrain_side', emoji: '🚄', japanese: '新幹線（横）', keywords: ['bullet', 'train', 'shinkansen', '新幹線'] },
+                    { name: 'bullettrain_front', emoji: '🚅', japanese: '新幹線（正面）', keywords: ['bullet', 'train', 'shinkansen', '新幹線'] },
+                    { name: 'metro', emoji: '🚇', japanese: '地下鉄', keywords: ['metro', 'subway', '地下鉄'] },
+                    { name: 'steam_locomotive', emoji: '🚂', japanese: '蒸気機関車', keywords: ['steam', 'locomotive', '蒸気機関車'] },
+                    { name: 'railway_car', emoji: '🚃', japanese: '電車の車両', keywords: ['railway', 'car', '電車', '車両'] },
+
+                    // 飛行機・船
+                    { name: 'airplane', emoji: '✈️', japanese: '飛行機', keywords: ['airplane', 'plane', '飛行機'] },
+                    { name: 'small_airplane', emoji: '🛩️', japanese: '小型飛行機', keywords: ['airplane', 'small', '飛行機', '小型'] },
+                    { name: 'airplane_departure', emoji: '🛫', japanese: '飛行機の離陸', keywords: ['airplane', 'departure', '飛行機', '離陸'] },
+                    { name: 'airplane_arrival', emoji: '🛬', japanese: '飛行機の着陸', keywords: ['airplane', 'arrival', '飛行機', '着陸'] },
+                    { name: 'parachute', emoji: '🪂', japanese: 'パラシュート', keywords: ['parachute', 'パラシュート'] },
+                    { name: 'seat', emoji: '💺', japanese: '座席', keywords: ['seat', 'airplane', '座席', '飛行機'] },
+                    { name: 'helicopter', emoji: '🚁', japanese: 'ヘリコプター', keywords: ['helicopter', 'ヘリコプター'] },
+                    { name: 'rocket', emoji: '🚀', japanese: 'ロケット', keywords: ['rocket', 'space', 'ロケット', '宇宙'] },
+                    { name: 'flying_saucer', emoji: '🛸', japanese: 'UFO', keywords: ['ufo', 'flying', 'saucer', 'UFO', '宇宙人'] },
+                    { name: 'satellite', emoji: '🛰️', japanese: '人工衛星', keywords: ['satellite', 'space', '人工衛星', '宇宙'] },
+                    { name: 'ship', emoji: '🚢', japanese: '船', keywords: ['ship', 'boat', '船'] },
+                    { name: 'speedboat', emoji: '🚤', japanese: 'スピードボート', keywords: ['speedboat', 'boat', 'スピードボート', '船'] },
+                    { name: 'sailboat', emoji: '⛵', japanese: 'ヨット', keywords: ['sailboat', 'yacht', 'ヨット', '船'] },
+                    { name: 'motor_boat', emoji: '🛥️', japanese: 'モーターボート', keywords: ['motor', 'boat', 'モーターボート', '船'] },
+                    { name: 'canoe', emoji: '🛶', japanese: 'カヌー', keywords: ['canoe', 'カヌー'] },
+                    { name: 'ferry', emoji: '⛴️', japanese: 'フェリー', keywords: ['ferry', 'フェリー'] },
+
+                    // スポーツ・レジャー
+                    { name: 'soccer', emoji: '⚽', japanese: 'サッカーボール', keywords: ['soccer', 'football', 'ball', 'サッカー', 'ボール'] },
+                    { name: 'basketball', emoji: '🏀', japanese: 'バスケットボール', keywords: ['basketball', 'ball', 'バスケ', 'ボール'] },
+                    { name: 'football', emoji: '🏈', japanese: 'アメフト', keywords: ['football', 'american', 'アメフト', 'ボール'] },
+                    { name: 'baseball', emoji: '⚾', japanese: '野球', keywords: ['baseball', 'ball', '野球', 'ボール'] },
+                    { name: 'softball', emoji: '🥎', japanese: 'ソフトボール', keywords: ['softball', 'ball', 'ソフトボール', 'ボール'] },
+                    { name: 'tennis', emoji: '🎾', japanese: 'テニス', keywords: ['tennis', 'ball', 'テニス', 'ボール'] },
+                    { name: 'volleyball', emoji: '🏐', japanese: 'バレーボール', keywords: ['volleyball', 'ball', 'バレー', 'ボール'] },
+                    { name: 'rugby_football', emoji: '🏉', japanese: 'ラグビー', keywords: ['rugby', 'football', 'ラグビー', 'ボール'] },
+                    { name: 'flying_disc', emoji: '🥏', japanese: 'フリスビー', keywords: ['frisbee', 'disc', 'フリスビー'] },
+                    { name: 'bowling', emoji: '🎳', japanese: 'ボウリング', keywords: ['bowling', 'ボウリング'] },
+                    { name: 'cricket_game', emoji: '🏏', japanese: 'クリケット', keywords: ['cricket', 'クリケット'] },
+                    { name: 'field_hockey', emoji: '🏑', japanese: 'フィールドホッケー', keywords: ['field', 'hockey', 'ホッケー'] },
+                    { name: 'ice_hockey', emoji: '🏒', japanese: 'アイスホッケー', keywords: ['ice', 'hockey', 'アイスホッケー'] },
+                    { name: 'lacrosse', emoji: '🥍', japanese: 'ラクロス', keywords: ['lacrosse', 'ラクロス'] },
+                    { name: 'ping_pong', emoji: '🏓', japanese: '卓球', keywords: ['ping', 'pong', 'table', 'tennis', '卓球'] },
+                    { name: 'badminton', emoji: '🏸', japanese: 'バドミントン', keywords: ['badminton', 'バドミントン'] },
+                    { name: 'boxing_glove', emoji: '🥊', japanese: 'ボクシンググローブ', keywords: ['boxing', 'glove', 'ボクシング', 'グローブ'] },
+                    { name: 'martial_arts_uniform', emoji: '🥋', japanese: '武道着', keywords: ['martial', 'arts', 'uniform', '武道', '着物'] },
+                    { name: 'goal_net', emoji: '🥅', japanese: 'ゴールネット', keywords: ['goal', 'net', 'ゴール', 'ネット'] },
+                    { name: 'golf', emoji: '⛳', japanese: 'ゴルフ', keywords: ['golf', 'flag', 'ゴルフ', '旗'] },
+                    { name: 'ice_skate', emoji: '⛸️', japanese: 'アイススケート', keywords: ['ice', 'skate', 'アイススケート'] },
+                    { name: 'fishing_pole_and_fish', emoji: '🎣', japanese: '釣り', keywords: ['fishing', 'fish', '釣り', '魚'] },
+                    { name: 'diving_mask', emoji: '🤿', japanese: 'ダイビングマスク', keywords: ['diving', 'mask', 'ダイビング', 'マスク'] },
+                    { name: 'running_shirt_with_sash', emoji: '🎽', japanese: 'ランニングシャツ', keywords: ['running', 'shirt', 'ランニング', 'シャツ'] },
+                    { name: 'ski', emoji: '🎿', japanese: 'スキー', keywords: ['ski', 'スキー'] },
+                    { name: 'sled', emoji: '🛷', japanese: 'そり', keywords: ['sled', 'sledge', 'そり'] },
+
+                    // 楽器・音楽
+                    { name: 'musical_note', emoji: '🎵', japanese: '音符', keywords: ['music', 'note', '音楽', '音符'] },
+                    { name: 'notes', emoji: '🎶', japanese: '音符', keywords: ['music', 'notes', '音楽', '音符'] },
+                    { name: 'musical_score', emoji: '🎼', japanese: '楽譜', keywords: ['music', 'score', '音楽', '楽譜'] },
+                    { name: 'musical_keyboard', emoji: '🎹', japanese: 'ピアノ', keywords: ['piano', 'keyboard', 'ピアノ', '鍵盤'] },
+                    { name: 'guitar', emoji: '🎸', japanese: 'ギター', keywords: ['guitar', 'ギター'] },
+                    { name: 'violin', emoji: '🎻', japanese: 'バイオリン', keywords: ['violin', 'バイオリン'] },
+                    { name: 'trumpet', emoji: '🎺', japanese: 'トランペット', keywords: ['trumpet', 'トランペット'] },
+                    { name: 'saxophone', emoji: '🎷', japanese: 'サックス', keywords: ['saxophone', 'sax', 'サックス'] },
+                    { name: 'drum', emoji: '🥁', japanese: 'ドラム', keywords: ['drum', 'ドラム'] },
+                    { name: 'microphone', emoji: '🎤', japanese: 'マイク', keywords: ['microphone', 'mic', 'マイク'] },
+                    { name: 'headphones', emoji: '🎧', japanese: 'ヘッドフォン', keywords: ['headphones', 'ヘッドフォン'] },
+                    { name: 'radio', emoji: '📻', japanese: 'ラジオ', keywords: ['radio', 'ラジオ'] },
+
+                    // ゲーム・エンターテイメント
+                    { name: 'video_game', emoji: '🎮', japanese: 'ゲーム', keywords: ['game', 'video', 'controller', 'ゲーム', 'コントローラー'] },
+                    { name: 'joystick', emoji: '🕹️', japanese: 'ジョイスティック', keywords: ['joystick', 'game', 'ジョイスティック', 'ゲーム'] },
+                    { name: 'game_die', emoji: '🎲', japanese: 'サイコロ', keywords: ['dice', 'game', 'サイコロ', 'ゲーム'] },
+                    { name: 'jigsaw', emoji: '🧩', japanese: 'ジグソーパズル', keywords: ['puzzle', 'jigsaw', 'パズル', 'ジグソー'] },
+                    { name: 'teddy_bear', emoji: '🧸', japanese: 'テディベア', keywords: ['teddy', 'bear', 'toy', 'テディベア', 'おもちゃ'] },
+                    { name: 'spades', emoji: '♠️', japanese: 'スペード', keywords: ['spades', 'card', 'スペード', 'カード'] },
+                    { name: 'hearts', emoji: '♥️', japanese: 'ハート', keywords: ['hearts', 'card', 'ハート', 'カード'] },
+                    { name: 'diamonds', emoji: '♦️', japanese: 'ダイヤ', keywords: ['diamonds', 'card', 'ダイヤ', 'カード'] },
+                    { name: 'clubs', emoji: '♣️', japanese: 'クラブ', keywords: ['clubs', 'card', 'クラブ', 'カード'] },
+                    { name: 'black_joker', emoji: '🃏', japanese: 'ジョーカー', keywords: ['joker', 'card', 'ジョーカー', 'カード'] },
+                    { name: 'mahjong', emoji: '🀄', japanese: '麻雀', keywords: ['mahjong', '麻雀'] },
+                    { name: 'flower_playing_cards', emoji: '🎴', japanese: '花札', keywords: ['flower', 'cards', '花札', 'カード'] },
+
+                    // イベント・お祝い
+                    { name: 'performing_arts', emoji: '🎭', japanese: '演劇', keywords: ['theater', 'drama', 'mask', '演劇', 'マスク'] },
+                    { name: 'art', emoji: '🎨', japanese: 'アート', keywords: ['art', 'paint', 'palette', 'アート', '絵の具'] },
+                    { name: 'clapper', emoji: '🎬', japanese: '映画', keywords: ['movie', 'cinema', 'clapper', '映画', 'カチンコ'] },
+                    { name: 'microphone2', emoji: '🎙️', japanese: 'マイク2', keywords: ['microphone', 'studio', 'マイク', 'スタジオ'] },
+                    { name: 'tv', emoji: '📺', japanese: 'テレビ', keywords: ['tv', 'television', 'テレビ'] },
+                    { name: 'camera', emoji: '📷', japanese: 'カメラ', keywords: ['camera', 'photo', 'カメラ', '写真'] },
+                    { name: 'camera_flash', emoji: '📸', japanese: 'カメラフラッシュ', keywords: ['camera', 'flash', 'カメラ', 'フラッシュ'] },
+                    { name: 'video_camera', emoji: '📹', japanese: 'ビデオカメラ', keywords: ['video', 'camera', 'ビデオカメラ'] },
+                    { name: 'vhs', emoji: '📼', japanese: 'VHS', keywords: ['vhs', 'video', 'VHS', 'ビデオ'] },
+                    { name: 'mag', emoji: '🔍', japanese: '虫眼鏡', keywords: ['magnifying', 'glass', 'search', '虫眼鏡', '検索'] },
+                    { name: 'mag_right', emoji: '🔎', japanese: '虫眼鏡（右）', keywords: ['magnifying', 'glass', 'search', '虫眼鏡', '検索'] },
+                    { name: 'candle', emoji: '🕯️', japanese: 'ろうそく', keywords: ['candle', 'ろうそく'] },
+                    { name: 'bulb', emoji: '💡', japanese: '電球', keywords: ['bulb', 'idea', 'light', '電球', 'アイデア'] },
+                    { name: 'flashlight', emoji: '🔦', japanese: '懐中電灯', keywords: ['flashlight', 'torch', '懐中電灯'] },
+                    { name: 'izakaya_lantern', emoji: '🏮', japanese: '提灯', keywords: ['lantern', 'izakaya', '提灯', '居酒屋'] },
+                    { name: 'diya_lamp', emoji: '🪔', japanese: 'ディヤランプ', keywords: ['diya', 'lamp', 'ディヤ', 'ランプ'] },
+
+                    // 休日・お祝い
+                    { name: 'jack_o_lantern', emoji: '🎃', japanese: 'ジャック・オー・ランタン', keywords: ['pumpkin', 'halloween', 'ジャック・オー・ランタン', 'ハロウィン'] },
+                    { name: 'christmas_tree', emoji: '🎄', japanese: 'クリスマスツリー', keywords: ['christmas', 'tree', 'クリスマス', 'ツリー'] },
+                    { name: 'fireworks', emoji: '🎆', japanese: '打ち上げ花火', keywords: ['fireworks', '花火'] },
+                    { name: 'sparkler', emoji: '🎇', japanese: '線香花火', keywords: ['sparkler', 'fireworks', '線香花火', '花火'] },
+                    { name: 'firecracker', emoji: '🧨', japanese: '爆竹', keywords: ['firecracker', '爆竹'] },
+                    { name: 'balloon', emoji: '🎈', japanese: '風船', keywords: ['balloon', '風船'] },
+                    { name: 'tada', emoji: '🎉', japanese: 'お祝い', keywords: ['celebration', 'party', 'お祝い', 'パーティー'] },
+                    { name: 'confetti_ball', emoji: '🎊', japanese: '紙吹雪', keywords: ['confetti', 'party', '紙吹雪', 'パーティー'] },
+                    { name: 'tanabata_tree', emoji: '🎋', japanese: '七夕', keywords: ['tanabata', 'bamboo', '七夕', '竹'] },
+                    { name: 'bamboo', emoji: '🎍', japanese: '門松', keywords: ['bamboo', 'new', 'year', '門松', '正月'] },
+                    { name: 'dolls', emoji: '🎎', japanese: 'ひな人形', keywords: ['dolls', 'hinamatsuri', 'ひな人形', 'ひなまつり'] },
+                    { name: 'flags', emoji: '🎏', japanese: 'こいのぼり', keywords: ['flags', 'carp', 'こいのぼり', '鯉'] },
+                    { name: 'wind_chime', emoji: '🎐', japanese: '風鈴', keywords: ['wind', 'chime', '風鈴'] },
+                    { name: 'rice_scene', emoji: '🎑', japanese: '月見', keywords: ['moon', 'viewing', '月見', 'お月見'] },
+                    { name: 'red_envelope', emoji: '🧧', japanese: 'お年玉', keywords: ['red', 'envelope', 'money', 'お年玉', 'お金'] },
+                    { name: 'ribbon', emoji: '🎀', japanese: 'リボン', keywords: ['ribbon', 'リボン'] },
+                    { name: 'gift', emoji: '🎁', japanese: 'プレゼント', keywords: ['gift', 'present', 'プレゼント'] },
+                    { name: 'reminder_ribbon', emoji: '🎗️', japanese: 'リマインダーリボン', keywords: ['reminder', 'ribbon', 'リボン'] },
+                    { name: 'tickets', emoji: '🎟️', japanese: 'チケット', keywords: ['tickets', 'チケット'] },
+                    { name: 'ticket', emoji: '🎫', japanese: 'チケット', keywords: ['ticket', 'チケット'] },
+
+                    // 道具・オフィス用品
+                    { name: 'medal_military', emoji: '🎖️', japanese: '軍事勲章', keywords: ['medal', 'military', '勲章', '軍事'] },
+                    { name: 'trophy', emoji: '🏆', japanese: 'トロフィー', keywords: ['trophy', 'award', 'トロフィー', '賞'] },
+                    { name: 'medal_sports', emoji: '🏅', japanese: 'スポーツメダル', keywords: ['medal', 'sports', 'メダル', 'スポーツ'] },
+                    { name: '1st_place_medal', emoji: '🥇', japanese: '金メダル', keywords: ['gold', 'medal', 'first', '金メダル', '1位'] },
+                    { name: '2nd_place_medal', emoji: '🥈', japanese: '銀メダル', keywords: ['silver', 'medal', 'second', '銀メダル', '2位'] },
+                    { name: '3rd_place_medal', emoji: '🥉', japanese: '銅メダル', keywords: ['bronze', 'medal', 'third', '銅メダル', '3位'] },
+                    { name: 'closed_book', emoji: '📕', japanese: '閉じた本（赤）', keywords: ['book', 'closed', 'red', '本', '赤'] },
+                    { name: 'open_book', emoji: '📖', japanese: '開いた本', keywords: ['book', 'open', '本', '開いた'] },
+                    { name: 'blue_book', emoji: '📘', japanese: '青い本', keywords: ['book', 'blue', '本', '青'] },
+                    { name: 'green_book', emoji: '📗', japanese: '緑の本', keywords: ['book', 'green', '本', '緑'] },
+                    { name: 'orange_book', emoji: '📙', japanese: 'オレンジの本', keywords: ['book', 'orange', '本', 'オレンジ'] },
+                    { name: 'books', emoji: '📚', japanese: '本の山', keywords: ['books', 'stack', '本', '積み重ね'] },
+                    { name: 'notebook', emoji: '📓', japanese: 'ノート', keywords: ['notebook', 'ノート'] },
+                    { name: 'ledger', emoji: '📔', japanese: '台帳', keywords: ['ledger', 'notebook', '台帳', 'ノート'] },
+                    { name: 'page_with_curl', emoji: '📃', japanese: 'カールした紙', keywords: ['page', 'curl', 'paper', '紙', 'カール'] },
+                    { name: 'scroll', emoji: '📜', japanese: '巻物', keywords: ['scroll', 'paper', '巻物', '紙'] },
+                    { name: 'page_facing_up', emoji: '📄', japanese: '紙', keywords: ['page', 'paper', '紙'] },
+                    { name: 'newspaper', emoji: '📰', japanese: '新聞', keywords: ['newspaper', 'news', '新聞', 'ニュース'] },
+                    { name: 'newspaper_roll', emoji: '🗞️', japanese: '新聞の束', keywords: ['newspaper', 'roll', '新聞', '束'] },
+                    { name: 'bookmark_tabs', emoji: '📑', japanese: 'ブックマーク', keywords: ['bookmark', 'tabs', 'ブックマーク', 'タブ'] },
+                    { name: 'bookmark', emoji: '🔖', japanese: 'しおり', keywords: ['bookmark', 'しおり'] },
+
+                    // 時計・時間
+                    { name: 'watch', emoji: '⌚', japanese: '腕時計', keywords: ['watch', 'time', '腕時計', '時間'] },
+                    { name: 'alarm_clock', emoji: '⏰', japanese: '目覚まし時計', keywords: ['alarm', 'clock', 'time', '目覚まし時計', '時間'] },
+                    { name: 'stopwatch', emoji: '⏱️', japanese: 'ストップウォッチ', keywords: ['stopwatch', 'time', 'ストップウォッチ', '時間'] },
+                    { name: 'timer_clock', emoji: '⏲️', japanese: 'タイマー', keywords: ['timer', 'clock', 'タイマー', '時計'] },
+                    { name: 'hourglass_done', emoji: '⌛', japanese: '砂時計（終了）', keywords: ['hourglass', 'done', 'time', '砂時計', '時間'] },
+                    { name: 'hourglass', emoji: '⏳', japanese: '砂時計', keywords: ['hourglass', 'time', '砂時計', '時間'] },
+
+                    // 天体・宇宙
+                    { name: 'ringed_planet', emoji: '🪐', japanese: '土星', keywords: ['saturn', 'planet', 'rings', '土星', '惑星'] },
+                    { name: 'earth_americas', emoji: '🌎', japanese: '地球（アメリカ大陸）', keywords: ['earth', 'americas', 'world', '地球', 'アメリカ'] },
+                    { name: 'earth_africa', emoji: '🌍', japanese: '地球（アフリカ大陸）', keywords: ['earth', 'africa', 'world', '地球', 'アフリカ'] },
+                    { name: 'earth_asia', emoji: '🌏', japanese: '地球（アジア大陸）', keywords: ['earth', 'asia', 'world', '地球', 'アジア'] },
+                    { name: 'globe_with_meridians', emoji: '🌐', japanese: '地球儀', keywords: ['globe', 'world', 'internet', '地球儀', 'インターネット'] },
+
+                    // 建物・場所
+                    { name: 'house', emoji: '🏠', japanese: '家', keywords: ['house', 'home', '家'] },
+                    { name: 'house_with_garden', emoji: '🏡', japanese: '庭付きの家', keywords: ['house', 'garden', '家', '庭'] },
+                    { name: 'derelict_house', emoji: '🏚️', japanese: '廃屋', keywords: ['house', 'derelict', 'abandoned', '家', '廃屋'] },
+                    { name: 'office', emoji: '🏢', japanese: 'オフィスビル', keywords: ['office', 'building', 'オフィス', 'ビル'] },
+                    { name: 'department_store', emoji: '🏬', japanese: 'デパート', keywords: ['department', 'store', 'デパート', '店'] },
+                    { name: 'post_office', emoji: '🏣', japanese: '郵便局', keywords: ['post', 'office', '郵便局'] },
+                    { name: 'european_post_office', emoji: '🏤', japanese: 'ヨーロッパの郵便局', keywords: ['european', 'post', 'office', '郵便局', 'ヨーロッパ'] },
+                    { name: 'hospital', emoji: '🏥', japanese: '病院', keywords: ['hospital', 'medical', '病院', '医療'] },
+                    { name: 'bank', emoji: '🏦', japanese: '銀行', keywords: ['bank', 'money', '銀行', 'お金'] },
+                    { name: 'hotel', emoji: '🏨', japanese: 'ホテル', keywords: ['hotel', 'accommodation', 'ホテル', '宿泊'] },
+                    { name: 'love_hotel', emoji: '🏩', japanese: 'ラブホテル', keywords: ['love', 'hotel', 'ラブホテル'] },
+                    { name: 'convenience_store', emoji: '🏪', japanese: 'コンビニ', keywords: ['convenience', 'store', 'コンビニ'] },
+                    { name: 'school', emoji: '🏫', japanese: '学校', keywords: ['school', 'education', '学校', '教育'] },
+                    { name: 'factory', emoji: '🏭', japanese: '工場', keywords: ['factory', 'industrial', '工場', '産業'] },
+                    { name: 'japanese_castle', emoji: '🏯', japanese: '日本の城', keywords: ['castle', 'japanese', 'お城', '日本'] },
+                    { name: 'european_castle', emoji: '🏰', japanese: 'ヨーロッパの城', keywords: ['castle', 'european', 'お城', 'ヨーロッパ'] },
+                    { name: 'wedding', emoji: '💒', japanese: '結婚式場', keywords: ['wedding', 'church', '結婚式', '教会'] },
+                    { name: 'tokyo_tower', emoji: '🗼', japanese: '東京タワー', keywords: ['tokyo', 'tower', '東京タワー'] },
+                    { name: 'statue_of_liberty', emoji: '🗽', japanese: '自由の女神', keywords: ['statue', 'liberty', '自由の女神'] }
+                ];
+            }
+
+            setupEventListeners() {
+                this.setupSearchListener();
+                this.setupPaginationListeners();
+            }
+
+            setupSearchListener() {
+                this.elements.searchInput.addEventListener('input', (e) => {
+                    clearTimeout(this.state.searchTimeout);
+                    this.state.searchTimeout = setTimeout(() => {
+                        this.searchEmojis(e.target.value);
+                    }, this.config.searchDelay);
+                });
+            }
+
+            setupPaginationListeners() {
+                const paginationButtons = [
+                    { btn: this.elements.prevBtn, action: 'prev' },
+                    { btn: this.elements.nextBtn, action: 'next' },
+                    { btn: this.elements.prevBtnTop, action: 'prev' },
+                    { btn: this.elements.nextBtnTop, action: 'next' }
+                ];
+
+                paginationButtons.forEach(({ btn, action }) => {
+                    btn.addEventListener('click', () => this.handlePageChange(action));
+                });
+            }
+
+            handlePageChange(action) {
+                const totalPages = this.getTotalPages();
+                
+                if (action === 'prev' && this.state.currentPage > 1) {
+                    this.state.currentPage--;
+                } else if (action === 'next' && this.state.currentPage < totalPages) {
+                    this.state.currentPage++;
+                } else {
+                    return;
+                }
+                
+                this.displayEmojis();
+            }
+
+            searchEmojis(query) {
+                if (!query.trim()) {
+                    this.state.filteredEmojis = [...this.state.allEmojis];
+                } else {
+                    const searchTerm = query.toLowerCase();
+                    this.state.filteredEmojis = this.state.allEmojis.filter(emoji => 
+                        this.matchesSearch(emoji, searchTerm)
+                    );
+                }
+                
+                this.state.currentPage = 1;
+                this.displayEmojis();
+            }
+
+            matchesSearch(emoji, searchTerm) {
+                return emoji.name.toLowerCase().includes(searchTerm) ||
+                       emoji.japanese.toLowerCase().includes(searchTerm) ||
+                       emoji.keywords.some(keyword => keyword.toLowerCase().includes(searchTerm));
+            }
+
+            displayEmojis() {
+                const currentEmojis = this.getCurrentPageEmojis();
+                
+                this.updateStats();
+                this.updatePagination();
+
+                if (currentEmojis.length === 0) {
+                    this.showNoResults();
+                    return;
+                }
+
+                this.renderEmojis(currentEmojis);
+            }
+
+            getCurrentPageEmojis() {
+                const startIndex = (this.state.currentPage - 1) * this.config.emojisPerPage;
+                const endIndex = startIndex + this.config.emojisPerPage;
+                return this.state.filteredEmojis.slice(startIndex, endIndex);
+            }
+
+            renderEmojis(emojis) {
+                const grid = this.elements.emojiGrid;
+                grid.innerHTML = '';
+
+                const fragment = document.createDocumentFragment();
+                
+                emojis.forEach(emoji => {
+                    const card = this.createEmojiCard(emoji);
+                    fragment.appendChild(card);
+                });
+
+                grid.appendChild(fragment);
+                this.showGrid();
+            }
+
+            createEmojiCard(emoji) {
+                const card = document.createElement('div');
+                card.className = 'emoji-card';
+                card.innerHTML = `
+                    <div class="emoji-display">${emoji.emoji}</div>
+                    <div class="emoji-name">${emoji.name}</div>
+                    <div class="emoji-name-jp">${emoji.japanese}</div>
+                `;
+                
+                card.addEventListener('click', () => this.copyToClipboard(emoji.emoji));
+                return card;
+            }
+
+            updateStats() {
+                this.elements.totalCount.textContent = this.state.filteredEmojis.length;
+                this.elements.currentPage.textContent = this.state.currentPage;
+                this.elements.totalPages.textContent = this.getTotalPages();
+                this.elements.stats.style.display = 'flex';
+            }
+
+            updatePagination() {
+                const isFirstPage = this.state.currentPage === 1;
+                const isLastPage = this.state.currentPage === this.getTotalPages();
+                const pageText = `${this.state.currentPage} / ${this.getTotalPages()}`;
+
+                [
+                    { prev: this.elements.prevBtn, next: this.elements.nextBtn, info: this.elements.pageInfo },
+                    { prev: this.elements.prevBtnTop, next: this.elements.nextBtnTop, info: this.elements.pageInfoTop }
+                ].forEach(({ prev, next, info }) => {
+                    prev.disabled = isFirstPage;
+                    next.disabled = isLastPage;
+                    info.textContent = pageText;
+                });
+
+                this.showPagination();
+            }
+
+            getTotalPages() {
+                return Math.max(1, Math.ceil(this.state.filteredEmojis.length / this.config.emojisPerPage));
+            }
+
+            copyToClipboard(emoji) {
+                navigator.clipboard.writeText(emoji).then(() => {
+                    this.showNotification(`${emoji} をクリップボードにコピーしました！`);
+                }).catch(err => {
+                    console.error('コピーに失敗しました:', err);
+                });
+            }
+
+            showNotification(message) {
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.remove(), 3000);
+            }
+
+            hideLoading() {
+                this.elements.loading.style.display = 'none';
+            }
+
+            showGrid() {
+                this.elements.emojiGrid.style.display = 'grid';
+                this.elements.noResults.style.display = 'none';
+            }
+
+            showPagination() {
+                this.elements.pagination.style.display = 'flex';
+                this.elements.paginationTop.style.display = 'flex';
+            }
+
+            showNoResults(message = '😕 検索結果がありません') {
+                this.elements.emojiGrid.style.display = 'none';
+                this.elements.noResults.style.display = 'block';
+                this.elements.pagination.style.display = 'none';
+                this.elements.paginationTop.style.display = 'none';
+                
+                this.elements.noResults.innerHTML = `
+                    <h3>${message}</h3>
+                    <p>別のキーワードで検索してみてください</p>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new EmojiSearchApp();
+        });
+    </script>
+</body>
+</html>
