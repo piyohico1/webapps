@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-MSTVN0KCF9');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多言語単語カード帳</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-preserve-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const VocabularyFlashcardApp = () => {
+            // 配列をシャッフルする関数
+            const shuffleArray = (array) => {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            };
+
+            // 小学生レベルの英単語データベース（中国語簡体字とピンイン追加）
+            const vocabularyData = [
+                { english: "apple", japanese: "りんご", hiragana: "りんご", chinese: "苹果", pinyin: "píngguǒ", category: "food" },
+                { english: "book", japanese: "本", hiragana: "ほん", chinese: "书", pinyin: "shū", category: "school" },
+                { english: "cat", japanese: "猫", hiragana: "ねこ", chinese: "猫", pinyin: "māo", category: "animal" },
+                { english: "dog", japanese: "犬", hiragana: "いぬ", chinese: "狗", pinyin: "gǒu", category: "animal" },
+                { english: "elephant", japanese: "象", hiragana: "ぞう", chinese: "大象", pinyin: "dàxiàng", category: "animal" },
+                { english: "fish", japanese: "魚", hiragana: "さかな", chinese: "鱼", pinyin: "yú", category: "animal" },
+                { english: "green", japanese: "緑", hiragana: "みどり", chinese: "绿色", pinyin: "lǜsè", category: "color" },
+                { english: "house", japanese: "家", hiragana: "いえ", chinese: "房子", pinyin: "fángzi", category: "place" },
+                { english: "ice cream", japanese: "アイスクリーム", hiragana: "あいすくりーむ", chinese: "冰淇淋", pinyin: "bīngqílín", category: "food" },
+                { english: "juice", japanese: "ジュース", hiragana: "じゅーす", chinese: "果汁", pinyin: "guǒzhī", category: "food" },
+                { english: "key", japanese: "鍵", hiragana: "かぎ", chinese: "钥匙", pinyin: "yàoshi", category: "object" },
+                { english: "lion", japanese: "ライオン", hiragana: "らいおん", chinese: "狮子", pinyin: "shīzi", category: "animal" },
+                { english: "moon", japanese: "月", hiragana: "つき", chinese: "月亮", pinyin: "yuèliang", category: "nature" },
+                { english: "nose", japanese: "鼻", hiragana: "はな", chinese: "鼻子", pinyin: "bízi", category: "body" },
+                { english: "orange", japanese: "オレンジ", hiragana: "おれんじ", chinese: "橙子", pinyin: "chéngzi", category: "food" },
+                { english: "pencil", japanese: "鉛筆", hiragana: "えんぴつ", chinese: "铅笔", pinyin: "qiānbǐ", category: "school" },
+                { english: "queen", japanese: "女王", hiragana: "じょおう", chinese: "女王", pinyin: "nǚwáng", category: "people" },
+                { english: "red", japanese: "赤", hiragana: "あか", chinese: "红色", pinyin: "hóngsè", category: "color" },
+                { english: "sun", japanese: "太陽", hiragana: "たいよう", chinese: "太阳", pinyin: "tàiyáng", category: "nature" },
+                { english: "tree", japanese: "木", hiragana: "き", chinese: "树", pinyin: "shù", category: "nature" },
+                { english: "umbrella", japanese: "傘", hiragana: "かさ", chinese: "雨伞", pinyin: "yǔsǎn", category: "object" },
+                { english: "violin", japanese: "バイオリン", hiragana: "ばいおりん", chinese: "小提琴", pinyin: "xiǎotíqín", category: "music" },
+                { english: "water", japanese: "水", hiragana: "みず", chinese: "水", pinyin: "shuǐ", category: "nature" },
+                { english: "yellow", japanese: "黄色", hiragana: "きいろ", chinese: "黄色", pinyin: "huángsè", category: "color" },
+                { english: "zoo", japanese: "動物園", hiragana: "どうぶつえん", chinese: "动物园", pinyin: "dòngwùyuán", category: "place" },
+                { english: "bird", japanese: "鳥", hiragana: "とり", chinese: "鸟", pinyin: "niǎo", category: "animal" },
+                { english: "car", japanese: "車", hiragana: "くるま", chinese: "汽车", pinyin: "qìchē", category: "transport" },
+                { english: "desk", japanese: "机", hiragana: "つくえ", chinese: "桌子", pinyin: "zhuōzi", category: "school" },
+                { english: "eye", japanese: "目", hiragana: "め", chinese: "眼睛", pinyin: "yǎnjīng", category: "body" },
+                { english: "flower", japanese: "花", hiragana: "はな", chinese: "花", pinyin: "huā", category: "nature" },
+                { english: "girl", japanese: "女の子", hiragana: "おんなのこ", chinese: "女孩", pinyin: "nǚhái", category: "people" },
+                { english: "hand", japanese: "手", hiragana: "て", chinese: "手", pinyin: "shǒu", category: "body" },
+                { english: "island", japanese: "島", hiragana: "しま", chinese: "岛", pinyin: "dǎo", category: "place" },
+                { english: "jump", japanese: "跳ぶ", hiragana: "とぶ", chinese: "跳", pinyin: "tiào", category: "action" },
+                { english: "king", japanese: "王", hiragana: "おう", chinese: "国王", pinyin: "guówáng", category: "people" },
+                { english: "lemon", japanese: "レモン", hiragana: "れもん", chinese: "柠檬", pinyin: "níngméng", category: "food" },
+                { english: "milk", japanese: "牛乳", hiragana: "ぎゅうにゅう", chinese: "牛奶", pinyin: "niúnǎi", category: "food" },
+                { english: "name", japanese: "名前", hiragana: "なまえ", chinese: "名字", pinyin: "míngzi", category: "basic" },
+                { english: "ocean", japanese: "海", hiragana: "うみ", chinese: "海洋", pinyin: "hǎiyáng", category: "nature" },
+                { english: "pizza", japanese: "ピザ", hiragana: "ぴざ", chinese: "披萨", pinyin: "pīsà", category: "food" },
+                { english: "rabbit", japanese: "うさぎ", hiragana: "うさぎ", chinese: "兔子", pinyin: "tùzi", category: "animal" },
+                { english: "school", japanese: "学校", hiragana: "がっこう", chinese: "学校", pinyin: "xuéxiào", category: "place" },
+                { english: "table", japanese: "テーブル", hiragana: "てーぶる", chinese: "桌子", pinyin: "zhuōzi", category: "object" },
+                { english: "under", japanese: "下", hiragana: "した", chinese: "下面", pinyin: "xiàmiàn", category: "position" },
+                { english: "voice", japanese: "声", hiragana: "こえ", chinese: "声音", pinyin: "shēngyīn", category: "body" },
+                { english: "window", japanese: "窓", hiragana: "まど", chinese: "窗户", pinyin: "chuānghu", category: "object" },
+                { english: "boy", japanese: "男の子", hiragana: "おとこのこ", chinese: "男孩", pinyin: "nánhái", category: "people" },
+                { english: "chair", japanese: "椅子", hiragana: "いす", chinese: "椅子", pinyin: "yǐzi", category: "object" },
+                { english: "door", japanese: "ドア", hiragana: "どあ", chinese: "门", pinyin: "mén", category: "object" },
+                { english: "ear", japanese: "耳", hiragana: "みみ", chinese: "耳朵", pinyin: "ěrduo", category: "body" },
+                { english: "friend", japanese: "友達", hiragana: "ともだち", chinese: "朋友", pinyin: "péngyǒu", category: "people" },
+                { english: "game", japanese: "ゲーム", hiragana: "げーむ", chinese: "游戏", pinyin: "yóuxì", category: "fun" },
+                { english: "happy", japanese: "幸せ", hiragana: "しあわせ", chinese: "快乐", pinyin: "kuàilè", category: "emotion" },
+                { english: "ice", japanese: "氷", hiragana: "こおり", chinese: "冰", pinyin: "bīng", category: "nature" },
+                { english: "jam", japanese: "ジャム", hiragana: "じゃむ", chinese: "果酱", pinyin: "guǒjiàng", category: "food" },
+                { english: "kite", japanese: "凧", hiragana: "たこ", chinese: "风筝", pinyin: "fēngzheng", category: "toy" },
+                { english: "love", japanese: "愛", hiragana: "あい", chinese: "爱", pinyin: "ài", category: "emotion" },
+                { english: "mouse", japanese: "ねずみ", hiragana: "ねずみ", chinese: "老鼠", pinyin: "lǎoshǔ", category: "animal" },
+                { english: "night", japanese: "夜", hiragana: "よる", chinese: "夜晚", pinyin: "yèwǎn", category: "time" },
+                { english: "one", japanese: "一", hiragana: "いち", chinese: "一", pinyin: "yī", category: "number" },
+                { english: "park", japanese: "公園", hiragana: "こうえん", chinese: "公园", pinyin: "gōngyuán", category: "place" },
+                { english: "quiet", japanese: "静か", hiragana: "しずか", chinese: "安静", pinyin: "ānjìng", category: "adjective" },
+                { english: "run", japanese: "走る", hiragana: "はしる", chinese: "跑", pinyin: "pǎo", category: "action" },
+                { english: "snow", japanese: "雪", hiragana: "ゆき", chinese: "雪", pinyin: "xuě", category: "nature" },
+                { english: "toy", japanese: "おもちゃ", hiragana: "おもちゃ", chinese: "玩具", pinyin: "wánjù", category: "fun" },
+                { english: "up", japanese: "上", hiragana: "うえ", chinese: "上面", pinyin: "shàngmiàn", category: "position" },
+                { english: "very", japanese: "とても", hiragana: "とても", chinese: "非常", pinyin: "fēicháng", category: "adverb" },
+                { english: "white", japanese: "白", hiragana: "しろ", chinese: "白色", pinyin: "báisè", category: "color" },
+                { english: "bag", japanese: "かばん", hiragana: "かばん", chinese: "包", pinyin: "bāo", category: "object" },
+                { english: "cake", japanese: "ケーキ", hiragana: "けーき", chinese: "蛋糕", pinyin: "dàngāo", category: "food" },
+                { english: "dance", japanese: "踊る", hiragana: "おどる", chinese: "跳舞", pinyin: "tiàowǔ", category: "action" },
+                { english: "egg", japanese: "卵", hiragana: "たまご", chinese: "蛋", pinyin: "dàn", category: "food" },
+                { english: "face", japanese: "顔", hiragana: "かお", chinese: "脸", pinyin: "liǎn", category: "body" },
+                { english: "good", japanese: "良い", hiragana: "よい", chinese: "好", pinyin: "hǎo", category: "adjective" },
+                { english: "hot", japanese: "熱い", hiragana: "あつい", chinese: "热", pinyin: "rè", category: "adjective" },
+                { english: "in", japanese: "中", hiragana: "なか", chinese: "里面", pinyin: "lǐmiàn", category: "position" },
+                { english: "kitchen", japanese: "台所", hiragana: "だいどころ", chinese: "厨房", pinyin: "chúfáng", category: "place" },
+                { english: "light", japanese: "光", hiragana: "ひかり", chinese: "光", pinyin: "guāng", category: "nature" },
+                { english: "morning", japanese: "朝", hiragana: "あさ", chinese: "早晨", pinyin: "zǎochén", category: "time" },
+                { english: "new", japanese: "新しい", hiragana: "あたらしい", chinese: "新", pinyin: "xīn", category: "adjective" },
+                { english: "old", japanese: "古い", hiragana: "ふるい", chinese: "旧", pinyin: "jiù", category: "adjective" },
+                { english: "picture", japanese: "絵", hiragana: "え", chinese: "图片", pinyin: "túpiàn", category: "art" },
+                { english: "quick", japanese: "速い", hiragana: "はやい", chinese: "快", pinyin: "kuài", category: "adjective" },
+                { english: "rain", japanese: "雨", hiragana: "あめ", chinese: "雨", pinyin: "yǔ", category: "nature" },
+                { english: "sing", japanese: "歌う", hiragana: "うたう", chinese: "唱歌", pinyin: "chànggē", category: "action" },
+                { english: "tall", japanese: "高い", hiragana: "たかい", chinese: "高", pinyin: "gāo", category: "adjective" },
+                { english: "use", japanese: "使う", hiragana: "つかう", chinese: "使用", pinyin: "shǐyòng", category: "action" },
+                { english: "walk", japanese: "歩く", hiragana: "あるく", chinese: "走路", pinyin: "zǒulù", category: "action" },
+                { english: "big", japanese: "大きい", hiragana: "おおきい", chinese: "大", pinyin: "dà", category: "adjective" },
+                { english: "cold", japanese: "冷たい", hiragana: "つめたい", chinese: "冷", pinyin: "lěng", category: "adjective" },
+                { english: "eat", japanese: "食べる", hiragana: "たべる", chinese: "吃", pinyin: "chī", category: "action" },
+                { english: "fun", japanese: "楽しい", hiragana: "たのしい", chinese: "有趣", pinyin: "yǒuqù", category: "emotion" },
+                { english: "give", japanese: "与える", hiragana: "あたえる", chinese: "给", pinyin: "gěi", category: "action" },
+                { english: "help", japanese: "助ける", hiragana: "たすける", chinese: "帮助", pinyin: "bāngzhù", category: "action" },
+                { english: "kind", japanese: "優しい", hiragana: "やさしい", chinese: "善良", pinyin: "shànliáng", category: "adjective" },
+                { english: "laugh", japanese: "笑う", hiragana: "わらう", chinese: "笑", pinyin: "xiào", category: "action" },
+                { english: "make", japanese: "作る", hiragana: "つくる", chinese: "做", pinyin: "zuò", category: "action" },
+                { english: "nice", japanese: "素敵", hiragana: "すてき", chinese: "好", pinyin: "hǎo", category: "adjective" },
+                { english: "open", japanese: "開く", hiragana: "あく", chinese: "开", pinyin: "kāi", category: "action" },
+                { english: "play", japanese: "遊ぶ", hiragana: "あそぶ", chinese: "玩", pinyin: "wán", category: "action" },
+                { english: "read", japanese: "読む", hiragana: "よむ", chinese: "读", pinyin: "dú", category: "action" },
+                { english: "sleep", japanese: "眠る", hiragana: "ねむる", chinese: "睡觉", pinyin: "shuìjiào", category: "action" },
+                { english: "think", japanese: "考える", hiragana: "かんがえる", chinese: "想", pinyin: "xiǎng", category: "action" },
+                { english: "write", japanese: "書く", hiragana: "かく", chinese: "写", pinyin: "xiě", category: "action" }
+            ];
+
+            const [searchTerm, setSearchTerm] = useState('');
+            const [searchLanguage, setSearchLanguage] = useState('english');
+            const [filteredWords, setFilteredWords] = useState(() => shuffleArray(vocabularyData));
+            const [currentCardIndex, setCurrentCardIndex] = useState(0);
+            const [currentLanguage, setCurrentLanguage] = useState('english');
+            const [showingSearchResults, setShowingSearchResults] = useState(false);
+            const [searchResultLanguages, setSearchResultLanguages] = useState({});
+            const [defaultDisplay, setDefaultDisplay] = useState('english');
+
+            // 初期化時にデフォルト表示を適用
+            useEffect(() => {
+                setCurrentLanguage(defaultDisplay);
+            }, [defaultDisplay]);
+
+            // キーボードナビゲーション
+            useEffect(() => {
+                const handleKeyPress = (event) => {
+                    if (showingSearchResults) {
+                        return;
+                    }
+                    
+                    switch (event.key) {
+                        case 'ArrowLeft':
+                            if (filteredWords.length <= 1) return;
+                            event.preventDefault();
+                            setTimeout(() => {
+                                setCurrentCardIndex(prev => 
+                                    prev === 0 ? filteredWords.length - 1 : prev - 1
+                                );
+                                setCurrentLanguage(defaultDisplay);
+                            }, 50);
+                            break;
+                        case 'ArrowRight':
+                            if (filteredWords.length <= 1) return;
+                            event.preventDefault();
+                            setTimeout(() => {
+                                setCurrentCardIndex(prev => 
+                                    prev === filteredWords.length - 1 ? 0 : prev + 1
+                                );
+                                setCurrentLanguage(defaultDisplay);
+                            }, 50);
+                            break;
+                        case 'ArrowUp':
+                        case 'ArrowDown':
+                        case ' ':
+                            if (filteredWords.length === 0) return;
+                            event.preventDefault();
+                            const langOrder = ['english', 'japanese', 'chinese'];
+                            const currentIndex = langOrder.indexOf(currentLanguage);
+                            const nextIndex = (currentIndex + 1) % langOrder.length;
+                            setCurrentLanguage(langOrder[nextIndex]);
+                            break;
+                        default:
+                            break;
+                    }
+                };
+
+                window.addEventListener('keydown', handleKeyPress);
+                return () => window.removeEventListener('keydown', handleKeyPress);
+            }, [showingSearchResults, filteredWords.length, defaultDisplay, currentCardIndex, currentLanguage]);
+
+            // 検索機能
+            useEffect(() => {
+                const newSearchResultLanguages = {};
+                
+                if (searchTerm.trim() === '') {
+                    setFilteredWords(shuffleArray(vocabularyData));
+                    setShowingSearchResults(false);
+                    setSearchResultLanguages(newSearchResultLanguages);
+                    setCurrentLanguage(defaultDisplay);
+                } else {
+                    const filtered = vocabularyData.filter(word => {
+                        switch (searchLanguage) {
+                            case 'english':
+                                return word.english.toLowerCase().includes(searchTerm.toLowerCase());
+                            case 'japanese':
+                                return word.japanese.includes(searchTerm) || word.hiragana.includes(searchTerm);
+                            case 'chinese':
+                                return word.chinese.includes(searchTerm) || word.pinyin.toLowerCase().includes(searchTerm.toLowerCase());
+                            default:
+                                return false;
+                        }
+                    });
+                    setFilteredWords(shuffleArray(filtered));
+                    setShowingSearchResults(true);
+                    setCurrentCardIndex(0);
+                    setSearchResultLanguages(newSearchResultLanguages);
+                    setCurrentLanguage(defaultDisplay);
+                }
+            }, [searchTerm, searchLanguage, defaultDisplay]);
+
+            const handleCardFlip = (cardIndex) => {
+                if (showingSearchResults) {
+                    const langOrder = ['english', 'japanese', 'chinese'];
+                    const currentLang = searchResultLanguages[cardIndex] || defaultDisplay;
+                    const currentIndex = langOrder.indexOf(currentLang);
+                    const nextIndex = (currentIndex + 1) % langOrder.length;
+                    const nextLang = langOrder[nextIndex];
+                    
+                    setSearchResultLanguages(prev => ({
+                        ...prev,
+                        [cardIndex]: nextLang
+                    }));
+                } else {
+                    const langOrder = ['english', 'japanese', 'chinese'];
+                    const currentIndex = langOrder.indexOf(currentLanguage);
+                    const nextIndex = (currentIndex + 1) % langOrder.length;
+                    setCurrentLanguage(langOrder[nextIndex]);
+                }
+            };
+
+            const getSearchResultLanguage = (index) => {
+                return searchResultLanguages[index] || defaultDisplay;
+            };
+
+            const getDisplayText = (word, language) => {
+                switch (language) {
+                    case 'english':
+                        return word.english;
+                    case 'japanese':
+                        return word.japanese;
+                    case 'chinese':
+                        return word.chinese;
+                    default:
+                        return word.english;
+                }
+            };
+
+            const getLanguageGradient = (language) => {
+                const gradients = {
+                    english: 'from-blue-500 via-blue-600 to-blue-700',
+                    japanese: 'from-pink-500 via-pink-600 to-red-500',
+                    chinese: 'from-green-500 via-green-600 to-emerald-600'
+                };
+                return gradients[language] || 'from-blue-500 via-blue-600 to-blue-700';
+            };
+
+            const getLanguageLabel = (language) => {
+                const labels = {
+                    english: 'ENGLISH',
+                    japanese: '日本語',
+                    chinese: '中文'
+                };
+                return labels[language] || 'ENGLISH';
+            };
+
+            const getFlipInstruction = (language) => {
+                return 'タップして次の言語へ';
+            };
+
+            const handlePrevCard = () => {
+                setTimeout(() => {
+                    setCurrentCardIndex(prev => 
+                        prev === 0 ? filteredWords.length - 1 : prev - 1
+                    );
+                    setCurrentLanguage(defaultDisplay);
+                }, 50);
+            };
+
+            const handleNextCard = () => {
+                setTimeout(() => {
+                    setCurrentCardIndex(prev => 
+                        prev === filteredWords.length - 1 ? 0 : prev + 1
+                    );
+                    setCurrentLanguage(defaultDisplay);
+                }, 50);
+            };
+
+            const handleReset = () => {
+                setSearchTerm('');
+                setCurrentCardIndex(0);
+                setCurrentLanguage(defaultDisplay);
+                setShowingSearchResults(false);
+                setFilteredWords(shuffleArray(vocabularyData));
+                setSearchResultLanguages({});
+            };
+
+            const currentWord = filteredWords[currentCardIndex];
+
+            // 個別のカードコンポーネント
+            const Card = ({ word, index, displayLanguage, isSmall = false }) => (
+                React.createElement('div', { className: 'perspective-1000' },
+                    React.createElement('div', {
+                        className: `transform-style-preserve-3d transition-transform duration-300 cursor-pointer ${
+                            isSmall ? 'w-80 h-56' : 'w-96 h-72'
+                        }`,
+                        onClick: () => handleCardFlip(index)
+                    },
+                        React.createElement('div', { className: 'absolute inset-0 backface-hidden bg-white rounded-3xl shadow-2xl border border-gray-100' },
+                            React.createElement('div', { className: 'h-full flex flex-col' },
+                                React.createElement('div', { className: `flex-1 bg-gradient-to-br ${getLanguageGradient(displayLanguage)} rounded-t-3xl p-6 flex items-center justify-center relative overflow-hidden` },
+                                    React.createElement('div', { className: 'absolute inset-0 bg-white/10 backdrop-blur-sm' }),
+                                    React.createElement('div', { className: 'relative text-center text-white z-10' },
+                                        React.createElement('div', { className: 'text-xs mb-3 opacity-80 font-medium tracking-wide' },
+                                            getLanguageLabel(displayLanguage)
+                                        ),
+                                        React.createElement('div', { className: `font-bold mb-2 ${isSmall ? 'text-2xl' : 'text-3xl'}` },
+                                            getDisplayText(word, displayLanguage)
+                                        ),
+                                        displayLanguage === 'chinese' && React.createElement('div', { className: `text-sm opacity-90 font-medium ${isSmall ? 'text-base' : 'text-lg'}` },
+                                            word.pinyin
+                                        )
+                                    )
+                                ),
+                                React.createElement('div', { className: 'p-6 flex items-center justify-center' },
+                                    React.createElement('div', { className: 'text-center' },
+                                        React.createElement('div', { className: 'text-sm text-gray-600' },
+                                            getFlipInstruction(displayLanguage)
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+
+            // Lucide React icons replacement
+            const Search = () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                React.createElement('circle', { cx: '11', cy: '11', r: '8' }),
+                React.createElement('path', { d: 'M21 21L16.65 16.65' })
+            );
+
+            const RotateCcw = () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                React.createElement('polyline', { points: '1 4 1 10 7 10' }),
+                React.createElement('path', { d: 'M3.51 15a9 9 0 1 0 2.13-9.36L1 10' })
+            );
+
+            const ChevronLeft = () => React.createElement('svg', { width: '24', height: '24', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                React.createElement('polyline', { points: '15 18 9 12 15 6' })
+            );
+
+            const ChevronRight = () => React.createElement('svg', { width: '24', height: '24', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                React.createElement('polyline', { points: '9 18 15 12 9 6' })
+            );
+
+            const BookOpen = () => React.createElement('svg', { width: '32', height: '32', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round' },
+                React.createElement('path', { d: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z' }),
+                React.createElement('path', { d: 'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' })
+            );
+
+            return React.createElement('div', { className: 'min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 pb-32' },
+                React.createElement('div', { className: 'max-w-6xl mx-auto' },
+                    // ヘッダー
+                    React.createElement('div', { className: 'text-center mb-8' },
+                        React.createElement('div', { className: 'flex items-center justify-center mb-4' },
+                            React.createElement('div', { className: 'bg-white rounded-full p-4 shadow-lg' },
+                                React.createElement(BookOpen, { className: 'w-8 h-8 text-blue-600' })
+                            )
+                        ),
+                        React.createElement('h1', { className: 'text-4xl font-bold text-gray-900 mb-2' },
+                            '多言語単語カード帳'
+                        ),
+                        React.createElement('p', { className: 'text-gray-600' }, '英語 • 日本語 • 中文')
+                    ),
+
+                    // 検索セクション
+                    React.createElement('div', { className: 'bg-white rounded-3xl p-6 mb-8 shadow-lg border border-gray-100' },
+                        React.createElement('div', { className: 'flex flex-col lg:flex-row gap-4 items-center' },
+                            React.createElement('div', { className: 'flex-1 relative' },
+                                React.createElement('div', { className: 'absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400' },
+                                    React.createElement(Search)
+                                ),
+                                React.createElement('input', {
+                                    type: 'text',
+                                    placeholder: searchLanguage === 'english' ? '英語で検索...' :
+                                        searchLanguage === 'japanese' ? '日本語・ひらがなで検索...' :
+                                        '中文・ピンインで検索...',
+                                    value: searchTerm,
+                                    onChange: (e) => setSearchTerm(e.target.value),
+                                    className: 'w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-blue-400 focus:outline-none text-lg bg-gray-50 focus:bg-white transition-all'
+                                })
+                            ),
+                            
+                            React.createElement('div', { className: 'flex gap-3 items-center' },
+                                React.createElement('div', { className: 'flex gap-2' },
+                                    React.createElement('button', {
+                                        onClick: () => setSearchLanguage('english'),
+                                        className: `px-4 py-3 rounded-2xl font-medium transition-all ${
+                                            searchLanguage === 'english'
+                                                ? 'bg-blue-500 text-white shadow-lg'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`
+                                    }, 'English'),
+                                    React.createElement('button', {
+                                        onClick: () => setSearchLanguage('japanese'),
+                                        className: `px-4 py-3 rounded-2xl font-medium transition-all ${
+                                            searchLanguage === 'japanese'
+                                                ? 'bg-pink-500 text-white shadow-lg'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`
+                                    }, '日本語'),
+                                    React.createElement('button', {
+                                        onClick: () => setSearchLanguage('chinese'),
+                                        className: `px-4 py-3 rounded-2xl font-medium transition-all ${
+                                            searchLanguage === 'chinese'
+                                                ? 'bg-green-500 text-white shadow-lg'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`
+                                    }, '中文')
+                                ),
+
+                                React.createElement('button', {
+                                    onClick: handleReset,
+                                    className: 'bg-gray-500 text-white p-3 rounded-2xl hover:bg-gray-600 transition-all shadow-lg flex items-center justify-center'
+                                }, React.createElement(RotateCcw))
+                            )
+                        )
+                    ),
+
+                    // 検索結果情報
+                    React.createElement('div', { className: 'text-center mb-6' },
+                        React.createElement('div', { className: 'bg-white rounded-2xl p-4 inline-block shadow-lg border border-gray-100' },
+                            React.createElement('p', { className: 'text-gray-700 font-medium' },
+                                showingSearchResults 
+                                    ? `検索結果: ${filteredWords.length}件`
+                                    : `全${vocabularyData.length}語収録`
+                            ),
+                            filteredWords.length > 0 && !showingSearchResults &&
+                                React.createElement('p', { className: 'text-sm text-gray-500 mt-1' },
+                                    `${currentCardIndex + 1} / ${filteredWords.length}`
+                                )
+                        )
+                    ),
+
+                    // 単語カード
+                    filteredWords.length > 0 ? (
+                        React.createElement('div', { className: 'flex flex-col items-center' },
+                            showingSearchResults ? (
+                                // 検索結果表示
+                                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-8 w-full' },
+                                    filteredWords.map((word, index) =>
+                                        React.createElement('div', { key: `${word.english}-${index}`, className: 'flex flex-col items-center' },
+                                            React.createElement(Card, {
+                                                word: word,
+                                                index: index,
+                                                displayLanguage: getSearchResultLanguage(index),
+                                                isSmall: true
+                                            })
+                                        )
+                                    )
+                                )
+                            ) : (
+                                // 通常表示
+                                React.createElement(React.Fragment, null,
+                                    // カードナビゲーション
+                                    React.createElement('div', { className: 'flex items-center gap-6 mb-8' },
+                                        React.createElement('button', {
+                                            onClick: handlePrevCard,
+                                            disabled: filteredWords.length <= 1,
+                                            className: 'bg-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-gray-100'
+                                        }, React.createElement(ChevronLeft, { className: 'text-gray-700' })),
+                                        
+                                        React.createElement('div', { className: 'bg-white rounded-2xl px-6 py-3 shadow-lg border border-gray-100' },
+                                            React.createElement('div', { className: 'text-gray-700 font-medium' },
+                                                `カテゴリ: ${currentWord.category}`
+                                            )
+                                        ),
+                                        
+                                        React.createElement('button', {
+                                            onClick: handleNextCard,
+                                            disabled: filteredWords.length <= 1,
+                                            className: 'bg-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-gray-100'
+                                        }, React.createElement(ChevronRight, { className: 'text-gray-700' }))
+                                    ),
+
+                                    // フラッシュカード
+                                    React.createElement(Card, {
+                                        word: currentWord,
+                                        index: currentCardIndex,
+                                        displayLanguage: currentLanguage,
+                                        isSmall: false
+                                    }),
+
+                                    // カード操作説明
+                                    React.createElement('div', { className: 'mt-8 text-center' },
+                                        React.createElement('p', { className: 'text-gray-600 text-sm bg-white rounded-2xl px-6 py-3 shadow-lg border border-gray-100 inline-block' },
+                                            'カードをクリック・↑↓・スペースキーで言語切り替え • ←→キーで単語を切り替え'
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ) : (
+                        React.createElement('div', { className: 'text-center' },
+                            React.createElement('div', { className: 'bg-white rounded-3xl p-8 shadow-lg border border-gray-100' },
+                                React.createElement('p', { className: 'text-gray-600 text-lg mb-2' },
+                                    '検索条件に一致する単語が見つかりません。'
+                                ),
+                                React.createElement('p', { className: 'text-gray-500 text-sm' },
+                                    '別のキーワードで検索してみてください。'
+                                )
+                            )
+                        )
+                    )
+                ),
+
+                // カード表示設定（画面下部）
+                React.createElement('div', { className: 'fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg' },
+                    React.createElement('div', { className: 'max-w-6xl mx-auto p-4' },
+                        React.createElement('div', { className: 'flex flex-col sm:flex-row justify-center items-center gap-4' },
+                            React.createElement('span', { className: 'text-gray-700 font-medium' }, 'デフォルトカード言語:'),
+                            React.createElement('div', { className: 'flex gap-2' },
+                                React.createElement('button', {
+                                    onClick: () => setDefaultDisplay('english'),
+                                    className: `px-6 py-3 rounded-2xl font-medium transition-all ${
+                                        defaultDisplay === 'english'
+                                            ? 'bg-blue-500 text-white shadow-lg'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`
+                                }, 'English'),
+                                React.createElement('button', {
+                                    onClick: () => setDefaultDisplay('japanese'),
+                                    className: `px-6 py-3 rounded-2xl font-medium transition-all ${
+                                        defaultDisplay === 'japanese'
+                                            ? 'bg-pink-500 text-white shadow-lg'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`
+                                }, '日本語'),
+                                React.createElement('button', {
+                                    onClick: () => setDefaultDisplay('chinese'),
+                                    className: `px-6 py-3 rounded-2xl font-medium transition-all ${
+                                        defaultDisplay === 'chinese'
+                                            ? 'bg-green-500 text-white shadow-lg'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`
+                                }, '中文')
+                            )
+                        )
+                    )
+                )
+            );
+        };
+
+        // アプリケーションをマウント
+        const domContainer = document.querySelector('#root');
+        const root = ReactDOM.createRoot(domContainer);
+        root.render(React.createElement(VocabularyFlashcardApp));
+    </script>
+</body>
+</html>
