@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-MSTVN0KCF9');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>頭身判定アプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.2);
+            transform: scale(1.02);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .clipboard-notice {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            display: none;
+        }
+
+        .analysis-container {
+            display: none;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .image-section {
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .image-container {
+            width: 100%;
+            max-width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            background: #f8f9fa;
+            min-height: 400px;
+        }
+
+        #canvas {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 10px;
+            cursor: crosshair;
+            object-fit: contain;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .results-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease;
+        }
+
+        .result-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .proportion-scale {
+            background: linear-gradient(90deg, #ff6b6b 0%, #ffd93d 20%, #6bcf7f 40%, #4ecdc4 60%, #45b7d1 80%, #764ba2 100%);
+            height: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .scale-marker {
+            position: absolute;
+            top: -5px;
+            width: 3px;
+            height: 30px;
+            background: #333;
+            border-radius: 2px;
+            transition: left 0.5s ease;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .instructions {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .error-message {
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #ff6b6b;
+            display: none;
+        }
+
+        .measurement-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+        }
+
+        @media (max-width: 1200px) {
+            .analysis-container {
+                grid-template-columns: 1fr 350px;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .analysis-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-section {
+                position: static;
+                margin-top: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+
+            .analysis-container {
+                gap: 20px;
+            }
+
+            .image-container {
+                min-height: 300px;
+            }
+
+            #canvas {
+                max-height: 60vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+                margin: 5px;
+            }
+
+            .controls {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📏 頭身判定アプリ</h1>
+        
+        <div class="instructions">
+            <strong>使い方：</strong>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+                <li>人物が写った画像をアップロード（ファイル選択・D&D・<strong>Ctrl+V</strong>）</li>
+                <li><strong>頭の測定：</strong>頭頂部をクリック＆ドラッグして頭の大きさを設定</li>
+                <li><strong>足元の測定：</strong>ドラッグ完了後、足元を<span style="color: #4ecdc4; font-weight: bold;">シングルクリック</span></li>
+                <li>自動で頭身が計算され、定規の分割線も表示されます</li>
+            </ol>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-text">📸 画像をドラッグ&ドロップ または クリックして選択</div>
+            <div class="upload-hint">JPG, PNG, GIF対応 | <strong>Ctrl+V</strong>でクリップボードから貼り付け</div>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="clipboard-notice" id="clipboardNotice">
+            📋 クリップボードから画像を貼り付けました！
+        </div>
+
+        <div class="analysis-container" id="analysisContainer">
+            <div class="image-section">
+                <div class="image-container">
+                    <canvas id="canvas"></canvas>
+                </div>
+                <div class="controls">
+                    <button class="btn" onclick="resetPoints()">🔄 リセット</button>
+                    <button class="btn" onclick="uploadNew()">📁 新しい画像</button>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <div class="result-item">
+                    <div class="result-label">測定状況</div>
+                    <div id="statusText" style="font-size: 1rem; color: #666;">
+                        画像をアップロードしてください
+                    </div>
+                </div>
+                
+                <div class="result-item">
+                    <div class="result-label">推定身長</div>
+                    <div class="result-value" id="estimatedHeight">-</div>
+                    <div class="measurement-info">
+                        <div>頭の実寸推定: <span id="realHeadSize">-</span></div>
+                        <div>身長計算式: 頭の高さ × 頭身</div>
+                    </div>
+                </div>
+                
+                <div class="result-item">
+                    <div class="result-label">頭身</div>
+                    <div class="result-value" id="proportionResult">-</div>
+                </div>
+                
+                <div class="result-item">
+                    <div class="result-label">評価</div>
+                    <div class="result-value" id="evaluationResult">-</div>
+                </div>
+                
+                <div class="result-item">
+                    <div class="result-label">測定データ</div>
+                    <div class="measurement-info">
+                        <div>頭の高さ: <span id="headHeight">-</span></div>
+                        <div>全身の高さ: <span id="totalHeight">-</span></div>
+                        <div>画像内比率: <span id="ratio">-</span></div>
+                    </div>
+                </div>
+                
+                <div class="result-item">
+                    <div class="result-label">頭身スケール</div>
+                    <div class="proportion-scale">
+                        <div class="scale-marker" id="scaleMarker"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-top: 5px;">
+                        <span>3頭身</span>
+                        <span>4頭身</span>
+                        <span>5頭身</span>
+                        <span>6頭身</span>
+                        <span>7頭身</span>
+                        <span>8頭身</span>
+                        <span>9頭身</span>
+                        <span>10頭身</span>
+                    </div>
+                </div>
+                
+                <div class="result-item">
+                    <div class="result-label">身長範囲参考</div>
+                    <div class="measurement-info" id="heightRangeInfo">
+                        <div>一般的な身長範囲での頭身比較</div>
+                        <div id="heightComparison">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let canvas, ctx;
+        let headTop = null;
+        let headBottom = null;
+        let footPoint = null;
+        let imageLoaded = false;
+        let currentImage = null;
+        let isDragging = false;
+        let dragStart = null;
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+
+            // ファイル選択
+            uploadArea.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // ドラッグ&ドロップ
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+
+            // キャンバスイベント
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('click', handleCanvasClick);
+
+            // クリップボード対応
+            document.addEventListener('paste', handlePaste);
+            document.addEventListener('keydown', handleKeyDown);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea').classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea').classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea').classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                loadImage(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                loadImage(file);
+            }
+        }
+
+        function handlePaste(e) {
+            e.preventDefault();
+            
+            const items = e.clipboardData.items;
+            let imageFile = null;
+
+            // クリップボードアイテムから画像を探す
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.type.indexOf('image') !== -1) {
+                    imageFile = item.getAsFile();
+                    break;
+                }
+            }
+
+            if (imageFile) {
+                showClipboardNotice();
+                loadImage(imageFile);
+            } else {
+                showError('クリップボードに画像が見つかりません');
+            }
+        }
+
+        function handleKeyDown(e) {
+            // Ctrl+V または Cmd+V でペースト操作をハイライト
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                const uploadArea = document.getElementById('uploadArea');
+                uploadArea.style.borderColor = '#4caf50';
+                uploadArea.style.background = 'rgba(76, 175, 80, 0.1)';
+                
+                setTimeout(() => {
+                    uploadArea.style.borderColor = '#667eea';
+                    uploadArea.style.background = 'rgba(102, 126, 234, 0.05)';
+                }, 200);
+            }
+        }
+
+        function loadImage(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('画像ファイルを選択してください');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    displayImage(img);
+                    resetPoints();
+                    hideError();
+                    hideClipboardNotice();
+                };
+                img.src = e.target.result;
+                currentImage = img;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayImage(img) {
+            // 画像コンテナのサイズを取得
+            const container = document.querySelector('.image-container');
+            const containerRect = container.getBoundingClientRect();
+            const maxWidth = containerRect.width - 40; // パディングを考慮
+            const maxHeight = Math.min(window.innerHeight * 0.8, 800); // 画面の80%またはMax800px
+            
+            // 最小サイズを設定（枠の50%以上は使用）
+            const minWidth = maxWidth * 0.5;
+            const minHeight = maxHeight * 0.5;
+            
+            let { width, height } = img;
+            
+            // アスペクト比を保持してリサイズ
+            // まず最大サイズに制限
+            if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width *= ratio;
+                height *= ratio;
+            }
+            
+            // 画像が小さすぎる場合は拡大（最小サイズまで）
+            if (width < minWidth || height < minHeight) {
+                const ratio = Math.max(minWidth / width, minHeight / height);
+                width *= ratio;
+                height *= ratio;
+                
+                // 拡大後に最大サイズを超えた場合は再調整
+                if (width > maxWidth || height > maxHeight) {
+                    const adjustRatio = Math.min(maxWidth / width, maxHeight / height);
+                    width *= adjustRatio;
+                    height *= adjustRatio;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // 画像を描画
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            imageLoaded = true;
+            document.getElementById('analysisContainer').style.display = 'grid';
+            
+            updateStatus('頭頂部をクリック＆ドラッグして頭の大きさを設定してください');
+        }
+
+        function getCanvasCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // キャンバスのスケールを考慮
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: x * scaleX,
+                y: y * scaleY
+            };
+        }
+
+        function handleMouseDown(e) {
+            if (!imageLoaded) return;
+
+            const coords = getCanvasCoordinates(e);
+            
+            if (!headTop) {
+                isDragging = true;
+                dragStart = coords;
+                headTop = coords;
+                e.preventDefault();
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (!isDragging || !headTop) return;
+
+            const coords = getCanvasCoordinates(e);
+            headBottom = coords;
+            
+            redrawCanvas();
+            e.preventDefault();
+        }
+
+        function handleMouseUp(e) {
+            if (isDragging && headTop && headBottom) {
+                isDragging = false;
+                updateStatus('足元をシングルクリックしてください');
+                redrawCanvas();
+                e.preventDefault();
+                return;
+            }
+            
+            // 頭の設定が完了している場合は足元を設定
+            if (!isDragging && headTop && headBottom && !footPoint) {
+                const coords = getCanvasCoordinates(e);
+                footPoint = coords;
+                updateStatus('測定完了！');
+                redrawCanvas();
+                calculateProportion();
+                e.preventDefault();
+            }
+        }
+
+        function handleCanvasClick(e) {
+            // クリックイベントは無効化（mouseupで処理）
+            e.preventDefault();
+        }
+
+        function redrawCanvas() {
+            if (!currentImage) return;
+
+            // 画像を再描画
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+
+            // 頭の範囲を描画
+            if (headTop && headBottom) {
+                drawHeadRange(headTop, headBottom);
+            }
+
+            // 足元ポイントを描画
+            if (footPoint) {
+                drawPoint(footPoint.x, footPoint.y, '#4ecdc4', '足');
+            }
+
+            // 定規と分割線を描画
+            if (headTop && headBottom && footPoint) {
+                drawRulerWithDivisions();
+            }
+        }
+
+        function drawHeadRange(top, bottom) {
+            // 頭の範囲を矩形で表示
+            const headHeight = Math.abs(bottom.y - top.y);
+            const headWidth = headHeight * 0.8; // 頭の幅は高さの80%程度
+            const centerX = (top.x + bottom.x) / 2;
+            const minY = Math.min(top.y, bottom.y);
+
+            // 頭の範囲の背景
+            ctx.fillStyle = 'rgba(255, 107, 107, 0.2)';
+            ctx.fillRect(centerX - headWidth/2, minY, headWidth, headHeight);
+
+            // 頭の範囲の枠線
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(centerX - headWidth/2, minY, headWidth, headHeight);
+
+            // 頭頂部と頭の下端のポイント
+            drawPoint(centerX, minY, '#ff6b6b', '頭頂');
+            drawPoint(centerX, minY + headHeight, '#ff6b6b', '顎');
+
+            // 頭の高さを表示
+            ctx.fillStyle = '#ff6b6b';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`頭の高さ: ${Math.round(headHeight)}px`, centerX + headWidth/2 + 10, minY + headHeight/2);
+        }
+
+        function drawPoint(x, y, color, label) {
+            // 外側の円
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 内側の円
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+
+            // ラベル
+            ctx.fillStyle = color;
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y - 20);
+        }
+
+        function drawRulerWithDivisions() {
+            if (!headTop || !headBottom || !footPoint) return;
+
+            const headHeight = Math.abs(headBottom.y - headTop.y);
+            const totalHeight = Math.abs(footPoint.y - Math.min(headTop.y, headBottom.y));
+            const proportion = totalHeight / headHeight;
+            
+            const startY = Math.min(headTop.y, headBottom.y);
+            const endY = footPoint.y;
+            const rulerX = Math.max(headTop.x, headBottom.x, footPoint.x) + 50;
+
+            // 定規の縦線
+            ctx.beginPath();
+            ctx.moveTo(rulerX, startY);
+            ctx.lineTo(rulerX, endY);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 頭身分割線を描画
+            const divisions = Math.ceil(proportion);
+            for (let i = 0; i <= divisions; i++) {
+                const y = startY + (headHeight * i);
+                if (y <= endY) {
+                    // 分割線
+                    ctx.beginPath();
+                    ctx.moveTo(rulerX - 15, y);
+                    ctx.lineTo(rulerX + 15, y);
+                    ctx.strokeStyle = i === 0 ? '#ff6b6b' : '#667eea';
+                    ctx.lineWidth = i === 0 ? 3 : 2;
+                    ctx.stroke();
+
+                    // 頭身番号
+                    ctx.fillStyle = '#333';
+                    ctx.font = 'bold 14px Arial';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`${i}`, rulerX + 20, y + 5);
+
+                    // 実際の測定値表示（1頭身目のみ）
+                    if (i === 1) {
+                        ctx.fillStyle = '#666';
+                        ctx.font = '12px Arial';
+                        ctx.fillText(`${Math.round(headHeight)}px`, rulerX + 40, y + 5);
+                    }
+                }
+            }
+
+            // 最下端の線（足元）
+            if (endY > startY + (headHeight * divisions)) {
+                ctx.beginPath();
+                ctx.moveTo(rulerX - 15, endY);
+                ctx.lineTo(rulerX + 15, endY);
+                ctx.strokeStyle = '#4ecdc4';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                const finalProportion = (endY - startY) / headHeight;
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${finalProportion.toFixed(1)}`, rulerX + 20, endY + 5);
+            }
+
+            // 定規のラベル
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.save();
+            ctx.translate(rulerX - 30, (startY + endY) / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('頭身定規', 0, 0);
+            ctx.restore();
+        }
+
+        function calculateProportion() {
+            if (!headTop || !headBottom || !footPoint) return;
+
+            const headHeight = Math.abs(headBottom.y - headTop.y);
+            const totalHeight = Math.abs(footPoint.y - Math.min(headTop.y, headBottom.y));
+            const proportion = totalHeight / headHeight;
+
+            const roundedProportion = Math.round(proportion * 10) / 10;
+            
+            document.getElementById('proportionResult').textContent = `${roundedProportion}頭身`;
+            
+            // 推定身長を計算
+            const estimatedHeight = calculateEstimatedHeight(headHeight, proportion);
+            document.getElementById('estimatedHeight').textContent = estimatedHeight.height;
+            document.getElementById('realHeadSize').textContent = estimatedHeight.headSize;
+            
+            // 測定データを更新
+            document.getElementById('headHeight').textContent = `${Math.round(headHeight)}px`;
+            document.getElementById('totalHeight').textContent = `${Math.round(totalHeight)}px`;
+            document.getElementById('ratio').textContent = `1:${roundedProportion}`;
+            
+            // 身長範囲比較を表示
+            displayHeightComparison(proportion);
+            
+            // 評価を設定
+            let evaluation = '';
+            if (proportion < 4) {
+                evaluation = 'デフォルメ強';
+            } else if (proportion < 5) {
+                evaluation = 'ちびキャラ風';
+            } else if (proportion < 6) {
+                evaluation = '子供らしい';
+            } else if (proportion < 6.5) {
+                evaluation = '可愛らしい';
+            } else if (proportion < 7.5) {
+                evaluation = 'バランス良好';
+            } else if (proportion < 8.5) {
+                evaluation = 'スタイル良好';
+            } else if (proportion < 9.5) {
+                evaluation = 'モデル体型';
+            } else {
+                evaluation = '超スタイル抜群';
+            }
+            
+            document.getElementById('evaluationResult').textContent = evaluation;
+            
+            // スケールマーカーを更新
+            updateScaleMarker(proportion);
+        }
+
+        function calculateEstimatedHeight(headHeightPx, proportion) {
+            // 平均的な頭の実寸（成人）
+            const averageHeadSizes = {
+                male: 23.5,   // cm（男性平均）
+                female: 22.0, // cm（女性平均）
+                child: 20.0,  // cm（子供平均）
+                average: 22.5 // cm（全体平均）
+            };
+
+            // 頭身から推定される人物タイプ
+            let headSizeCm;
+            let personType;
+            
+            if (proportion < 4) {
+                headSizeCm = 18.0;  // 極端にデフォルメされたキャラクター
+                personType = "デフォルメキャラ";
+            } else if (proportion < 5) {
+                headSizeCm = averageHeadSizes.child;
+                personType = "ちびキャラ";
+            } else if (proportion < 6) {
+                headSizeCm = averageHeadSizes.child;
+                personType = "子供・キャラクター";
+            } else if (proportion < 7) {
+                headSizeCm = averageHeadSizes.average;
+                personType = "一般的";
+            } else if (proportion < 8) {
+                headSizeCm = averageHeadSizes.average;
+                personType = "一般的";
+            } else if (proportion < 9) {
+                headSizeCm = averageHeadSizes.average;
+                personType = "スタイル良好";
+            } else {
+                headSizeCm = averageHeadSizes.average;
+                personType = "モデル級";
+            }
+
+            // 推定身長を計算（cm）
+            const estimatedHeightCm = headSizeCm * proportion;
+            
+            // 複数パターンで計算
+            const maleHeight = averageHeadSizes.male * proportion;
+            const femaleHeight = averageHeadSizes.female * proportion;
+            
+            return {
+                height: `${Math.round(estimatedHeightCm)}cm（${personType}）`,
+                headSize: `約${headSizeCm}cm`,
+                maleHeight: Math.round(maleHeight),
+                femaleHeight: Math.round(femaleHeight)
+            };
+        }
+
+        function displayHeightComparison(proportion) {
+            const heights = {
+                90: 90 / 22.5,    // 90cm の場合の頭身（子供）
+                100: 100 / 22.5,  // 100cm の場合の頭身
+                120: 120 / 22.5,  // 120cm の場合の頭身
+                140: 140 / 22.5,  // 140cm の場合の頭身
+                150: 150 / 22.5,  // 150cm の場合の頭身
+                160: 160 / 22.5,  // 160cm の場合の頭身
+                170: 170 / 22.5,  // 170cm の場合の頭身
+                180: 180 / 22.5   // 180cm の場合の頭身
+            };
+
+            let comparisonText = '';
+            
+            // 現在の頭身に最も近い身長を見つける
+            let closestHeight = 160;
+            let minDiff = Math.abs(proportion - heights[160]);
+            
+            for (const [height, headProp] of Object.entries(heights)) {
+                const diff = Math.abs(proportion - headProp);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestHeight = parseInt(height);
+                }
+            }
+
+            comparisonText = `
+                <div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 0.9rem;">
+                    <div>90cm → ${heights[90].toFixed(1)}頭身</div>
+                    <div>100cm → ${heights[100].toFixed(1)}頭身</div>
+                    <div>120cm → ${heights[120].toFixed(1)}頭身</div>
+                    <div>140cm → ${heights[140].toFixed(1)}頭身</div>
+                    <div>150cm → ${heights[150].toFixed(1)}頭身</div>
+                    <div>160cm → ${heights[160].toFixed(1)}頭身</div>
+                    <div>170cm → ${heights[170].toFixed(1)}頭身</div>
+                    <div>180cm → ${heights[180].toFixed(1)}頭身</div>
+                </div>
+                <div style="margin-top: 10px; padding: 8px; background: rgba(102, 126, 234, 0.1); border-radius: 5px;">
+                    <strong>最も近い標準身長: ${closestHeight}cm</strong>
+                </div>
+            `;
+            
+            document.getElementById('heightComparison').innerHTML = comparisonText;
+        }
+
+        function updateScaleMarker(proportion) {
+            const marker = document.getElementById('scaleMarker');
+            const minProp = 3;   // 3頭身から
+            const maxProp = 10;  // 10頭身まで
+            const clampedProp = Math.max(minProp, Math.min(maxProp, proportion));
+            const percentage = ((clampedProp - minProp) / (maxProp - minProp)) * 100;
+            
+            marker.style.left = `${percentage}%`;
+        }
+
+        function resetPoints() {
+            headTop = null;
+            headBottom = null;
+            footPoint = null;
+            isDragging = false;
+            dragStart = null;
+            
+            if (currentImage) {
+                redrawCanvas();
+                updateStatus('頭頂部をクリック＆ドラッグして頭の大きさを設定してください');
+            }
+            
+            document.getElementById('proportionResult').textContent = '-';
+            document.getElementById('estimatedHeight').textContent = '-';
+            document.getElementById('realHeadSize').textContent = '-';
+            document.getElementById('evaluationResult').textContent = '-';
+            document.getElementById('headHeight').textContent = '-';
+            document.getElementById('totalHeight').textContent = '-';
+            document.getElementById('ratio').textContent = '-';
+            document.getElementById('heightComparison').innerHTML = '-';
+            document.getElementById('scaleMarker').style.left = '50%';  // 6.5頭身あたり（3-10頭身の中央）
+        }
+
+        function uploadNew() {
+            document.getElementById('analysisContainer').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            resetPoints();
+            imageLoaded = false;
+            currentImage = null;
+            updateStatus('画像をアップロードしてください');
+        }
+
+        function updateStatus(message) {
+            const statusElement = document.getElementById('statusText');
+            
+            // メッセージに応じて色を設定
+            if (message.includes('頭頂部')) {
+                statusElement.innerHTML = '<span style="color: #ff6b6b; font-weight: bold;">頭頂部をクリック＆ドラッグして頭の大きさを設定してください</span>';
+            } else if (message.includes('足元')) {
+                statusElement.innerHTML = '<span style="color: #4ecdc4; font-weight: bold;">足元をシングルクリックしてください</span>';
+            } else if (message.includes('測定完了')) {
+                statusElement.innerHTML = '<span style="color: #6bcf7f; font-weight: bold;">測定完了！</span>';
+            } else {
+                statusElement.innerHTML = message;
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function showClipboardNotice() {
+            const notice = document.getElementById('clipboardNotice');
+            notice.style.display = 'block';
+            
+            // 3秒後に自動で非表示
+            setTimeout(() => {
+                hideClipboardNotice();
+            }, 3000);
+        }
+
+        function hideClipboardNotice() {
+            document.getElementById('clipboardNotice').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
