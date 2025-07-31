@@ -27,7 +27,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 2s ease;
+            /* 遅延を削除 */
         }
 
         /* 背景のレベル別スタイル */
@@ -62,7 +62,7 @@
             width: 100%;
             height: 100%;
             opacity: 0;
-            transition: opacity 2s ease;
+            /* 遅延を削除 */
         }
 
         .stars.visible {
@@ -88,7 +88,7 @@
             width: 100%;
             height: 100%;
             opacity: 0;
-            transition: opacity 2s ease;
+            /* 遅延を削除 */
         }
 
         .planets.visible {
@@ -108,10 +108,22 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             text-align: center;
             min-width: 400px;
+            max-width: 90vw;
             backdrop-filter: blur(10px);
             border: 3px solid rgba(255, 255, 255, 0.3);
             position: relative;
             z-index: 100;
+            /* 遅延を削除し、即座にリサイズ対応 */
+            transition: none;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 500px) {
+            .game-container {
+                min-width: 300px;
+                padding: 20px;
+                margin: 10px;
+            }
         }
 
         .stats-container {
@@ -131,6 +143,12 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
+        @media (max-width: 500px) {
+            .score {
+                font-size: 24px;
+            }
+        }
+
         .score-label {
             font-size: 14px;
             opacity: 0.9;
@@ -144,6 +162,14 @@
             margin-top: 15px;
             font-size: 12px;
             font-weight: 600;
+        }
+
+        @media (max-width: 500px) {
+            .level-info {
+                grid-template-columns: 1fr;
+                gap: 5px;
+                font-size: 11px;
+            }
         }
 
         .dialog {
@@ -167,7 +193,15 @@
             margin-bottom: 20px;
             text-shadow: 0 1px 2px rgba(0,0,0,0.1);
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            transition: all 2s ease;
+            /* レベル変更時のみトランジション */
+            transition: background 2s ease;
+        }
+
+        @media (max-width: 500px) {
+            .dialog-header {
+                font-size: 16px;
+                padding: 10px 15px;
+            }
         }
 
         /* レベル別ヘッダー背景 */
@@ -204,6 +238,13 @@
             margin-bottom: 20px;
         }
 
+        @media (max-width: 500px) {
+            .dialog-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
         .rocket-icon {
             width: 80px;
             height: 80px;
@@ -213,6 +254,14 @@
             justify-content: center;
             animation: rocketFloat 3s ease-in-out infinite;
             transition: all 0.3s ease;
+        }
+
+        @media (max-width: 500px) {
+            .rocket-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 40px;
+            }
         }
 
         @keyframes rocketFloat {
@@ -225,6 +274,13 @@
             color: #444;
             font-weight: 600;
             line-height: 1.4;
+        }
+
+        @media (max-width: 500px) {
+            .dialog-text {
+                font-size: 14px;
+                text-align: center;
+            }
         }
 
         .boost-button {
@@ -241,6 +297,13 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.1);
             position: relative;
             overflow: hidden;
+        }
+
+        @media (max-width: 500px) {
+            .boost-button {
+                padding: 12px 30px;
+                font-size: 16px;
+            }
         }
 
         .boost-button::before {
@@ -358,6 +421,13 @@
             margin-top: 15px;
         }
 
+        @media (max-width: 500px) {
+            .power-ups {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+
         .power-up {
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
@@ -369,6 +439,13 @@
             cursor: pointer;
             transition: all 0.3s ease;
             opacity: 0.7;
+        }
+
+        @media (max-width: 500px) {
+            .power-up {
+                font-size: 11px;
+                padding: 8px;
+            }
         }
 
         .power-up:hover {
@@ -386,6 +463,13 @@
             top: 20px;
             right: 20px;
             z-index: 1000;
+        }
+
+        @media (max-width: 500px) {
+            .social-section {
+                top: 10px;
+                right: 10px;
+            }
         }
 
         .x-post-button {
@@ -406,6 +490,14 @@
             backdrop-filter: blur(10px);
         }
 
+        @media (max-width: 500px) {
+            .x-post-button {
+                padding: 10px 15px;
+                font-size: 12px;
+                gap: 5px;
+            }
+        }
+
         .x-post-button:hover {
             transform: translateY(-2px) scale(1.05);
             box-shadow: 0 6px 20px rgba(29, 161, 242, 0.4);
@@ -418,6 +510,12 @@
 
         .x-icon {
             font-size: 16px;
+        }
+
+        @media (max-width: 500px) {
+            .x-icon {
+                font-size: 14px;
+            }
         }
 
         .achievements {
@@ -433,6 +531,14 @@
             justify-content: center;
             box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
             animation: achievementGlow 3s ease-in-out infinite;
+        }
+
+        @media (max-width: 500px) {
+            .achievements {
+                padding: 12px;
+                font-size: 14px;
+                min-height: 40px;
+            }
         }
 
         @keyframes achievementGlow {
@@ -457,7 +563,17 @@
             font-family: 'Orbitron', monospace;
             font-weight: 700;
             z-index: 999;
-            transition: all 0.5s ease;
+            /* 即座に更新（遅延なし） */
+            transition: none;
+        }
+
+        @media (max-width: 500px) {
+            .level-indicator {
+                top: 10px;
+                left: 10px;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
         }
 
         .level-indicator.space-level {
@@ -546,6 +662,13 @@
             text-shadow: 0 0 20px rgba(0, 200, 255, 1);
             opacity: 0;
             animation: spaceMessageAppear 3s ease-out forwards;
+        }
+
+        @media (max-width: 500px) {
+            .space-message {
+                font-size: 24px;
+                padding: 0 20px;
+            }
         }
 
         @keyframes spaceMessageAppear {
@@ -930,11 +1053,11 @@
                 const message = document.createElement('div');
                 message.className = 'space-message';
                 message.textContent = '🚀 宇宙の果てに到達！';
-                message.style.color = '#ffffff';
+                message.style.color = '#9370db';
                 message.style.textShadow = '0 0 30px rgba(255, 255, 255, 1)';
                 spaceTransition.appendChild(message);
 
-                createCosmicParticles(spaceTransition, 50, ['#ffffff', '#00ffff', '#ff00ff', '#ffff00']);
+                createCosmicParticles(spaceTransition, 50, ['#9370db', '#4b0082', '#ff00ff', '#ffff00']);
 
                 // ネビュラクラウド
                 createNebulaClouds(spaceTransition);
@@ -1394,13 +1517,13 @@
                 statusMessage = `🖤 宇宙の外に到達！存在を超越しました！\n${launches}回のブーストで全宇宙を制覇！`;
                 hashtags += " #宇宙征服者 #超越";
             } else if (gameState.level >= 9) {
-                statusMessage = `◼️ 宇宙の果てに到達！\n${launches}回のブーストで無限の宇宙を制覇中！`;
+                statusMessage = `🚀 宇宙の果てに到達！\n${launches}回のブーストで無限の宇宙を制覇中！`;
                 hashtags += " #宇宙の果て #無限";
             } else if (gameState.level >= 8) {
                 statusMessage = `🌌 銀河系を征服！\n${launches}回のブーストで銀河の彼方へ！`;
                 hashtags += " #銀河征服 #銀河系";
             } else if (gameState.level >= 7) {
-                statusMessage = `💫 恒星系を探索中！\n${launches}回のブーストで他の恒星系へ航路開拓！`;
+                statusMessage = `⭐ 恒星系を探索中！\n${launches}回のブーストで他の恒星系へ航路開拓！`;
                 hashtags += " #恒星系 #宇宙探検";
             } else if (gameState.level >= 6) {
                 statusMessage = `🪐 惑星圏を航行中！\n${launches}回のブーストで太陽系の惑星を探索！`;
@@ -1409,7 +1532,7 @@
                 statusMessage = `🌙 月軌道に到達！\n${launches}回のブーストで宇宙空間に突入！`;
                 hashtags += " #月面基地 #宇宙突入";
             } else if (gameState.level >= 4) {
-                statusMessage = `🌎️ 成層圏に到達！\n${launches}回のブーストで大気圏突破まであと少し！`;
+                statusMessage = `🌤️ 成層圏に到達！\n${launches}回のブーストで大気圏突破まであと少し！`;
                 hashtags += " #成層圏 #大気圏";
             } else if (gameState.level >= 3) {
                 statusMessage = `☁️ 雲の上まで到達！\n${launches}回のブーストで雲海を越えました！`;
