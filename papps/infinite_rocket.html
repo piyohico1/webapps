@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 16 16%22><text x=%220%22 y=%2214%22 font-size=%2216%22>&#x1F680;</text></svg>" type="image/svg+xml">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-MSTVN0KCF9');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ロケットクリッカー</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 2s ease;
+        }
+
+        /* 背景のレベル別スタイル */
+        .bg-level-1, .bg-level-2 {
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 70%, #228B22 100%);
+        }
+        
+        .bg-level-3, .bg-level-4 {
+            background: linear-gradient(to bottom, #4169E1 0%, #87CEEB 50%, #90EE90 100%);
+        }
+        
+        .bg-level-5, .bg-level-6 {
+            background: linear-gradient(to bottom, #191970 0%, #4169E1 40%, #87CEEB 100%);
+        }
+        
+        .bg-level-7, .bg-level-8 {
+            background: linear-gradient(to bottom, #000000 0%, #191970 60%, #4169E1 100%);
+        }
+        
+        .bg-level-9-plus {
+            background: linear-gradient(to bottom, #000000 0%, #0D1B2A 50%, #1B263B 100%);
+        }
+
+        .bg-level-10-plus {
+            background: #000000;
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+
+        .stars.visible {
+            opacity: 1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .planets {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+
+        .planets.visible {
+            opacity: 0.7;
+        }
+
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            text-align: center;
+            min-width: 400px;
+            backdrop-filter: blur(10px);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 100;
+        }
+
+        .stats-container {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .score {
+            font-family: 'Orbitron', monospace;
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .score-label {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 600;
+        }
+
+        .level-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .dialog {
+            position: relative;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 
+                0 10px 30px rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            margin-bottom: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .dialog-header {
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: all 2s ease;
+        }
+
+        /* レベル別ヘッダー背景 */
+        .bg-level-1 .dialog-header, .bg-level-2 .dialog-header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+        }
+        
+        .bg-level-3 .dialog-header, .bg-level-4 .dialog-header {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+        }
+        
+        .bg-level-5 .dialog-header, .bg-level-6 .dialog-header {
+            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+        }
+        
+        .bg-level-7 .dialog-header, .bg-level-8 .dialog-header {
+            background: linear-gradient(45deg, #FF5722, #D84315);
+        }
+        
+        .bg-level-9-plus .dialog-header {
+            background: linear-gradient(45deg, #212121, #424242);
+        }
+        
+        .bg-level-10-plus .dialog-header {
+            background: linear-gradient(45deg, #000000, #1a1a1a);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .dialog-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .rocket-icon {
+            width: 80px;
+            height: 80px;
+            font-size: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: rocketFloat 3s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes rocketFloat {
+            0%, 100% { transform: translateY(0px) rotate(-5deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .dialog-text {
+            font-size: 16px;
+            color: #444;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .boost-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .boost-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .boost-button:hover::before {
+            left: 100%;
+        }
+
+        .boost-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .boost-button:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .rocket {
+            position: absolute;
+            font-size: 40px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .rocket-launch {
+            animation: rocketLaunch 2s ease-out forwards;
+        }
+
+        @keyframes rocketLaunch {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            70% {
+                transform: translateY(-400px) rotate(10deg) scale(1.2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-600px) rotate(15deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .exhaust {
+            position: absolute;
+            pointer-events: none;
+            font-size: 30px;
+            animation: exhaustFade 1.5s ease-out forwards;
+            z-index: 50;
+        }
+
+        @keyframes exhaustFade {
+            0% {
+                opacity: 1;
+                transform: translateY(20px) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100px) scale(2);
+            }
+        }
+
+        @keyframes exhaustFadeGlow {
+            0% {
+                opacity: 1;
+                transform: translateY(20px) scale(1);
+                filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
+            }
+            50% {
+                filter: drop-shadow(0 0 15px rgba(255, 255, 255, 1));
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100px) scale(2);
+                filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0));
+            }
+        }
+
+        .floating-text {
+            position: absolute;
+            pointer-events: none;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 36px;
+            color: #ff6b6b;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 999;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-80px) scale(1.2);
+            }
+        }
+
+        .power-ups {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .power-up {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .power-up:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .power-up.affordable {
+            opacity: 1;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .social-section {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .x-post-button {
+            background: linear-gradient(45deg, #000000, #0d8bd9);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(29, 161, 242, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .x-post-button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(29, 161, 242, 0.4);
+            background: linear-gradient(45deg, #000000, #1da1f2);
+        }
+
+        .x-post-button:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .x-icon {
+            font-size: 16px;
+        }
+
+        .achievements {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53, #ff6b9d);
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 15px;
+            color: white;
+            font-weight: 600;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+            animation: achievementGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes achievementGlow {
+            0%, 100% { 
+                box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+                transform: scale(1.02);
+            }
+        }
+
+        .level-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            z-index: 999;
+            transition: all 0.5s ease;
+        }
+
+        .level-indicator.space-level {
+            background: linear-gradient(45deg, #000428, #004e92);
+            box-shadow: 0 0 20px rgba(0, 78, 146, 0.6);
+            animation: spaceGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes spaceGlow {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(0, 78, 146, 0.6);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(0, 200, 255, 0.8);
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+
+        /* 宇宙突入時の特別エフェクト */
+        .space-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .space-flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(0,200,255,0.4) 50%, transparent 100%);
+            opacity: 0;
+            animation: spaceFlash 2s ease-out forwards;
+        }
+
+        @keyframes spaceFlash {
+            0% { opacity: 0; transform: scale(0.5); }
+            30% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(2); }
+        }
+
+        .cosmic-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .cosmic-particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: cosmicFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes cosmicFloat {
+            0%, 100% { 
+                opacity: 0.3; 
+                transform: translateY(0px) scale(1) rotate(0deg);
+            }
+            50% { 
+                opacity: 1; 
+                transform: translateY(-30px) scale(1.5) rotate(180deg);
+            }
+        }
+
+        .space-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: 'Orbitron', monospace;
+            font-size: 36px;
+            font-weight: 900;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0, 200, 255, 1);
+            opacity: 0;
+            animation: spaceMessageAppear 3s ease-out forwards;
+        }
+
+        @keyframes spaceMessageAppear {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.5);
+                filter: blur(10px);
+            }
+            40% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1.2);
+                filter: blur(0px);
+            }
+            70% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1);
+                filter: blur(0px);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.8);
+                filter: blur(5px);
+            }
+        }
+
+        /* 銀河レベル以上の特別エフェクト */
+        .galaxy-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(138, 43, 226, 0.1) 70%);
+            animation: galaxyRotate 20s linear infinite;
+        }
+
+        @keyframes galaxyRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .nebula-cloud {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: nebulaFloat 15s ease-in-out infinite;
+        }
+
+        @keyframes nebulaFloat {
+            0%, 100% { 
+                transform: translateX(0px) translateY(0px) scale(1);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translateX(20px) translateY(-15px) scale(1.2);
+                opacity: 0.6;
+            }
+        }
+
+        /* 宇宙レベル以上での特別な星エフェクト */
+        .bg-level-5 .stars .star,
+        .bg-level-6 .stars .star,
+        .bg-level-7 .stars .star,
+        .bg-level-8 .stars .star,
+        .bg-level-9-plus .stars .star,
+        .bg-level-10-plus .stars .star {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 1);
+        }
+
+        .shooting-star::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100px;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8));
+        }
+
+        .shooting-star-animation {
+            animation: shootingStar 3s ease-out forwards;
+        }
+
+        @keyframes shootingStar {
+            0% {
+                transform: translateX(-100px) translateY(-100px);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100vw) translateY(100vh);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body id="gameBody" class="bg-level-1">
+    <div class="level-indicator" id="levelIndicator">🌍 地上基地</div>
+    
+    <div class="stars" id="stars"></div>
+    <div class="planets" id="planets"></div>
+    <div class="space-transition" id="spaceTransition"></div>
+    
+    <div class="game-container">
+        <div class="stats-container">
+            <div class="score" id="score">0</div>
+            <div class="score-label">🚀 ブースト回数</div>
+            <div class="level-info">
+                <span>高度レベル: <span id="level">1</span></span>
+                <span>現在高度: <span id="altitude">0 km</span></span>
+                <span>自動ブースト: <span id="opsValue">0</span>/秒</span>
+            </div>
+        </div>
+
+        <div class="dialog">
+            <div class="dialog-header" id="dialogTitle">
+                🚀 ロケットをブーストしよう！
+            </div>
+            <div class="dialog-content">
+                <div class="rocket-icon" id="rocketIcon">🚀</div>
+                <div class="dialog-text" id="dialogText">
+                    ブーストしてロケットを発射しよう！<br>地上からの発進準備完了！
+                </div>
+            </div>
+            <div class="dialog-buttons">
+                <button class="boost-button" id="boostButton" onclick="boostRocket()">
+                    ⚡ ブースト！
+                </button>
+            </div>
+        </div>
+
+        <div class="power-ups">
+            <button class="power-up" id="autoLauncher" onclick="buyPowerUp('autoLauncher')">
+                🤖 自動ブースト装置<br>コスト: <span id="autoLauncherCost">10</span>
+            </button>
+            <button class="power-up" id="rocketBooster" onclick="buyPowerUp('rocketBooster')">
+                ⚡ ブースト倍率<br>コスト: <span id="rocketBoosterCost">25</span>
+            </button>
+            <button class="power-up" id="multiStage" onclick="buyPowerUp('multiStage')">
+                🎯 多段ロケット<br>コスト: <span id="multiStageCost">50</span>
+            </button>
+            <button class="power-up" id="spaceStation" onclick="buyPowerUp('spaceStation')">
+                🛸 宇宙ステーション<br>コスト: <span id="spaceStationCost">100</span>
+            </button>
+        </div>
+
+        <div class="achievements" id="achievements">
+            🎯 目標: 高原発射場まで25回ブーストしよう！
+        </div>
+    </div>
+
+    <div class="social-section">
+        <button class="x-post-button" onclick="postToX()">
+            <span class="x-icon">x</span>
+            記録をシェア
+        </button>
+    </div>
+
+    <script>
+        let gameState = {
+            launches: 0,
+            level: 1,
+            launchPower: 1,
+            autoLauncherCount: 0,
+            rocketBoosterLevel: 0,
+            multiStageLevel: 0,
+            spaceStationLevel: 0,
+            opsValue: 0
+        };
+
+        let powerUpCosts = {
+            autoLauncher: 10,
+            rocketBooster: 25,
+            multiStage: 50,
+            spaceStation: 100
+        };
+
+        // レベルアップに必要なブースト回数を定義
+        const levelThresholds = {
+            1: 0,      // 地上基地
+            2: 25,     // 高原発射場
+            3: 50,     // 雲の上
+            4: 100,    // 成層圏
+            5: 250,    // 月軌道
+            6: 500,    // 惑星圏
+            7: 1000,   // 恒星系
+            8: 2500,   // 銀河系
+            9: 5000,   // 宇宙の果て
+            10: 10000  // 宇宙の外
+        };
+
+        const levelData = {
+            1: { bg: 'bg-level-1', location: '🌍 地上基地', message: 'ロケットをブーストしよう！', description: '地上からの発進準備完了！', altitude: '0 km' },
+            2: { bg: 'bg-level-2', location: '🌱 高原発射場', message: '高度が上がってきた！', description: '高原の発射台から更なる高度へ！', altitude: '2 km' },
+            3: { bg: 'bg-level-3', location: '☁️ 雲の上', message: '雲を突き抜けた！', description: '雲海を越えて成層圏を目指せ！', altitude: '12 km' },
+            4: { bg: 'bg-level-4', location: '🌤️ 成層圏', message: '成層圏に到達！', description: '大気圏突破まであと少し！', altitude: '50 km' },
+            5: { bg: 'bg-level-5', location: '🌙 月軌道', message: '月が見えてきた！', description: '月面基地建設の準備だ！', altitude: '384,400 km' },
+            6: { bg: 'bg-level-6', location: '🪐 惑星圏', message: '惑星圏を航行中！', description: '太陽系の惑星を探索しよう！', altitude: '778 百万 km' },
+            7: { bg: 'bg-level-7', location: '⭐ 恒星系', message: '恒星系を探索！', description: '他の恒星系への航路を開拓！', altitude: '4.2 光年' },
+            8: { bg: 'bg-level-8', location: '🌌 銀河系', message: '銀河の彼方へ！', description: '銀河系制覇への道のり！', altitude: '26,000 光年' },
+            9: { bg: 'bg-level-9-plus', location: '🚀 宇宙の果て', message: '無限の宇宙を制覇！', description: '全宇宙の支配者となれ！', altitude: '∞ 無限大' },
+            10: { bg: 'bg-level-10-plus', location: '🖤 宇宙の外', message: '存在の境界を超越！', description: '全ての存在を超越した！', altitude: '超越' }
+        };
+
+        const messages = [
+            { text: "ブースト成功！", icon: "🔥" },
+            { text: "宇宙へ一直線！", icon: "🚀" },
+            { text: "素晴らしいブースト！", icon: "🌌" },
+            { text: "ロケット好調！", icon: "✨️" },
+            { text: "宇宙飛行士気分！", icon: "👨‍🚀" },
+            { text: "ミッション成功！", icon: "🎯" },
+            { text: "宇宙探検家！", icon: "🛸" },
+            { text: "銀河征服者！", icon: "👑" },
+            { text: "宇宙の支配者！", icon: "🌟" }
+        ];
+
+        // 実績をレベルシステムと一致させる
+        const achievements = [
+            { threshold: 25, message: "🌱 高原発射場到達！25回達成！", nextTarget: "雲の上まで50回" },
+            { threshold: 50, message: "☁️ 雲の上到達！50回達成！", nextTarget: "成層圏まで100回" },
+            { threshold: 100, message: "🌤️ 成層圏到達！100回達成！", nextTarget: "月軌道まで250回" },
+            { threshold: 250, message: "🌙 月軌道到達！250回達成！", nextTarget: "惑星圏まで500回" },
+            { threshold: 500, message: "🪐 惑星圏到達！500回達成！", nextTarget: "恒星系まで1000回" },
+            { threshold: 1000, message: "⭐ 恒星系到達！1000回達成！", nextTarget: "銀河系まで2500回" },
+            { threshold: 2500, message: "🌌 銀河系到達！2500回達成！", nextTarget: "宇宙の果てまで5000回" },
+            { threshold: 5000, message: "🚀 宇宙の果て到達！5000回達成！", nextTarget: "宇宙の外まで10000回" },
+            { threshold: 10000, message: "🖤 宇宙の外到達！10000回達成！全実績達成！", nextTarget: null }
+        ];
+
+        function initGame() {
+            generateStars();
+            generatePlanets();
+            setInterval(autoLaunch, 1000);
+            updateDisplay();
+            updatePowerUps();
+            updateBackground();
+            updateAchievementDisplay();
+            createShootingStars(); // 流れ星エフェクトを初期化
+        }
+
+        function generateStars() {
+            const starsContainer = document.getElementById('stars');
+            starsContainer.innerHTML = ''; // 既存の星をクリア
+            
+            const starCount = gameState.level >= 5 ? 150 : 100; // 宇宙レベルでは星を増やす
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        function generatePlanets() {
+            const planetsContainer = document.getElementById('planets');
+            planetsContainer.innerHTML = ''; // 既存の惑星をクリア
+            
+            const planets = [
+                { size: '60px', color: '#ff6b6b', left: '10%', top: '20%' },
+                { size: '40px', color: '#4ecdc4', left: '80%', top: '60%' },
+                { size: '30px', color: '#ffe66d', left: '70%', top: '15%' },
+                { size: '50px', color: '#a8e6cf', left: '15%', top: '70%' }
+            ];
+
+            // 高レベルでは惑星を追加
+            if (gameState.level >= 8) {
+                planets.push(
+                    { size: '35px', color: '#ff9ff3', left: '90%', top: '30%' },
+                    { size: '45px', color: '#54a0ff', left: '5%', top: '50%' }
+                );
+            }
+
+            planets.forEach((planet, index) => {
+                const planetDiv = document.createElement('div');
+                planetDiv.className = 'planet';
+                planetDiv.style.width = planet.size;
+                planetDiv.style.height = planet.size;
+                planetDiv.style.background = planet.color;
+                planetDiv.style.left = planet.left;
+                planetDiv.style.top = planet.top;
+                planetDiv.style.animationDelay = index * 5 + 's';
+                
+                // 高レベルでは惑星にグローエフェクトを追加
+                if (gameState.level >= 6) {
+                    planetDiv.style.boxShadow = `0 0 20px ${planet.color}`;
+                }
+                
+                planetsContainer.appendChild(planetDiv);
+            });
+        }
+
+        function createSpaceTransitionEffect(level) {
+            const spaceTransition = document.getElementById('spaceTransition');
+            spaceTransition.innerHTML = '';
+
+            if (level === 5) {
+                // 月軌道到達時：宇宙突入エフェクト
+                const flash = document.createElement('div');
+                flash.className = 'space-flash';
+                spaceTransition.appendChild(flash);
+
+                const message = document.createElement('div');
+                message.className = 'space-message';
+                message.textContent = '🌙 宇宙空間に突入！';
+                spaceTransition.appendChild(message);
+
+                createCosmicParticles(spaceTransition, 20, ['#00c8ff', '#ffffff', '#ffd700']);
+
+                setTimeout(() => {
+                    spaceTransition.innerHTML = '';
+                }, 4000);
+            }
+            else if (level === 7) {
+                // 恒星系到達時：恒星エフェクト
+                const flash = document.createElement('div');
+                flash.className = 'space-flash';
+                flash.style.background = 'radial-gradient(circle, rgba(255,215,0,0.8) 0%, rgba(255,69,0,0.4) 50%, transparent 100%)';
+                spaceTransition.appendChild(flash);
+
+                const message = document.createElement('div');
+                message.className = 'space-message';
+                message.textContent = '⭐ 恒星系を制覇！';
+                message.style.color = '#ffd700';
+                message.style.textShadow = '0 0 20px rgba(255, 215, 0, 1)';
+                spaceTransition.appendChild(message);
+
+                createCosmicParticles(spaceTransition, 30, ['#ffd700', '#ff4500', '#ffffff']);
+
+                setTimeout(() => {
+                    spaceTransition.innerHTML = '';
+                }, 4000);
+            }
+            else if (level === 8) {
+                // 銀河系到達時：銀河エフェクト
+                const flash = document.createElement('div');
+                flash.className = 'space-flash';
+                flash.style.background = 'radial-gradient(circle, rgba(138,43,226,0.8) 0%, rgba(75,0,130,0.4) 50%, transparent 100%)';
+                spaceTransition.appendChild(flash);
+
+                const message = document.createElement('div');
+                message.className = 'space-message';
+                message.textContent = '🌌 銀河系を征服！';
+                message.style.color = '#9370db';
+                message.style.textShadow = '0 0 20px rgba(147, 112, 219, 1)';
+                spaceTransition.appendChild(message);
+
+                createCosmicParticles(spaceTransition, 40, ['#9370db', '#4b0082', '#8a2be2', '#ffffff']);
+
+                // 銀河回転エフェクト
+                const galaxyEffect = document.createElement('div');
+                galaxyEffect.className = 'galaxy-effect';
+                spaceTransition.appendChild(galaxyEffect);
+
+                setTimeout(() => {
+                    spaceTransition.innerHTML = '';
+                }, 5000);
+            }
+            else if (level === 9) {
+                // 宇宙の果て到達時：究極エフェクト
+                const flash = document.createElement('div');
+                flash.className = 'space-flash';
+                flash.style.background = 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)';
+                spaceTransition.appendChild(flash);
+
+                const message = document.createElement('div');
+                message.className = 'space-message';
+                message.textContent = '🚀 宇宙の果てに到達！';
+                message.style.color = '#ffffff';
+                message.style.textShadow = '0 0 30px rgba(255, 255, 255, 1)';
+                spaceTransition.appendChild(message);
+
+                createCosmicParticles(spaceTransition, 50, ['#ffffff', '#00ffff', '#ff00ff', '#ffff00']);
+
+                // ネビュラクラウド
+                createNebulaClouds(spaceTransition);
+
+                setTimeout(() => {
+                    spaceTransition.innerHTML = '';
+                }, 6000);
+            }
+            else if (level === 10) {
+                // 宇宙の外到達時：超越エフェクト
+                const flash = document.createElement('div');
+                flash.className = 'space-flash';
+                flash.style.background = 'radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(255,255,255,0.3) 50%, rgba(0,0,0,1) 100%)';
+                spaceTransition.appendChild(flash);
+
+                const message = document.createElement('div');
+                message.className = 'space-message';
+                message.textContent = '🖤 存在を超越した！';
+                message.style.color = '#000000';
+                message.style.textShadow = '0 0 20px rgba(255, 255, 255, 1)';
+                message.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                message.style.padding = '20px';
+                message.style.borderRadius = '10px';
+                spaceTransition.appendChild(message);
+
+                createCosmicParticles(spaceTransition, 60, ['#000000', '#ffffff', '#666666']);
+
+                setTimeout(() => {
+                    spaceTransition.innerHTML = '';
+                }, 7000);
+            }
+        }
+
+        function createCosmicParticles(container, count, colors) {
+            const particlesDiv = document.createElement('div');
+            particlesDiv.className = 'cosmic-particles';
+            
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'cosmic-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 8 + 4 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.animationDelay = Math.random() * 4 + 's';
+                particle.style.boxShadow = `0 0 10px ${particle.style.background}`;
+                particlesDiv.appendChild(particle);
+            }
+            
+            container.appendChild(particlesDiv);
+        }
+
+        function createNebulaClouds(container) {
+            const colors = ['#ff006e', '#8338ec', '#3a86ff', '#06ffa5'];
+            
+            for (let i = 0; i < 4; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'nebula-cloud';
+                cloud.style.left = Math.random() * 80 + 10 + '%';
+                cloud.style.top = Math.random() * 80 + 10 + '%';
+                cloud.style.width = Math.random() * 200 + 100 + 'px';
+                cloud.style.height = cloud.style.width;
+                cloud.style.background = colors[i];
+                cloud.style.animationDelay = i * 2 + 's';
+                container.appendChild(cloud);
+            }
+        }
+
+        function createShootingStars() {
+            if (gameState.level >= 5) {
+                setInterval(() => {
+                    if (Math.random() < 0.3) { // 30%の確率で流れ星
+                        const shootingStar = document.createElement('div');
+                        shootingStar.className = 'shooting-star shooting-star-animation';
+                        shootingStar.style.left = Math.random() * 100 + '%';
+                        shootingStar.style.top = Math.random() * 50 + '%';
+                        document.body.appendChild(shootingStar);
+                        
+                        setTimeout(() => {
+                            shootingStar.remove();
+                        }, 3000);
+                    }
+                }, 2000);
+            }
+        }
+
+        function calculateLevel(launches) {
+            for (let level = 10; level >= 1; level--) {
+                if (launches >= levelThresholds[level]) {
+                    return level;
+                }
+            }
+            return 1;
+        }
+
+        function boostRocket() {
+            const button = document.getElementById('boostButton');
+            const container = document.querySelector('.game-container');
+            
+            // ブーストパワー計算
+            let boostValue = gameState.launchPower;
+            
+            // 多段ロケット判定
+            if (gameState.multiStageLevel > 0 && Math.random() < 0.15 * gameState.multiStageLevel) {
+                boostValue *= 3;
+                createFloatingText('+' + boostValue + ' ⚡x3', '#ff6b6b', true);
+            } else {
+                createFloatingText('+' + boostValue, '#667eea');
+            }
+            
+            gameState.launches += boostValue;
+            
+            // レベルアップ判定
+            const newLevel = calculateLevel(gameState.launches);
+            
+            if (newLevel > gameState.level) {
+                const oldLevel = gameState.level;
+                gameState.level = newLevel;
+                createFloatingText('高度レベルアップ！', '#ff6b6b', true);
+                
+                // 特別な宇宙演出をトリガー
+                if (newLevel >= 5 && oldLevel < 5) {
+                    createSpaceTransitionEffect(newLevel);
+                } else if (newLevel === 7 && oldLevel < 7) {
+                    createSpaceTransitionEffect(7);
+                } else if (newLevel === 8 && oldLevel < 8) {
+                    createSpaceTransitionEffect(8);
+                } else if (newLevel === 9 && oldLevel < 9) {
+                    createSpaceTransitionEffect(9);
+                } else if (newLevel === 10 && oldLevel < 10) {
+                    createSpaceTransitionEffect(10);
+                }
+                
+                updateBackground();
+            }
+            
+            // ロケット発射アニメーション
+            createRocketLaunch();
+            
+            // ボタンアニメーション
+            button.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 100);
+            
+            // メッセージとアイコン更新
+            updateMessage();
+            checkAchievements();
+            updateDisplay();
+            updatePowerUps();
+        }
+
+        function createRocketLaunch() {
+            const container = document.querySelector('.game-container');
+            const rocket = document.createElement('div');
+            rocket.className = 'rocket rocket-launch';
+            rocket.textContent = '🚀';
+            rocket.style.left = '50%';
+            rocket.style.top = '60%';
+            rocket.style.transform = 'translateX(-50%)';
+            container.appendChild(rocket);
+
+            // レベルに応じた噴射エフェクト
+            const currentLevel = Math.min(gameState.level, 9);
+            let exhaustEffects, exhaustCount, exhaustSize, exhaustSpread, fadeDuration;
+            
+            if (currentLevel <= 2) {
+                // 地上レベル：基本的な噴射
+                exhaustEffects = ['🔥', '💨'];
+                exhaustCount = Math.floor(Math.random() * 2) + 1; // 1-2個
+                exhaustSize = '30px';
+                exhaustSpread = 15;
+                fadeDuration = 1500; // 基本時間
+            } else if (currentLevel <= 4) {
+                // 大気圏レベル：少し派手に
+                exhaustEffects = ['🔥', '💨'];
+                exhaustCount = 2; // 2個固定
+                exhaustSize = '35px';
+                exhaustSpread = 25;
+                fadeDuration = 1800; // 1.2倍
+            } else if (currentLevel <= 6) {
+                // 宇宙レベル：かなり派手
+                exhaustEffects = ['🔥', '💨', '✨', '🌟'];
+                exhaustCount = Math.floor(Math.random() * 2) + 2; // 2-3個
+                exhaustSize = '40px';
+                exhaustSpread = 35;
+                fadeDuration = 2100; // 1.4倍
+            } else if (currentLevel <= 8) {
+                // 銀河レベル：超派手
+                exhaustEffects = ['🔥', '💨', '✨', '🌟'];
+                exhaustCount = 3; // 3個固定
+                exhaustSize = '45px';
+                exhaustSpread = 40;
+                fadeDuration = 2400; // 1.6倍
+            } else {
+                // 宇宙の果て：最大派手
+                exhaustEffects = ['🔥', '💨', '✨', '🌟'];
+                exhaustCount = Math.floor(Math.random() * 2) + 3; // 3-4個
+                exhaustSize = '50px';
+                exhaustSpread = 50;
+                fadeDuration = 3000; // 2倍
+            }
+
+            // 噴射エフェクト生成
+            for (let i = 0; i < exhaustCount; i++) {
+                setTimeout(() => {
+                    const exhaust = document.createElement('div');
+                    exhaust.className = 'exhaust';
+                    exhaust.textContent = exhaustEffects[Math.floor(Math.random() * exhaustEffects.length)];
+                    exhaust.style.left = (50 + (Math.random() - 0.5) * exhaustSpread) + '%';
+                    exhaust.style.top = '75%';
+                    exhaust.style.fontSize = exhaustSize;
+                    exhaust.style.zIndex = '50';
+                    exhaust.style.animationDuration = fadeDuration + 'ms';
+                    
+                    // 高レベルでは追加エフェクト
+                    if (currentLevel >= 7) {
+                        exhaust.style.filter = 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.8))';
+                        exhaust.style.animation = `exhaustFadeGlow ${fadeDuration}ms ease-out forwards`;
+                    }
+                    
+                    document.body.appendChild(exhaust);
+                    
+                    setTimeout(() => exhaust.remove(), fadeDuration);
+                }, i * 100); // より短い間隔で連続噴射
+            }
+
+            setTimeout(() => rocket.remove(), 2000);
+        }
+
+        function autoLaunch() {
+            if (gameState.autoLauncherCount > 0) {
+                const autoValue = gameState.autoLauncherCount;
+                gameState.launches += autoValue;
+                gameState.opsValue = autoValue;
+                updateDisplay();
+                checkAchievements();
+                
+                // レベルアップ判定
+                const newLevel = calculateLevel(gameState.launches);
+                
+                if (newLevel > gameState.level) {
+                    const oldLevel = gameState.level;
+                    gameState.level = newLevel;
+                    
+                    // 特別な宇宙演出をトリガー
+                    if (newLevel >= 5 && oldLevel < 5) {
+                        createSpaceTransitionEffect(newLevel);
+                    } else if (newLevel === 7 && oldLevel < 7) {
+                        createSpaceTransitionEffect(7);
+                    } else if (newLevel === 8 && oldLevel < 8) {
+                        createSpaceTransitionEffect(8);
+                    } else if (newLevel === 9 && oldLevel < 9) {
+                        createSpaceTransitionEffect(9);
+                    } else if (newLevel === 10 && oldLevel < 10) {
+                        createSpaceTransitionEffect(10);
+                    }
+                    
+                    updateBackground();
+                }
+            }
+        }
+
+        function updateBackground() {
+            const body = document.getElementById('gameBody');
+            const levelIndicator = document.getElementById('levelIndicator');
+            const stars = document.getElementById('stars');
+            const planets = document.getElementById('planets');
+            
+            // 背景クラスを削除
+            body.className = '';
+            
+            // 新しい背景を適用
+            const currentLevel = Math.min(gameState.level, 10);
+            const levelInfo = levelData[currentLevel] || levelData[10];
+            
+            if (currentLevel >= 10) {
+                body.classList.add('bg-level-10-plus');
+            } else if (currentLevel >= 9) {
+                body.classList.add('bg-level-9-plus');
+            } else {
+                body.classList.add(levelInfo.bg);
+            }
+            
+            levelIndicator.textContent = levelInfo.location + ' (' + levelInfo.altitude + ')';
+            
+            // レベルインジケーターに宇宙感を追加
+            if (currentLevel >= 5) {
+                levelIndicator.classList.add('space-level');
+            } else {
+                levelIndicator.classList.remove('space-level');
+            }
+            
+            // 星と惑星の表示制御と再生成
+            if (currentLevel >= 5) {
+                stars.classList.add('visible');
+                generateStars(); // 宇宙レベルで星を再生成
+            } else {
+                stars.classList.remove('visible');
+            }
+            
+            if (currentLevel >= 7) {
+                planets.classList.add('visible');
+                generatePlanets(); // 惑星レベルで惑星を再生成
+            } else {
+                planets.classList.remove('visible');
+            }
+        }
+
+        function updateMessage() {
+            const messageObj = messages[Math.min(Math.floor(gameState.level), messages.length - 1)];
+            const currentLevel = Math.min(gameState.level, 10);
+            const levelInfo = levelData[currentLevel] || levelData[10];
+            
+            document.getElementById('dialogText').innerHTML = messageObj.text + '<br>' + levelInfo.description;
+            document.getElementById('rocketIcon').textContent = messageObj.icon;
+            
+            let titleText = levelInfo.message;
+            // 「ロケットをブーストしよう」は「ロケットを発射しよう」に
+            if (titleText.includes('ロケットをブーストしよう')) {
+                titleText = 'ロケットを発射しよう！';
+            }
+            // その他の「しよう」は「をかけよう」に
+            else if (titleText.includes('しよう')) {
+                titleText = titleText.replace('しよう', 'をかけよう');
+            }
+            
+            document.getElementById('dialogTitle').textContent = '⚡ ' + titleText;
+        }
+
+        function createFloatingText(text, color, isSpecial = false) {
+            const container = document.querySelector('.game-container');
+            const floatingText = document.createElement('div');
+            floatingText.className = 'floating-text';
+            floatingText.textContent = text;
+            floatingText.style.color = color;
+            floatingText.style.left = '50%';
+            floatingText.style.top = '40%';
+            floatingText.style.transform = 'translateX(-50%)';
+            
+            if (isSpecial) {
+                floatingText.style.fontSize = '48px';
+                floatingText.style.textShadow = '0 0 10px ' + color;
+            }
+            
+            container.appendChild(floatingText);
+            setTimeout(() => floatingText.remove(), 1000);
+        }
+
+        function buyPowerUp(type) {
+            const cost = powerUpCosts[type];
+            if (gameState.launches >= cost) {
+                gameState.launches -= cost;
+                
+                switch(type) {
+                    case 'autoLauncher':
+                        gameState.autoLauncherCount++;
+                        powerUpCosts.autoLauncher = Math.floor(powerUpCosts.autoLauncher * 1.5);
+                        break;
+                    case 'rocketBooster':
+                        gameState.rocketBoosterLevel++;
+                        gameState.launchPower = Math.floor(gameState.launchPower * 1.5) + 1;
+                        powerUpCosts.rocketBooster = Math.floor(powerUpCosts.rocketBooster * 2);
+                        break;
+                    case 'multiStage':
+                        gameState.multiStageLevel++;
+                        powerUpCosts.multiStage = Math.floor(powerUpCosts.multiStage * 2.5);
+                        break;
+                    case 'spaceStation':
+                        gameState.spaceStationLevel++;
+                        powerUpCosts.spaceStation = Math.floor(powerUpCosts.spaceStation * 3);
+                        break;
+                }
+                
+                createFloatingText('アップグレード完了！', '#667eea');
+                updateDisplay();
+                updatePowerUps();
+            }
+        }
+
+        function updateDisplay() {
+            const currentLevel = Math.min(gameState.level, 10);
+            const levelInfo = levelData[currentLevel] || levelData[10];
+            
+            document.getElementById('score').textContent = gameState.launches.toLocaleString();
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('altitude').textContent = levelInfo.altitude;
+            document.getElementById('opsValue').textContent = gameState.opsValue;
+        }
+
+        function updatePowerUps() {
+            const powerUps = ['autoLauncher', 'rocketBooster', 'multiStage', 'spaceStation'];
+            
+            powerUps.forEach(type => {
+                const button = document.getElementById(type);
+                const costSpan = document.getElementById(type + 'Cost');
+                const cost = powerUpCosts[type];
+                
+                costSpan.textContent = cost.toLocaleString();
+                
+                if (gameState.launches >= cost) {
+                    button.classList.add('affordable');
+                } else {
+                    button.classList.remove('affordable');
+                }
+            });
+        }
+
+        function updateAchievementDisplay() {
+            const nextAchievement = achievements.find(a => !a.achieved && gameState.launches < a.threshold);
+            
+            if (nextAchievement) {
+                const nextLevelInfo = Object.values(levelData).find(level => 
+                    level.location.includes(nextAchievement.nextTarget?.split('まで')[0]) || 
+                    nextAchievement.threshold === levelThresholds[Object.keys(levelData).find(key => levelData[key] === level)]
+                );
+                
+                const nextLevelName = Object.keys(levelThresholds).find(key => levelThresholds[key] === nextAchievement.threshold);
+                const targetLocation = nextLevelName ? levelData[nextLevelName]?.location.split(' ')[1] || '次のエリア' : '次のエリア';
+                
+                document.getElementById('achievements').textContent = 
+                    `🎯 目標: ${targetLocation}まで${nextAchievement.threshold}回ブーストしよう！`;
+            } else {
+                const completedCount = achievements.filter(a => a.achieved).length;
+                if (completedCount === achievements.length) {
+                    document.getElementById('achievements').textContent = 
+                        '🏆 全実績達成！あなたは真の宇宙征服者です！';
+                }
+            }
+        }
+
+        function checkAchievements() {
+            achievements.forEach(achievement => {
+                if (gameState.launches >= achievement.threshold && !achievement.achieved) {
+                    achievement.achieved = true;
+                    document.getElementById('achievements').textContent = achievement.message;
+                    createFloatingText('実績解除！', '#ff6b6b', true);
+                    
+                    setTimeout(() => {
+                        updateAchievementDisplay();
+                    }, 3000);
+                }
+            });
+        }
+
+        function postToX() {
+            const currentLevel = Math.min(gameState.level, 10);
+            const levelInfo = levelData[currentLevel] || levelData[10];
+            const launches = gameState.launches.toLocaleString();
+            
+            // レベル別のメッセージを生成
+            let statusMessage = "";
+            let hashtags = "#ロケットクリッカー #宇宙 #ゲーム";
+            
+            if (gameState.level >= 10) {
+                statusMessage = `🖤 宇宙の外に到達！存在を超越しました！\n${launches}回のブーストで全宇宙を制覇！`;
+                hashtags += " #宇宙征服者 #超越";
+            } else if (gameState.level >= 9) {
+                statusMessage = `◼️ 宇宙の果てに到達！\n${launches}回のブーストで無限の宇宙を制覇中！`;
+                hashtags += " #宇宙の果て #無限";
+            } else if (gameState.level >= 8) {
+                statusMessage = `🌌 銀河系を征服！\n${launches}回のブーストで銀河の彼方へ！`;
+                hashtags += " #銀河征服 #銀河系";
+            } else if (gameState.level >= 7) {
+                statusMessage = `💫 恒星系を探索中！\n${launches}回のブーストで他の恒星系へ航路開拓！`;
+                hashtags += " #恒星系 #宇宙探検";
+            } else if (gameState.level >= 6) {
+                statusMessage = `🪐 惑星圏を航行中！\n${launches}回のブーストで太陽系の惑星を探索！`;
+                hashtags += " #惑星探索 #太陽系";
+            } else if (gameState.level >= 5) {
+                statusMessage = `🌙 月軌道に到達！\n${launches}回のブーストで宇宙空間に突入！`;
+                hashtags += " #月面基地 #宇宙突入";
+            } else if (gameState.level >= 4) {
+                statusMessage = `🌎️ 成層圏に到達！\n${launches}回のブーストで大気圏突破まであと少し！`;
+                hashtags += " #成層圏 #大気圏";
+            } else if (gameState.level >= 3) {
+                statusMessage = `☁️ 雲の上まで到達！\n${launches}回のブーストで雲海を越えました！`;
+                hashtags += " #雲の上 #高高度";
+            } else if (gameState.level >= 2) {
+                statusMessage = `🌱 高原発射場に到達！\n${launches}回のブーストで高度が上がってきた！`;
+                hashtags += " #高原発射場 #ロケット発射";
+            } else {
+                statusMessage = `🚀 地上基地から${launches}回ブースト！\n宇宙を目指して頑張っています！`;
+                hashtags += " #地上基地 #宇宙への夢";
+            }
+
+            // 自動ブーストの情報も追加
+            if (gameState.opsValue > 0) {
+                statusMessage += `\n自動ブースト: ${gameState.opsValue}/秒`;
+            }
+
+            // 実績の情報も追加
+            const completedAchievements = achievements.filter(a => a.achieved).length;
+            if (completedAchievements > 0) {
+                statusMessage += `\n実績: ${completedAchievements}/${achievements.length}個達成`;
+            }
+
+            statusMessage += `\n\n現在地: ${levelInfo.location}`;
+            statusMessage += `\n高度: ${levelInfo.altitude}`;
+
+            // URLエンコード
+            const encodedText = encodeURIComponent(statusMessage + "\n\n" + hashtags);
+            const gameUrl = encodeURIComponent(window.location.href);
+            
+            // X（旧Twitter）の投稿URL
+            const xUrl = `https://x.com/intent/tweet?text=${encodedText}&url=${gameUrl}`;
+            
+            // 新しいウィンドウで開く
+            window.open(xUrl, '_blank', 'width=550,height=420');
+        }
+
+        // ページ読み込み時にゲーム開始
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
