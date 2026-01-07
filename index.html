@@ -1,83 +1,127 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 16 16%22><text x=%220%22 y=%2214%22 font-size=%2216%22>&#x1f423;</text></svg>" type="image/svg+xml">
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
-    <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
 
-    gtag('config', 'G-MSTVN0KCF9');
-    </script>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>piyohico apps</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 16 16%22><text x=%220%22 y=%2214%22 font-size=%2216%22>&#x1f423;</text></svg>"
+        type="image/svg+xml">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-MSTVN0KCF9');
+    </script>
+
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet"><body>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- CSP (Content Security Policy) - Basic protection -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https://www.googletagmanager.com https://www.google-analytics.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://www.google-analytics.com; connect-src 'self' https://www.google-analytics.com;">
+</head>
+
+<body>
+    <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="share-button" target="_blank"
+        rel="noopener noreferrer" aria-label="Xでシェア">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="x-icon">
+            <path
+                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z">
+            </path>
+        </svg>
+    </a>
     <div class="container">
         <header class="header">
             <h1>piyohico apps</h1>
-            <p>ブラウザだけで使えるアプリ <a href="https://x.com/piyo621" target="_blank">@piyohico</a></p>
+            <p>シンプルなブラウザアプリ <a href="https://x.com/piyo621" target="_blank" rel="noopener noreferrer">@piyohico</a>
+            </p>
         </header>
-        
+
         <main>
+            <!-- 検索バー -->
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="search-input" class="search-input" placeholder="アプリを検索..." aria-label="アプリを検索">
+            </div>
+
             <div class="apps-grid" id="apps-grid">
                 <!-- アプリリストはJavaScriptで動的に読み込まれます -->
             </div>
         </main>
-        
+
         <footer class="footer">
-            <p>&copy; 2025 piyohico apps. All rights reserved.</p>
+            <p>&copy; 2026 piyohico apps. All rights reserved.</p>
         </footer>
     </div>
 
     <script>
+        // グローバル変数として保持（検索用）
+        let allApps = [];
+
         // アプリリスト（Markdown形式）を読み込んで表示
         async function loadApps() {
             try {
-                console.log('apps.mdファイルを読み込み中...');
                 const response = await fetch('./apps.md');
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                
+
                 const markdownText = await response.text();
-                console.log('Markdownファイル読み込み完了');
-                
-                // 簡単なMarkdownパーサー（アプリリスト用）
-                const apps = parseAppsMarkdown(markdownText);
-                console.log(`${apps.length}個のアプリを解析しました`);
-                
-                if (apps.length === 0) {
+
+                // Markdownパーサー
+                allApps = parseAppsMarkdown(markdownText);
+
+                if (allApps.length === 0) {
                     throw new Error('アプリリストが空です');
                 }
-                
-                renderApps(apps);
+
+                renderApps(allApps);
+
+                // 検索イベントリスナーの設定
+                setupSearch();
+
             } catch (error) {
                 console.error('アプリリストの読み込みに失敗しました:', error);
-                showError('apps.mdファイルの読み込みに失敗しました。ファイルが存在するか確認してください。');
+                showError('apps.mdファイルの読み込みに失敗しました。');
             }
+        }
+
+        // XSS対策：HTML特殊文字のエスケープ
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
         function parseAppsMarkdown(markdown) {
             const apps = [];
             const lines = markdown.split('\n');
             let currentApp = null;
-            
+
             for (const line of lines) {
                 const trimmed = line.trim();
-                
+
                 if (trimmed.startsWith('## ')) {
-                    // 新しいアプリの開始
-                    if (currentApp) {
-                        apps.push(currentApp);
-                    }
-                    
+                    if (currentApp) apps.push(currentApp);
+
                     const titleMatch = trimmed.match(/^## (.+?) (.+)/);
                     if (titleMatch) {
                         currentApp = {
@@ -98,6 +142,7 @@
                     }
                 } else if (trimmed.startsWith('**リンク:**')) {
                     if (currentApp) {
+                        // リンクの抽出は少し緩めに
                         const linkMatch = trimmed.match(/\[(.+?)\]\((.+?)\)/);
                         if (linkMatch) {
                             currentApp.link = linkMatch[2];
@@ -105,53 +150,101 @@
                     }
                 }
             }
-            
-            // 最後のアプリを追加
-            if (currentApp) {
-                apps.push(currentApp);
-            }
-            
+
+            if (currentApp) apps.push(currentApp);
+
             return apps;
+        }
+
+        function setupSearch() {
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const filteredApps = allApps.filter(app => {
+                    return app.title.toLowerCase().includes(query) ||
+                        app.description.toLowerCase().includes(query);
+                });
+                renderApps(filteredApps);
+            });
+        }
+
+        function isNewApp(dateString) {
+            if (!dateString) return false;
+            // "2025年7月31日" のような形式をパース
+            const dateMatch = dateString.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+            if (!dateMatch) return false;
+
+            const year = parseInt(dateMatch[1]);
+            const month = parseInt(dateMatch[2]) - 1; // 月は0-11
+            const day = parseInt(dateMatch[3]);
+
+            const appDate = new Date(year, month, day);
+            const now = new Date();
+
+            // 30日以内ならNewとする
+            const diffTime = Math.abs(now - appDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            return diffDays <= 30;
+        }
+
+        function renderApps(apps) {
+            const appsGrid = document.getElementById('apps-grid');
+            appsGrid.innerHTML = '';
+
+            if (apps.length === 0) {
+                appsGrid.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#718096;">該当するアプリが見つかりませんでした。</p>';
+                return;
+            }
+
+            apps.forEach((app, index) => {
+                const appCard = document.createElement('div');
+                appCard.className = 'app-card';
+                // アニメーションの遅延を追加
+                appCard.style.animationDelay = `${index * 0.05}s`;
+
+                const isNew = isNewApp(app.date);
+                const newBadge = isNew ? '<div class="badge-new">NEW</div>' : '';
+
+                // サニタイズされた値を使用
+                const safeTitle = escapeHtml(app.title);
+                const safeDesc = escapeHtml(app.description);
+                const safeDate = escapeHtml(app.date);
+                const safeLink = escapeHtml(app.link);
+                // アイコンは絵文字前提なのでそのまま出すが、念のためエスケープしても良いが絵文字が壊れる場合もあるので注意
+                // ここでは絵文字1文字+αと想定してそのまま出す（Markdownのパースで抽出されたもの）
+                const safeIcon = app.icon;
+
+                appCard.innerHTML = `
+                    ${newBadge}
+                    <h3>
+                        <span class="app-icon">${safeIcon}</span>
+                        ${safeTitle}
+                    </h3>
+                    <p>${safeDesc}</p>
+                    <div class="card-footer">
+                        <div class="app-date">${safeDate}</div>
+                        <a href="${safeLink}" class="app-link" target="_blank" rel="noopener noreferrer" aria-label="${safeTitle}を開く">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                `;
+                appsGrid.appendChild(appCard);
+            });
         }
 
         function showError(message) {
             const appsGrid = document.getElementById('apps-grid');
             appsGrid.innerHTML = `
                 <div class="error-message">
-                    <h3>⚠️ エラー</h3>
-                    <p>${message}</p>
-                    <p>以下を確認してください：</p>
-                    <ul>
-                        <li>apps.mdファイルがindex.htmlと同じディレクトリにあるか</li>
-                        <li>Webサーバー経由でアクセスしているか（file://プロトコルでは動作しません）</li>
-                        <li>apps.mdファイルの形式が正しいか</li>
-                    </ul>
+                    <h3><i class="fas fa-exclamation-triangle"></i> エラー</h3>
+                    <p>${escapeHtml(message)}</p>
                 </div>
             `;
         }
 
-        function renderApps(apps) {
-            const appsGrid = document.getElementById('apps-grid');
-            appsGrid.innerHTML = '';
-            
-            apps.forEach(app => {
-                const appCard = document.createElement('div');
-                appCard.className = 'app-card';
-                appCard.innerHTML = `
-                    <h3>
-                        <span class="app-icon">${app.icon}</span>
-                        ${app.title}
-                    </h3>
-                    <p>${app.description}</p>
-                    <div class="app-date">制作日: ${app.date}</div>
-                    <a href="${app.link}" class="app-link">アプリを開く</a>
-                `;
-                appsGrid.appendChild(appCard);
-            });
-        }
-
-        // ページ読み込み時にアプリリストを読み込む
         document.addEventListener('DOMContentLoaded', loadApps);
     </script>
 </body>
+
 </html>
