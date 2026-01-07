@@ -35,8 +35,8 @@
 </head>
 
 <body>
-    <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="share-button" target="_blank"
-        rel="noopener noreferrer" aria-label="Xでシェア">
+    <a href="https://twitter.com/intent/tweet?text=%E3%81%82%E3%82%8B%E3%81%A8%E4%BE%BF%E5%88%A9%E3%81%AA%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%82%A2%E3%83%97%E3%83%AA%20-%20piyohico%20apps"
+        class="share-button" target="_blank" rel="noopener noreferrer" aria-label="Xでシェア">
         <svg viewBox="0 0 24 24" aria-hidden="true" class="x-icon">
             <path
                 d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z">
@@ -46,7 +46,7 @@
     <div class="container">
         <header class="header">
             <h1>piyohico apps</h1>
-            <p>シンプルなブラウザアプリ <a href="https://x.com/piyo621" target="_blank" rel="noopener noreferrer">@piyohico</a>
+            <p>あると便利なブラウザアプリ <a href="https://x.com/piyo621" target="_blank" rel="noopener noreferrer">@piyohico</a>
             </p>
         </header>
 
@@ -243,7 +243,17 @@
             `;
         }
 
-        document.addEventListener('DOMContentLoaded', loadApps);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadApps();
+
+            // シェアボタンに現在のURLを追加
+            const shareBtn = document.querySelector('.share-button');
+            if (shareBtn) {
+                const currentUrl = encodeURIComponent(window.location.href);
+                const currentHref = shareBtn.getAttribute('href');
+                shareBtn.setAttribute('href', `${currentHref}&url=${currentUrl}`);
+            }
+        });
     </script>
 </body>
 
