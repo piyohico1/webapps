@@ -251,7 +251,7 @@
             if (shareBtn) {
                 const currentUrl = encodeURIComponent(window.location.href);
                 const currentHref = shareBtn.getAttribute('href');
-                shareBtn.setAttribute('href', `${currentHref}&url=${currentUrl}`);
+                shareBtn.setAttribute('href', `${currentHref}%0a&url=${currentUrl}`);
             }
         });
     </script>
