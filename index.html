@@ -229,6 +229,19 @@
                         </a>
                     </div>
                 `;
+
+                // カード全体をクリック可能にする
+                appCard.addEventListener('click', (e) => {
+                    // リンクボタンそのものをクリックした場合は重複処理しない
+                    if (e.target.closest('.app-link')) return;
+
+                    // テキスト選択中は遷移しない（ユーザビリティ向上）
+                    const selection = window.getSelection();
+                    if (selection.toString().length > 0) return;
+
+                    window.open(safeLink, '_blank', 'noopener,noreferrer');
+                });
+
                 appsGrid.appendChild(appCard);
             });
         }

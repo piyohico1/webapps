@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             applyCrop: "切り抜き適用",
             alertLoadFail: "画像の読み込みに失敗しました。",
             alertCopyFail: "コピーに失敗しました。\nブラウザの権限設定を確認してください。",
-            shareText: "ブラウザで使えるシンプルな画像編集アプリ「SNAPTUNE」を使ってみました！\nhttps://piyohico1.github.io/webapps/papps/snaptune/ #SNAPTUNE",
+            shareText: "ブラウザで使えるシンプルな画像編集アプリ「SNAPTUNE」を使ってみました！ #SNAPTUNE",
             copied: "コピー完了！"
         },
         en: {
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             applyCrop: "Apply Crop",
             alertLoadFail: "Failed to load image.",
             alertCopyFail: "Failed to copy.\nPlease check browser permissions.",
-            shareText: "Tried SNAPTUNE, a simple browser-based image editor!\nhttps://piyohico1.github.io/webapps/papps/snaptune/ #SNAPTUNE",
+            shareText: "Tried SNAPTUNE, a simple browser-based image editor! #SNAPTUNE",
             copied: "Copied!"
         }
     };
@@ -272,12 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Share to X
     document.getElementById('share-btn').addEventListener('click', () => {
         const text = encodeURIComponent(i18n[currentLang].shareText);
-        const url = encodeURIComponent(window.location.href); // Or a fixed official URL if available
-        // Since it is local file, usually window.location.href is file:// which is not helpful.
-        // Let's just share text if it's strictly local, or maybe a project repo URL?
-        // Using just text for now as requested "Share the App".
-        const shareUrl = `https://twitter.com/intent/tweet?text=${text}`;
-        window.open(shareUrl, '_blank', 'width=550,height=420');
+        const urlProperty = encodeURIComponent('https://piyohico1.github.io/webapps/papps/snaptune/');
+        const shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${urlProperty}`;
+        window.open(shareUrl, '_blank');
     });
 
     // Filters

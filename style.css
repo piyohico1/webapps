@@ -163,6 +163,7 @@ body {
     display: flex;
     flex-direction: column;
     animation: fadeInUp 0.6s ease-out backwards;
+    cursor: pointer;
 }
 
 .app-card:hover {
