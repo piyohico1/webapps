@@ -1,0 +1,12 @@
+/* Orientation Controls */
+.orientation-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.orientation-controls .aspect-btn {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}

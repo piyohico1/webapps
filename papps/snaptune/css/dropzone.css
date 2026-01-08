@@ -1,0 +1,50 @@
+/* Drop Zone */
+.drop-zone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(99, 102, 241, 0.4);
+    /* Accent color with opacity */
+    border: 4px dashed var(--accent-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    /* Lower z-index so it stays under header/sidebar conceptually if needed, but inside workspace it is top */
+    /* Top level */
+    pointer-events: none;
+    /* Let events fall through to container handlers */
+    backdrop-filter: blur(4px);
+    border-radius: var(--radius-md);
+    /* Add radius back */
+}
+
+.drop-zone.hidden {
+    display: none;
+}
+
+.drop-message {
+    text-align: center;
+    color: white;
+    background: rgba(0, 0, 0, 0.7);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    pointer-events: none;
+}
+
+.drop-message svg {
+    margin-bottom: var(--spacing-sm);
+}
+
+.drop-message p {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Add drag interaction feedback to main workspace */
+.main-workspace.drag-active {
+    background-color: #1f2229;
+    /* Slightly lighter bg */
+}
