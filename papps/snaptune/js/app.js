@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             applyCrop: "切り抜き適用",
             alertLoadFail: "画像の読み込みに失敗しました。",
             alertCopyFail: "コピーに失敗しました。\nブラウザの権限設定を確認してください。",
-            shareText: "ブラウザで使えるシンプルな画像編集アプリ「SnapTune」を使ってみました！ #SnapTune",
+            shareText: "ブラウザで使えるシンプルな画像編集アプリ「SNAPTUNE」を使ってみました！ #SNAPTUNE",
             copied: "コピー完了！"
         },
         en: {
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             applyCrop: "Apply Crop",
             alertLoadFail: "Failed to load image.",
             alertCopyFail: "Failed to copy.\nPlease check browser permissions.",
-            shareText: "Tried SnapTune, a simple browser-based image editor! #SnapTune",
+            shareText: "Tried SNAPTUNE, a simple browser-based image editor! #SNAPTUNE",
             copied: "Copied!"
         }
     };
