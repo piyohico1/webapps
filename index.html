@@ -63,7 +63,7 @@
         </main>
 
         <footer class="footer">
-            <p>&copy; 2026 piyohico apps. All rights reserved.</p>
+            <p>&copy; piyohico apps. All rights reserved.</p>
         </footer>
     </div>
 
@@ -88,6 +88,13 @@
                 if (allApps.length === 0) {
                     throw new Error('アプリリストが空です');
                 }
+
+                // 日付でソート（新しい順）
+                allApps.sort((a, b) => {
+                    const dateA = getDateObject(a.updateDate || a.date);
+                    const dateB = getDateObject(b.updateDate || b.date);
+                    return dateB - dateA;
+                });
 
                 renderApps(allApps);
 
@@ -129,6 +136,7 @@
                             title: titleMatch[2],
                             description: '',
                             date: '',
+                            updateDate: '',
                             link: ''
                         };
                     }
@@ -139,6 +147,10 @@
                 } else if (trimmed.startsWith('**制作日:**')) {
                     if (currentApp) {
                         currentApp.date = trimmed.replace('**制作日:**', '').trim();
+                    }
+                } else if (trimmed.startsWith('**更新日:**')) {
+                    if (currentApp) {
+                        currentApp.updateDate = trimmed.replace('**更新日:**', '').trim();
                     }
                 } else if (trimmed.startsWith('**リンク:**')) {
                     if (currentApp) {
@@ -168,17 +180,22 @@
             });
         }
 
-        function isNewApp(dateString) {
-            if (!dateString) return false;
-            // "2025年7月31日" のような形式をパース
+        function getDateObject(dateString) {
+            if (!dateString) return new Date(0); // 過去の日付
             const dateMatch = dateString.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-            if (!dateMatch) return false;
+            if (!dateMatch) return new Date(0);
 
             const year = parseInt(dateMatch[1]);
-            const month = parseInt(dateMatch[2]) - 1; // 月は0-11
+            const month = parseInt(dateMatch[2]) - 1;
             const day = parseInt(dateMatch[3]);
 
-            const appDate = new Date(year, month, day);
+            return new Date(year, month, day);
+        }
+
+        function isNewApp(dateString) {
+            if (!dateString) return false;
+
+            const appDate = getDateObject(dateString);
             const now = new Date();
 
             // 30日以内ならNewとする
@@ -203,17 +220,25 @@
                 // アニメーションの遅延を追加
                 appCard.style.animationDelay = `${index * 0.05}s`;
 
-                const isNew = isNewApp(app.date);
+                // 更新日があればそれを優先してNEW判定
+                const checkDate = app.updateDate || app.date;
+                const isNew = isNewApp(checkDate);
                 const newBadge = isNew ? '<div class="badge-new">NEW</div>' : '';
 
                 // サニタイズされた値を使用
                 const safeTitle = escapeHtml(app.title);
                 const safeDesc = escapeHtml(app.description);
                 const safeDate = escapeHtml(app.date);
+                const safeUpdateDate = escapeHtml(app.updateDate);
                 const safeLink = escapeHtml(app.link);
                 // アイコンは絵文字前提なのでそのまま出すが、念のためエスケープしても良いが絵文字が壊れる場合もあるので注意
                 // ここでは絵文字1文字+αと想定してそのまま出す（Markdownのパースで抽出されたもの）
                 const safeIcon = app.icon;
+
+                let dateDisplay = `<div class="app-date">${safeDate}</div>`;
+                if (safeUpdateDate) {
+                    dateDisplay = `<div class="app-date">🔄 ${safeUpdateDate}</div>`;
+                }
 
                 appCard.innerHTML = `
                     ${newBadge}
@@ -223,7 +248,7 @@
                     </h3>
                     <p>${safeDesc}</p>
                     <div class="card-footer">
-                        <div class="app-date">${safeDate}</div>
+                        ${dateDisplay}
                         <a href="${safeLink}" class="app-link" target="_blank" rel="noopener noreferrer" aria-label="${safeTitle}を開く">
                             <i class="fas fa-arrow-right"></i>
                         </a>

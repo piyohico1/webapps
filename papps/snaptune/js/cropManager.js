@@ -134,9 +134,120 @@ class CropManager {
                 }
             }
 
+            // Clamp resizing to canvas bounds
+            // 1. Clamp Top/Left
+            if (newRect.x < 0) {
+                newRect.w += newRect.x; // reduce width by the amount it went over (negative x)
+                newRect.x = 0;
+            }
+            if (newRect.y < 0) {
+                newRect.h += newRect.y; // reduce height
+                newRect.y = 0;
+            }
+
+            // 2. Clamp Bottom/Right
+            if (newRect.x + newRect.w > canvasRect.width) {
+                newRect.w = canvasRect.width - newRect.x;
+            }
+            if (newRect.y + newRect.h > canvasRect.height) {
+                newRect.h = canvasRect.height - newRect.y;
+            }
+
             // Min size
             if (newRect.w < 20) newRect.w = 20;
             if (newRect.h < 20) newRect.h = 20;
+
+            // Re-apply Aspect Ratio after clamping if needed?
+            // If clamping broke the ratio, we might need to adjust the other dimension to match again.
+            // This is tricky. Simple clamping is often preferred over rigid ratio if it hits the edge.
+            // But if strict ratio is required, we have to clamp the *dominant* side and adjust the other.
+
+            if (this.activeRatio) {
+                // Check if we violated ratio due to clamping
+                // Simplest logic: If we hit width limit, recalc height. If we hit height limit, recalc width.
+                // Ideally we shouldn't drift.
+
+                // Let's recalculate based on the new potentially-clamped width/height, 
+                // prioritizing the specific handle direction being dragged?
+                // That can lead to infinite loops or fighting constraints.
+                // For now, let's accept the clamping might slightly break ratio at the very edge 
+                // OR we clamp strictly. 
+
+                // Let's try to maintain ratio by reducing the other dimension if one hits the wall.
+
+                /* 
+                 * Logic: 
+                 * If width was clamped, adjust height = width / ratio
+                 * If height was clamped, adjust width = height * ratio
+                 */
+
+                // Since we modified w/h and x/y above, let's check ratio again
+                // But wait, changing h might push it out of bounds again? No, if we reduce.
+
+                const currentRatio = newRect.w / newRect.h;
+                // Allow small epsilon diff
+                if (Math.abs(currentRatio - this.activeRatio) > 0.01) {
+                    // Ratio mismatch due to clamping.
+                    // We should shrink the non-clamped dimension to fit.
+
+                    // If we are dragging E/W, width is primary. If we clamped width, we should adjust height.
+                    // But we clamped both above.
+                    // Just try to fit into the box with the ratio.
+
+                    if (this.dragHandle.includes('e') || this.dragHandle.includes('w')) {
+                        // Driven by width mostly, unless height hit limit.
+                        // But if width hit limit, we want encoded height.
+                        // If height hit limit, we want encoded width.
+
+                        // Re-verify
+                        let wFromH = newRect.h * this.activeRatio;
+                        let hFromW = newRect.w / this.activeRatio;
+
+                        // Which one is smaller/valid?
+                        if (wFromH <= newRect.w) {
+                            newRect.w = wFromH;
+                            if (this.dragHandle.includes('w')) {
+                                // If we shrank width, and we anchor Right (drag West), we need to adjust X?
+                                // X was set by drag.
+                                // If we reduce W, and we are dragging W, X should shift right? No, X is left edge.
+                                // Dragging West: X moves. 
+                                // If we hit Left Wall (x=0), newRect.w was reduced.
+                                // If we hit Right Wall (not possible dragging West)...
+
+                                // It's clearer to just set W/H. 
+                                // For West drag, Right edge is fixed: R = oldX + oldW.
+                                // newX = R - newW.
+                                newRect.x = (this.startRect.x + this.startRect.w) - newRect.w;
+                            }
+                        } else {
+                            newRect.h = hFromW;
+                            if (this.dragHandle.includes('n')) {
+                                // Dragging North? (Corner case)
+                                // If dragging NW, and we adjust Height, Bottom is fixed.
+                                // newY = (oldY + oldH) - newH
+                                newRect.y = (this.startRect.y + this.startRect.h) - newRect.h;
+                            }
+                            // If dragging varying Height handles...
+                        }
+                    } else {
+                        // N/S drag... similar logic
+                        // It gets complicated. 
+                        // Simplest acceptable UX: Enforce ratio purely, and if it exceeds bounds, clamp both and shrink to fit ratio.
+
+                        if (newRect.w > newRect.h * this.activeRatio) {
+                            newRect.w = newRect.h * this.activeRatio;
+                            if (this.dragHandle.includes('w')) {
+                                newRect.x = (this.startRect.x + this.startRect.w) - newRect.w;
+                            }
+                        } else {
+                            newRect.h = newRect.w / this.activeRatio;
+                            if (this.dragHandle.includes('n')) {
+                                newRect.y = (this.startRect.y + this.startRect.h) - newRect.h;
+                            }
+                        }
+                    }
+                }
+            }
 
         }
 
@@ -200,10 +311,20 @@ class CropManager {
 
     updateOverlay() {
         const r = this.currentRect;
-        this.overlay.style.top = `${r.y}px`;
-        this.overlay.style.left = `${r.x}px`;
+        const offset = this.getCanvasOffset();
+        this.overlay.style.top = `${r.y + offset.y}px`;
+        this.overlay.style.left = `${r.x + offset.x}px`;
         this.overlay.style.width = `${r.w}px`;
         this.overlay.style.height = `${r.h}px`;
+    }
+
+    getCanvasOffset() {
+        const containerRect = this.container.getBoundingClientRect();
+        const canvasRect = this.canvas.getBoundingClientRect();
+        return {
+            x: canvasRect.left - containerRect.left,
+            y: canvasRect.top - containerRect.top
+        };
     }
 
     hide() {

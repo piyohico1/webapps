@@ -43,8 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
             applyCrop: "切り抜き適用",
             alertLoadFail: "画像の読み込みに失敗しました。",
             alertCopyFail: "コピーに失敗しました。\nブラウザの権限設定を確認してください。",
-            shareText: "ブラウザで使えるシンプルな画像編集アプリ「SNAPTUNE」を使ってみました！ #SNAPTUNE",
-            copied: "コピー完了！"
+            shareText: "ブラウザで画像編集「SNAPTUNE」を使ってみました！",
+            copied: "コピー完了！",
+            updates: "アップデート履歴",
+            updatesTitle: "アップデート履歴",
+            close: "閉じる"
         },
         en: {
             undo: "Undo",
@@ -76,8 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
             applyCrop: "Apply Crop",
             alertLoadFail: "Failed to load image.",
             alertCopyFail: "Failed to copy.\nPlease check browser permissions.",
-            shareText: "Tried SNAPTUNE, a simple browser-based image editor! #SNAPTUNE",
-            copied: "Copied!"
+            shareText: "Tried 'SNAPTUNE' for image editing in the browser!",
+            copied: "Copied!",
+            updates: "Updates",
+            updatesTitle: "Update History",
+            close: "Close"
         }
     };
 
@@ -195,7 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 downloadBtn.disabled = false;
                 copyBtn.disabled = false;
                 updateUndoButton(); // Check undo state
-                resetZoom();
+                // resetZoom(); // Changed effectively to fitToScreen via resetZoom logic change or direct call
+                fitToScreen();
             } catch (err) {
                 console.error("Failed to load image", err);
                 alert(i18n[currentLang].alertLoadFail);
@@ -329,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Zoom Controls
     document.getElementById('zoom-in').addEventListener('click', () => updateZoom(0.1));
     document.getElementById('zoom-out').addEventListener('click', () => updateZoom(-0.1));
-    document.getElementById('fit-screen').addEventListener('click', resetZoom);
+    document.getElementById('fit-screen').addEventListener('click', fitToScreen);
 
     // Orientation & Crop
     const cropManager = new CropManager(
@@ -419,22 +426,113 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateZoom(delta) {
-        const newZoom = Math.round((zoomLevel + delta) * 10) / 10;
-        if (newZoom >= zoomMin && newZoom <= zoomMax) {
-            zoomLevel = newZoom;
-            document.getElementById('zoom-level').textContent = `${Math.round(zoomLevel * 100)}%`;
-            render();
-        }
+        // Round to 1 decimal to avoid float issues
+        let newZoom = Math.round((zoomLevel + delta) * 100) / 100;
+
+        // Dynamic min/max could be better, but fixed is fine for now
+        if (newZoom < zoomMin) newZoom = zoomMin;
+        if (newZoom > zoomMax) newZoom = zoomMax;
+
+        zoomLevel = newZoom;
+        document.getElementById('zoom-level').textContent = `${Math.round(zoomLevel * 100)}%`;
+        render();
     }
 
     function resetZoom() {
-        // Fit to container logic could go here
-        zoomLevel = 1.0;
-        document.getElementById('zoom-level').textContent = "100%";
-        // Reset CSS transform
-        canvas.style.transform = 'none';
-        // Logic to actually fit within container based on clientWidth/Height vs canvas.width/height is better
-        // For now, reset to 100%
+        // Reset to 100% or Fit? 
+        // "Fit" button usually implies Fit.
+        fitToScreen();
+    }
+
+    function fitToScreen() {
+        if (!processor.originalImage) return;
+
+        const container = document.getElementById('canvas-container');
+        // Container size might be limited by CSS max-height/width
+        // We need clientWidth/Height
+        const cw = container.clientWidth - 40; // padding/margin safety
+        const ch = container.clientHeight - 40;
+
+        const { width, height } = processor.getTransformedDimensions ? processor.getTransformedDimensions() : processor.originalImage;
+        // fallback if getTransformedDimensions missing (it is, need to use canvas size logic)
+        // Actually render() sets canvas.width/height based on rotation.
+        // We can just use the canvas.width/height implied by local logic?
+        // But render() hasn't run with new image maybe? 
+        // processor.originalImage is set.
+
+        // Let's replicate dimension logic or use current params
+        const { rotate } = processor.params;
+        const isRotated = rotate % 180 !== 0;
+        const imgW = isRotated ? processor.originalImage.height : processor.originalImage.width;
+        const imgH = isRotated ? processor.originalImage.width : processor.originalImage.height;
+
+        const scaleW = cw / imgW;
+        const scaleH = ch / imgH;
+
+        // Fit whole image
+        let scale = Math.min(scaleW, scaleH);
+
+        // If image is smaller than screen, maybe don't upscale? 
+        // Usually "Fit" means "Show All". If small, 1.0 is fine.
+        // If large, scale down.
+        if (scale > 1) scale = 1.0;
+
+        // Don't go too small
+        if (scale < zoomMin) scale = zoomMin;
+
+        zoomLevel = scale;
+        document.getElementById('zoom-level').textContent = `${Math.round(zoomLevel * 100)}%`;
         render();
     }
+
+    // --- Update History ---
+    const updatesModal = document.getElementById('updates-modal');
+    const updatesBtn = document.getElementById('updates-btn');
+    const closeModalBtn = document.getElementById('close-modal');
+    const updatesList = document.getElementById('updates-list');
+
+    const updateHistory = [
+        {
+            date: '2026.01.13',
+            desc: {
+                ja: '入力画像が画面外にはみ出てたのを解消\nトリミング操作の安定性を向上',
+                en: 'Fixed issue where input images extended off-screen\nImproved crop stability'
+            }
+        },
+        { date: '2026.01.08', desc: { ja: 'リリース！', en: 'Initial Release!' } }
+    ];
+
+    function renderUpdates() {
+        updatesList.innerHTML = '';
+        updateHistory.forEach(item => {
+            const li = document.createElement('li');
+            const dateSpan = document.createElement('span');
+            dateSpan.className = 'update-date';
+            dateSpan.textContent = item.date;
+
+            const descSpan = document.createElement('span');
+            descSpan.className = 'update-desc';
+            descSpan.textContent = item.desc[currentLang] || item.desc['ja'];
+
+            li.appendChild(dateSpan);
+            li.appendChild(descSpan);
+            updatesList.appendChild(li);
+        });
+    }
+
+    updatesBtn.addEventListener('click', () => {
+        renderUpdates();
+        updatesModal.classList.remove('hidden');
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        updatesModal.classList.add('hidden');
+    });
+
+    // Close on click outside
+    updatesModal.addEventListener('click', (e) => {
+        if (e.target === updatesModal) {
+            updatesModal.classList.add('hidden');
+        }
+    });
 });
