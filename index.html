@@ -51,10 +51,18 @@
         </header>
 
         <main>
+            <!-- Update Link -->
+            <div class="update-link-container">
+                <a href="#" class="update-link" id="updates-trigger">
+                    <i class="fas fa-history"></i> 更新履歴
+                </a>
+            </div>
+
             <!-- 検索バー -->
             <div class="search-container">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" id="search-input" class="search-input" placeholder="アプリを検索..." aria-label="アプリを検索">
+                <input type="text" id="search-input" class="search-input" placeholder="アプリを検索 / Search..."
+                    aria-label="アプリを検索">
             </div>
 
             <div class="apps-grid" id="apps-grid">
@@ -67,43 +75,68 @@
         </footer>
     </div>
 
+    <!-- Update History Modal -->
+    <div class="modal-overlay" id="update-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>更新履歴</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <ul class="update-list" id="update-list">
+                    <!-- Dynamic Content -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script>
         // グローバル変数として保持（検索用）
         let allApps = [];
 
         // アプリリスト（Markdown形式）を読み込んで表示
+        // アプリリストと履歴を読み込んで表示
         async function loadApps() {
             try {
-                const response = await fetch('./apps.md');
+                // 両方のファイルを並列で取得
+                const [appsRes, historyRes] = await Promise.all([
+                    fetch('./apps.md'),
+                    fetch('./history.md')
+                ]);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+                if (!appsRes.ok) throw new Error(`apps.md: ${appsRes.statusText}`);
+                // history.md は必須ではないかもしれないが、今回はエラーハンドリングしておく
+                if (!historyRes.ok) console.warn(`history.md: ${historyRes.statusText}`);
 
-                const markdownText = await response.text();
+                const appsText = await appsRes.text();
+                const historyText = historyRes.ok ? await historyRes.text() : '';
 
                 // Markdownパーサー
-                allApps = parseAppsMarkdown(markdownText);
+                allApps = parseAppsMarkdown(appsText);
+                const historyItems = parseHistoryMarkdown(historyText);
 
                 if (allApps.length === 0) {
                     throw new Error('アプリリストが空です');
                 }
 
-                // 日付でソート（新しい順）
-                allApps.sort((a, b) => {
+                renderApps(allApps);
+
+                // 履歴リストの結合とソート
+                const combinedHistory = [...allApps, ...historyItems];
+                combinedHistory.sort((a, b) => {
                     const dateA = getDateObject(a.updateDate || a.date);
                     const dateB = getDateObject(b.updateDate || b.date);
                     return dateB - dateA;
                 });
 
-                renderApps(allApps);
+                setupUpdateModal(combinedHistory);
 
                 // 検索イベントリスナーの設定
                 setupSearch();
 
             } catch (error) {
-                console.error('アプリリストの読み込みに失敗しました:', error);
-                showError('apps.mdファイルの読み込みに失敗しました。');
+                console.error('データの読み込みに失敗しました:', error);
+                showError('データの読み込みに失敗しました。');
             }
         }
 
@@ -132,40 +165,70 @@
                     const titleMatch = trimmed.match(/^## (.+?) (.+)/);
                     if (titleMatch) {
                         currentApp = {
+                            type: 'app',
                             icon: titleMatch[1],
                             title: titleMatch[2],
                             description: '',
                             date: '',
                             updateDate: '',
-                            link: ''
+                            link: '',
+                            english: '',
+                            englishDesc: ''
                         };
                     }
                 } else if (trimmed.startsWith('**説明:**')) {
-                    if (currentApp) {
-                        currentApp.description = trimmed.replace('**説明:**', '').trim();
-                    }
+                    if (currentApp) currentApp.description = trimmed.replace('**説明:**', '').trim();
                 } else if (trimmed.startsWith('**制作日:**')) {
-                    if (currentApp) {
-                        currentApp.date = trimmed.replace('**制作日:**', '').trim();
-                    }
+                    if (currentApp) currentApp.date = trimmed.replace('**制作日:**', '').trim();
                 } else if (trimmed.startsWith('**更新日:**')) {
-                    if (currentApp) {
-                        currentApp.updateDate = trimmed.replace('**更新日:**', '').trim();
-                    }
+                    if (currentApp) currentApp.updateDate = trimmed.replace('**更新日:**', '').trim();
+                } else if (trimmed.startsWith('**英語:**')) {
+                    if (currentApp) currentApp.english = trimmed.replace('**英語:**', '').trim();
+                } else if (trimmed.startsWith('**英語説明:**')) {
+                    if (currentApp) currentApp.englishDesc = trimmed.replace('**英語説明:**', '').trim();
                 } else if (trimmed.startsWith('**リンク:**')) {
                     if (currentApp) {
-                        // リンクの抽出は少し緩めに
                         const linkMatch = trimmed.match(/\[(.+?)\]\((.+?)\)/);
-                        if (linkMatch) {
-                            currentApp.link = linkMatch[2];
-                        }
+                        if (linkMatch) currentApp.link = linkMatch[2];
                     }
                 }
             }
-
             if (currentApp) apps.push(currentApp);
-
             return apps;
+        }
+
+        function parseHistoryMarkdown(markdown) {
+            const items = [];
+            if (!markdown) return items;
+
+            const lines = markdown.split('\n');
+            let currentItem = null;
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+
+                // 空行や特定の区切りで新しいアイテムとみなすこともできるが
+                // ここでは **内容:** が来たら新しいアイテムの開始とみなすシンプル実装にする
+                if (trimmed.startsWith('**内容:**')) {
+                    if (currentItem) items.push(currentItem);
+                    currentItem = {
+                        type: 'history',
+                        title: 'サイト更新', // デフォルトタイトル
+                        icon: '🏠',       // 固定アイコン
+                        description: trimmed.replace('**内容:**', '').trim(),
+                        date: '', // 更新日が入る
+                        updateDate: '' // ソート用
+                    };
+                } else if (trimmed.startsWith('**更新日:**')) {
+                    if (currentItem) {
+                        const date = trimmed.replace('**更新日:**', '').trim();
+                        currentItem.date = date;
+                        currentItem.updateDate = date; // appsと同じプロパティにしておく
+                    }
+                }
+            }
+            if (currentItem) items.push(currentItem);
+            return items;
         }
 
         function setupSearch() {
@@ -173,10 +236,87 @@
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.toLowerCase();
                 const filteredApps = allApps.filter(app => {
-                    return app.title.toLowerCase().includes(query) ||
-                        app.description.toLowerCase().includes(query);
+                    const matchTitle = app.title.toLowerCase().includes(query);
+                    const matchDesc = app.description.toLowerCase().includes(query);
+                    const matchEng = app.english && app.english.toLowerCase().includes(query);
+                    const matchEngDesc = app.englishDesc && app.englishDesc.toLowerCase().includes(query);
+                    return matchTitle || matchDesc || matchEng || matchEngDesc;
                 });
                 renderApps(filteredApps);
+            });
+        }
+
+        function setupUpdateModal(apps) {
+            const modal = document.getElementById('update-modal');
+            const trigger = document.getElementById('updates-trigger');
+            const close = document.getElementById('modal-close');
+            const list = document.getElementById('update-list');
+
+            if (!modal || !trigger || !close || !list) return;
+
+            // Populate List
+            // Populate List
+            list.innerHTML = apps.map(app => {
+                const date = app.updateDate || app.date;
+                const safeDate = escapeHtml(date);
+
+                // アプリか履歴かで表示を分ける
+                if (app.type === 'history') {
+                    // 履歴アイテム
+                    const safeDesc = escapeHtml(app.description);
+                    return `
+                        <li class="update-item">
+                            <div class="update-date">${safeDate}</div>
+                            <div class="update-info">
+                                <h4>
+                                    <span class="status-badge updated">Site Update</span>
+                                </h4>
+                                <p style="display:block; font-size:0.85rem; color:#6b7280; margin-top:0.2rem;">${safeDesc}</p>
+                            </div>
+                        </li>
+                    `;
+                } else {
+                    // アプリ
+                    const dateLabel = app.updateDate ? 'UPDATED' : 'CREATED';
+                    const badgeClass = app.updateDate ? 'updated' : 'created';
+                    const safeTitle = escapeHtml(app.title);
+                    const safeIcon = app.icon;
+
+                    return `
+                        <li class="update-item">
+                            <div class="update-date">${safeDate}</div>
+                            <div class="update-info">
+                                <h4>
+                                    ${safeIcon} ${safeTitle}
+                                    <span class="status-badge ${badgeClass}">${dateLabel}</span>
+                                </h4>
+                            </div>
+                        </li>
+                    `;
+                }
+            }).join('');
+
+            // Event Listeners
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                modal.classList.add('active');
+            });
+
+            close.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+
+            // ESC key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    modal.classList.remove('active');
+                }
             });
         }
 
