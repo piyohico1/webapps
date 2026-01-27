@@ -1,5 +1,12 @@
 # piyohico apps - アプリリスト
 
+## 🙌 iDiff
+**説明:** 画像の比較を簡単に。スライダー、重ね合わせ、差分表示など
+**制作日:** 2026年1月27日
+**英語:** iDiff
+**英語説明:** Easily compare images. Slider, overlay, difference display, etc.
+**リンク:** [アプリを開く](./papps/idiff/index.html)
+
 ## 🧵 X-STITCH
 **説明:** Xの縦長画像を結合したり分割したり
 **制作日:** 2026年1月12日

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iDiff</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-MSTVN0KCF9');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-left">
+                <h1>iDiff</h1>
+            </div>
+            <div class="header-center">
+                <button id="text-btn" class="icon-btn text-toggle-btn" title="Toggle Labels">
+                    <span>T</span>
+                </button>
+            </div>
+            <div class="header-right">
+                <button id="archive-btn" class="icon-btn" title="View History" data-i18n-title="viewHistory">
+                    <span style="font-size: 1.2rem;">📂</span>
+                </button>
+                <button id="lang-toggle" class="icon-btn" title="Toggle Language"
+                    style="font-size: 0.8rem; font-weight: 700;">
+                    JA
+                </button>
+                <button id="theme-toggle" class="icon-btn" title="Toggle Theme" data-i18n-title="toggleTheme">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button id="share-x-btn" class="icon-btn" title="Share on X">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <dialog id="history-modal" class="modal">
+            <div class="modal-header">
+                <h2 data-i18n="historyTitle">Comparison History</h2>
+                <button id="close-history-modal" class="icon-btn">✕</button>
+            </div>
+            <div class="history-list" id="history-list">
+                <div class="empty-state" data-i18n="historyEmpty">No history yet</div>
+            </div>
+        </dialog>
+
+        <dialog id="text-modal" class="modal">
+            <div class="modal-header">
+                <h2 data-i18n="editLabelsTitle">Edit Labels</h2>
+                <button id="close-text-modal" class="icon-btn">✕</button>
+            </div>
+            <div class="modal-content">
+                <div class="inputs-grid">
+                    <div class="input-group">
+                        <label for="label-input-1" data-i18n="label1">Image 1 Label</label>
+                        <input type="text" id="label-input-1" placeholder="e.g. Before"
+                            data-i18n-placeholder="label1Placeholder">
+                    </div>
+                    <div class="input-group">
+                        <label for="label-input-2" data-i18n="label2">Image 2 Label</label>
+                        <input type="text" id="label-input-2" placeholder="e.g. After"
+                            data-i18n-placeholder="label2Placeholder">
+                    </div>
+                </div>
+                <div class="label-actions">
+                    <button id="save-labels-btn" class="primary-btn" data-i18n="save">Save</button>
+                    <button id="reset-labels-btn" class="icon-btn small" title="Reset to Defaults"
+                        data-i18n-title="resetLabels">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </dialog>
+
+        <dialog id="confirm-modal" class="modal" style="z-index: 2000;">
+            <div class="modal-header">
+                <h2 data-i18n="deleteTitle">Delete History</h2>
+                <button id="close-confirm-modal" class="icon-btn">✕</button>
+            </div>
+            <div class="modal-content">
+                <p data-i18n="deleteConfirm">Are you sure you want to delete this comparison?</p>
+                <div class="modal-actions">
+                    <button id="cancel-delete-btn" class="secondary-btn" data-i18n="cancel">Cancel</button>
+                    <button id="confirm-delete-btn" class="danger-btn" data-i18n="delete">Delete</button>
+                </div>
+            </div>
+        </dialog>
+
+        <main class="main-content">
+            <div class="upload-section" id="upload-section">
+                <div class="drop-zone" id="drop-zone1">
+                    <input type="file" id="file-input1" accept="image/*" hidden>
+                    <div class="upload-content">
+                        <span class="icon">📷</span>
+                        <p data-i18n="upload1">Upload Image 1 (Base)</p>
+                        <span class="sub-text" data-i18n="dropHint">Drag & drop or click to browse</span>
+                    </div>
+                </div>
+                <div class="drop-zone" id="drop-zone2">
+                    <input type="file" id="file-input2" accept="image/*" hidden>
+                    <div class="upload-content">
+                        <span class="icon">📷</span>
+                        <p data-i18n="upload2">Upload Image 2 (Compare)</p>
+                        <span class="sub-text" data-i18n="dropHint">Drag & drop or click to browse</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comparison-container hidden" id="comparison-container">
+                <div id="label1" class="image-label">
+                    <span class="label-text"></span>
+                    <span class="label-resolution"></span>
+                </div>
+                <div id="label2" class="image-label">
+                    <span class="label-text"></span>
+                    <span class="label-resolution"></span>
+                </div>
+                <div class="image-wrapper" id="image-wrapper">
+                    <img id="image1" src="" alt="Image 1">
+                    <img id="image2" src="" alt="Image 2">
+                </div>
+                <div class="slider-handle" id="slider-handle">
+                    <div class="slider-knob">⇔</div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="control-panel">
+            <div class="control-group">
+                <label data-i18n="mode">Mode:</label>
+                <div class="mode-switcher">
+                    <button class="mode-btn active" data-mode="slider" data-i18n="modeSlider">Slider</button>
+                    <button class="mode-btn" data-mode="side-by-side" data-i18n="modeSide"
+                        style="display: none;">Side-by-Side</button>
+                    <button class="mode-btn" data-mode="difference" data-i18n="modeDiff">Difference</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <label data-i18n="zoom">Zoom:</label>
+                <button id="zoom-out" class="icon-btn">-</button>
+                <span id="zoom-level">100%</span>
+                <button id="zoom-in" class="icon-btn">+</button>
+                <button id="fit-view" class="icon-btn" title="Fit to View" data-i18n-title="fitView">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                    </svg>
+                </button>
+                <button id="reset-view" class="icon-btn" title="Reset View" data-i18n-title="resetView">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="control-group" id="opacity-control" style="display: none;">
+                <label data-i18n="opacity">Opacity:</label>
+                <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="0.5">
+            </div>
+            <a href="https://piyohico1.github.io/webapps/" target="_blank" class="copyright-link">@ piyohico apps</a>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
