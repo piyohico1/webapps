@@ -370,11 +370,11 @@ class ImageCompositor {
     }
 
     shareToX() {
-        // 紹介文言+/n URL+/n #appname
         const t = locales[this.currentLang];
-        const text = `${t.introText}\nhttps://piyohico1.github.io/webapps/\n#Composi`;
-        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-        window.open(url, '_blank');
+        const text = encodeURIComponent(t.introText);
+        const url = encodeURIComponent(window.location.href);
+        const intentUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=Composi`;
+        window.open(intentUrl, '_blank');
     }
 
     handleImageUpload(file, type) {
