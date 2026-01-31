@@ -125,7 +125,8 @@ class ImageCompositor {
             opacity: 1,
             brightness: 1,
             contrast: 1,
-            saturation: 1
+            saturation: 1,
+            hue: 0
         };
 
         this.view = { scale: 1, x: 0, y: 0 };
@@ -256,6 +257,7 @@ class ImageCompositor {
         bindControl('brightness', 'brightnessVal', this.filters, 'brightness', 0.01);
         bindControl('contrast', 'contrastVal', this.filters, 'contrast', 0.01);
         bindControl('saturation', 'saturationVal', this.filters, 'saturation', 0.01);
+        bindControl('hue', 'hueVal', this.filters, 'hue');
 
         document.getElementById('flipCheck').onchange = (e) => {
             this.history.pushState();
@@ -485,14 +487,25 @@ class ImageCompositor {
 
     resetTransform() {
         this.history.pushState();
+
+        let initialScale = 1;
+
         if (this.bgImage) {
             this.transform.x = this.bgImage.width / 2;
             this.transform.y = this.bgImage.height / 2;
+
+            // Fit overlay to background
+            if (this.overlayImage) {
+                const scaleX = this.bgImage.width / this.overlayImage.width;
+                const scaleY = this.bgImage.height / this.overlayImage.height;
+                initialScale = Math.min(scaleX, scaleY);
+            }
         } else {
             this.transform.x = this.canvas.width / 2;
             this.transform.y = this.canvas.height / 2;
         }
-        this.transform.scale = 1;
+
+        this.transform.scale = initialScale;
         this.transform.rotation = 0;
         this.transform.flipH = false;
         this.updateControlUI();
@@ -505,6 +518,7 @@ class ImageCompositor {
         this.filters.brightness = 1;
         this.filters.contrast = 1;
         this.filters.saturation = 1;
+        this.filters.hue = 0;
         this.updateControlUI();
         this.requestRender();
     }
@@ -681,24 +695,25 @@ class ImageCompositor {
         const delta = e.deltaY < 0 ? 1 : -1;
         const zoomFactor = Math.exp(delta * zoomIntensity);
 
-        if (this.overlayImage) {
+        // Ctrlキーが押されている、または合成画像がない場合はキャンバスズーム
+        if (e.ctrlKey || !this.overlayImage) {
+            const pos = this.getCanvasPos(e);
+            const wx = (pos.x - this.view.x) / this.view.scale;
+            const wy = (pos.y - this.view.y) / this.view.scale;
+            this.view.scale *= zoomFactor;
+            this.view.x = pos.x - wx * this.view.scale;
+            this.view.y = pos.y - wy * this.view.scale;
+            this.updateViewUI();
+            this.requestRender();
+        }
+        // 合成画像がある場合は合成画像サイズ変更
+        else if (this.overlayImage) {
             // Debounce history push for zoom? 
             // Actually, we can just push state. If optimized, it's cheap.
             this.history.pushState();
             this.transform.scale *= zoomFactor;
             this.updateControlUI();
             this.requestRender();
-        } else {
-            if (e.ctrlKey || !this.overlayImage) {
-                const pos = this.getCanvasPos(e);
-                const wx = (pos.x - this.view.x) / this.view.scale;
-                const wy = (pos.y - this.view.y) / this.view.scale;
-                this.view.scale *= zoomFactor;
-                this.view.x = pos.x - wx * this.view.scale;
-                this.view.y = pos.y - wy * this.view.scale;
-                this.updateViewUI();
-                this.requestRender();
-            }
         }
     }
 
@@ -781,6 +796,22 @@ class ImageCompositor {
                 this.history.redo();
                 this.requestRender();
             }
+
+            // Keyboard Movement
+            if (this.overlayImage && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                e.preventDefault();
+                const step = e.shiftKey ? 10 : 1;
+                this.history.pushState();
+
+                switch (e.code) {
+                    case 'ArrowUp': this.transform.y -= step; break;
+                    case 'ArrowDown': this.transform.y += step; break;
+                    case 'ArrowLeft': this.transform.x -= step; break;
+                    case 'ArrowRight': this.transform.x += step; break;
+                }
+                this.updateControlUI();
+                this.requestRender();
+            }
         });
         window.addEventListener('keyup', e => {
             if (e.code === 'Space') this.isSpacePressed = false;
@@ -840,7 +871,7 @@ class ImageCompositor {
             this.ctx.rotate(this.transform.rotation * Math.PI / 180);
             this.ctx.scale(this.transform.scale * (this.transform.flipH ? -1 : 1), this.transform.scale);
             this.ctx.globalAlpha = this.filters.opacity;
-            this.ctx.filter = `brightness(${this.filters.brightness}) contrast(${this.filters.contrast}) saturate(${this.filters.saturation})`;
+            this.ctx.filter = `brightness(${this.filters.brightness}) contrast(${this.filters.contrast}) saturate(${this.filters.saturation}) hue-rotate(${this.filters.hue}deg)`;
 
             const w = this.overlayImage.width;
             const h = this.overlayImage.height;
@@ -891,13 +922,24 @@ class ImageCompositor {
 
     // --- State/UI Sync ---
     updateControlUI() {
+        // Transform
         document.getElementById('scaleSlider').value = parseInt(this.transform.scale * 100);
         document.getElementById('scaleInput').value = parseInt(this.transform.scale * 100);
         document.getElementById('rotateSlider').value = parseInt(this.transform.rotation);
         document.getElementById('rotateInput').value = parseInt(this.transform.rotation);
         document.getElementById('flipCheck').checked = this.transform.flipH;
+
+        // Filters
         document.getElementById('opacitySlider').value = parseInt(this.filters.opacity * 100);
         document.getElementById('opacityInput').value = parseInt(this.filters.opacity * 100);
+        document.getElementById('brightnessSlider').value = parseInt(this.filters.brightness * 100);
+        document.getElementById('brightnessInput').value = parseInt(this.filters.brightness * 100);
+        document.getElementById('contrastSlider').value = parseInt(this.filters.contrast * 100);
+        document.getElementById('contrastInput').value = parseInt(this.filters.contrast * 100);
+        document.getElementById('saturationSlider').value = parseInt(this.filters.saturation * 100);
+        document.getElementById('saturationInput').value = parseInt(this.filters.saturation * 100);
+        document.getElementById('hueSlider').value = parseInt(this.filters.hue);
+        document.getElementById('hueInput').value = parseInt(this.filters.hue);
     }
 
     updateViewUI() {
@@ -960,7 +1002,8 @@ class ImageCompositor {
             outCtx.rotate(this.transform.rotation * Math.PI / 180);
             outCtx.scale(this.transform.scale * (this.transform.flipH ? -1 : 1), this.transform.scale);
             outCtx.globalAlpha = this.filters.opacity;
-            outCtx.filter = `brightness(${this.filters.brightness}) contrast(${this.filters.contrast}) saturate(${this.filters.saturation})`;
+            outCtx.globalAlpha = this.filters.opacity;
+            outCtx.filter = `brightness(${this.filters.brightness}) contrast(${this.filters.contrast}) saturate(${this.filters.saturation}) hue-rotate(${this.filters.hue}deg)`;
             const w = this.overlayImage.width;
             const h = this.overlayImage.height;
             if (this.cachedOverlay.isValid) {
@@ -992,7 +1035,8 @@ class ImageCompositor {
             outCtx.rotate(this.transform.rotation * Math.PI / 180);
             outCtx.scale(this.transform.scale * (this.transform.flipH ? -1 : 1), this.transform.scale);
             outCtx.globalAlpha = this.filters.opacity;
-            outCtx.filter = `brightness(${this.filters.brightness}) contrast(${this.filters.contrast}) saturate(${this.filters.saturation})`;
+            outCtx.globalAlpha = this.filters.opacity;
+            outCtx.filter = `brightness(${this.filters.brightness}) contrast(${this.filters.contrast}) saturate(${this.filters.saturation}) hue-rotate(${this.filters.hue}deg)`;
             const w = this.overlayImage.width;
             const h = this.overlayImage.height;
             if (this.cachedOverlay.isValid) {
