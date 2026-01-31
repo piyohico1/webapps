@@ -113,6 +113,17 @@
 
                 // Markdownパーサー
                 allApps = parseAppsMarkdown(appsText);
+
+                // 日付（更新日優先）の降順でソート、ただしComposiは最優先
+                allApps.sort((a, b) => {
+                    // Composiを最優先（タイトルで判定）
+                    if (a.title === 'Composi') return -1;
+                    if (b.title === 'Composi') return 1;
+
+                    const dateA = getDateObject(a.updateDate || a.date);
+                    const dateB = getDateObject(b.updateDate || b.date);
+                    return dateB - dateA;
+                });
                 const historyItems = parseHistoryMarkdown(historyText);
 
                 if (allApps.length === 0) {
@@ -338,11 +349,11 @@
             const appDate = getDateObject(dateString);
             const now = new Date();
 
-            // 30日以内ならNewとする
+            // 14日以内ならNewとする
             const diffTime = Math.abs(now - appDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            return diffDays <= 30;
+            return diffDays <= 14;
         }
 
         function renderApps(apps) {

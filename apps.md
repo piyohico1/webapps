@@ -1,19 +1,27 @@
 # piyohico apps - アプリリスト
 
+## 🧵 X-STITCH
+**説明:** Xの縦長画像を結合したり分割したり
+**制作日:** 2026年1月12日
+**更新日:** 2026年1月31日
+**英語:** X-STITCH
+**英語説明:** Join or split vertical images for X.
+**リンク:** [アプリを開く](./papps/xstitch/index.html)
+
+## 🖼️ Composi
+**説明:** 2枚の画像を簡単に合成できます
+**制作日:** 2025年7月6日
+**更新日:** 2026年1月31日
+**英語:** Composi
+**英語説明:** Easily composite two images.
+**リンク:** [アプリを開く](./papps/composi/index.html)
+
 ## 🙌 iDiff
 **説明:** 画像の比較を簡単に。スライダー、重ね合わせ、差分表示など
 **制作日:** 2026年1月27日
 **英語:** iDiff
 **英語説明:** Easily compare images. Slider, overlay, difference display, etc.
 **リンク:** [アプリを開く](./papps/idiff/index.html)
-
-## 🧵 X-STITCH
-**説明:** Xの縦長画像を結合したり分割したり
-**制作日:** 2026年1月12日
-**更新日:** 2026年1月24日
-**英語:** X-STITCH
-**英語説明:** Join or split vertical images for X.
-**リンク:** [アプリを開く](./papps/xstitch/index.html)
 
 ## 🔳 SNAPTUNE
 **説明:** シンプルな画像編集。簡易フィルター、トリミング、回転、反転
@@ -85,10 +93,3 @@
 **英語:** Windows 10 Support End Countdown
 **英語説明:** Check how many days left until Win10 support ends. Official links included.
 **リンク:** [アプリを開く](./papps/windows10_countdown.html)
-
-## 🖼️ 簡単画像合成アプリ
-**説明:** 合成画像を簡単に作成できます
-**制作日:** 2025年7月6日
-**英語:** Easy Image Compositor
-**英語説明:** Easily create composite images.
-**リンク:** [アプリを開く](./papps/image_compositor.html)

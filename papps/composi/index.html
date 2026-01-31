@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composi</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-MSTVN0KCF9');
+    </script>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 16 16%22><text x=%220%22 y=%2214%22 font-size=%2216%22>&#x1f5bc;</text></svg>"
+        type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path
+                    d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z" />
+            </svg>
+            <span data-i18n="appTitle">Image Compositor</span>
+            <button class="btn-text" id="updateBtn" data-i18n="updates"
+                style="margin-left: 10px; font-size: 0.8rem; font-weight: normal; color: #888;">更新履歴</button>
+        </div>
+        <div class="header-controls">
+            <button class="btn-text" id="langBtn">EN</button>
+            <button class="btn-icon" id="undoBtn" title="元に戻す (Ctrl+Z)" data-i18n="undo" data-i18n-attr="title"
+                disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 14L4 9l5-5" />
+                    <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11" />
+                </svg>
+            </button>
+            <button class="btn-icon" id="redoBtn" title="やり直す (Ctrl+Y)" data-i18n="redo" data-i18n-attr="title"
+                disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 14l5-5-5-5" />
+                    <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13" />
+                </svg>
+            </button>
+            <button class="btn-icon" id="copyBtn" title="クリップボードにコピー" data-i18n="copy" data-i18n-attr="title" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </button>
+            <div style="width: 1px; background: #444; margin: 0 10px;"></div>
+            <button class="btn-primary" id="downloadBtn" data-i18n="download" disabled>ダウンロード</button>
+            <button class="btn-icon" id="shareBtn" title="Share to X" style="margin-left: 10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="left-panel">
+        <div class="panel-section">
+            <div class="panel-title">
+                <span data-i18n="bgTitle">Background</span>
+                <button class="btn-danger" id="clearBgBtn" style="display:none; padding: 2px 8px; font-size: 0.7rem;"
+                    data-i18n="bgDelete">削除</button>
+            </div>
+            <div class="upload-card" id="bgUploadCard">
+                <div class="upload-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span><span data-i18n="bgPlaceholder">背景画像を選択</span></span>
+                </div>
+                <img id="bgPreview" class="preview-img">
+                <input type="file" id="bgInput" accept="image/*">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-title">
+                <span data-i18n="overlayTitle">Overlay Image</span>
+                <button class="btn-danger" id="clearOverlayBtn"
+                    style="display:none; padding: 2px 8px; font-size: 0.7rem;" data-i18n="overlayDelete">削除</button>
+            </div>
+            <div class="upload-card" id="overlayUploadCard">
+                <div class="upload-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+                        <path d="M12 5l7 7-7 7M5 12h14" />
+                    </svg>
+                    <span><span data-i18n="overlayPlaceholder">合成画像を選択</span></span>
+                </div>
+                <img id="overlayPreview" class="preview-img">
+                <input type="file" id="overlayInput" accept="image/*">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-title" data-i18n="shortcutsTitle">Shortcuts</div>
+            <div style="font-size: 0.8rem; color: #888; line-height: 1.6;" data-i18n="shortcuts">
+                • ドラッグ: 移動<br>
+                • Shift+ドラッグ: 回転 (Shift+Altで45度刻み)<br>
+                • ホイール: 画像サイズ変更<br>
+                • Ctrl+ホイール: 画面ズーム<br>
+                • 中クリック/Space: 画面移動
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-area" id="canvasContainer">
+        <canvas id="mainCanvas"></canvas>
+        <div class="canvas-overlay-ui">
+            <button class="btn-icon" id="zoomOutBtn" title="ズームアウト (-)" data-i18n="zoomOut" data-i18n-attr="title"
+                style="padding: 2px; width: 20px; height: 20px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <button class="btn-icon" id="zoomInBtn" title="ズームイン (+)" style="padding: 2px; width: 20px; height: 20px;"
+                data-i18n="zoomIn" data-i18n-attr="title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <span id="zoomLevel">100%</span>
+            <button class="btn-icon" id="resetViewBtn" title="ビューリセット" style="padding: 2px; width: 20px; height: 20px;"
+                data-i18n="resetView" data-i18n-attr="title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="accordion-item active">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <span data-i18n="transform">変形・配置</span>
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-content">
+                <div class="control-group">
+                    <div class="control-label">
+                        <span data-i18n="size">サイズ</span>
+                        <button class="btn-danger" onclick="app.resetTransform()"
+                            style="padding: 2px 6px; font-size: 0.7rem;" data-i18n="reset">リセット</button>
+                    </div>
+                    <div class="range-wrapper">
+                        <input type="range" id="scaleSlider" min="10" max="300" value="100">
+                        <input type="number" id="scaleInput" value="100">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="rotation">回転</div>
+                    <div class="range-wrapper">
+                        <input type="range" id="rotateSlider" min="-180" max="180" value="0">
+                        <input type="number" id="rotateInput" value="0">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="flipCheck">
+                        <span data-i18n="flipH">左右反転</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item active">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <span data-i18n="tools">ツール</span>
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-content">
+                <div class="tool-grid">
+                    <button class="tool-btn active" id="moveToolBtn" onclick="app.setTool('move')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M19 9l3 3-3 3M9 19l3 3 3-3M2 12h20M12 2v20" />
+                        </svg>
+                        <span data-i18n="toolMove">移動</span>
+                    </button>
+                    <button class="tool-btn" id="eraserToolBtn" onclick="app.setTool('eraser')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 20H7L3 16C2 15 2 13 3 12L13 2L22 11L20 20Z" />
+                            <line x1="14" y1="11" x2="7" y2="18" />
+                        </svg>
+                        <span data-i18n="toolEraser">消しゴム</span>
+                    </button>
+                </div>
+
+                <div id="eraserSettings"
+                    style="margin-top: 15px; display: none; padding: 10px; background: #252525; border-radius: 6px;">
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span data-i18n="eraserSize">サイズ</span>
+                            <span id="eraserSizeVal">20px</span>
+                        </div>
+                        <input type="range" id="eraserSizeSlider" min="5" max="500" value="20">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span data-i18n="eraserSoftness">ぼかし (Softness)</span>
+                            <span id="eraserSoftVal">0%</span>
+                        </div>
+                        <input type="range" id="eraserSoftSlider" min="0" max="100" value="0">
+                    </div>
+                    <button class="btn-danger" style="width: 100%; margin-top: 5px;" onclick="app.resetMask()"
+                        data-i18n="resetErase">消去をリセット</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <span data-i18n="colorAdj">色調補正</span>
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-content">
+                <div style="text-align: right; margin-bottom: 10px;">
+                    <button class="btn-danger" onclick="app.resetFilters()" style="padding: 2px 6px; font-size: 0.7rem;"
+                        data-i18n="reset">リセット</button>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="opacity">透明度</div>
+                    <div class="range-wrapper">
+                        <input type="range" id="opacitySlider" min="0" max="100" value="100">
+                        <input type="number" id="opacityInput" value="100">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="brightness">明度</div>
+                    <div class="range-wrapper">
+                        <input type="range" id="brightnessSlider" min="0" max="200" value="100">
+                        <input type="number" id="brightnessInput" value="100">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="contrast">コントラスト</div>
+                    <div class="range-wrapper">
+                        <input type="range" id="contrastSlider" min="0" max="200" value="100">
+                        <input type="number" id="contrastInput" value="100">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="saturation">彩度</div>
+                    <div class="range-wrapper">
+                        <input type="range" id="saturationSlider" min="0" max="200" value="100">
+                        <input type="number" id="saturationInput" value="100">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-note"
+            style="margin-top: auto; padding: 20px 0 20px 0; text-align: center; font-size: 1.125rem; font-weight: bold; color: #666;">
+            <a href="https://piyohico1.github.io/webapps/" target="_blank"
+                style="color: inherit; text-decoration: none;">@ piyohico apps</a>
+        </div>
+    </div>
+
+
+
+    <div id="updateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="updates">更新履歴</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <ul id="updateList" data-i18n="updateContent">
+                    <!-- Content will be injected via JS/locales -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="closeModalBtn" data-i18n="close">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="locales.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

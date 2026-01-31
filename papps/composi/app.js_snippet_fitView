@@ -1,0 +1,17 @@
+
+    fitView() {
+        if (!this.bgImage || !this.canvas.width || !this.canvas.height) {
+            // If no BG, just reset to center/100%
+            this.view = { scale: 1, x: this.canvas.width / 2, y: this.canvas.height / 2 };
+        } else {
+             const scaleX = this.canvas.width / this.bgImage.width;
+             const scaleY = this.canvas.height / this.bgImage.height;
+             const scale = Math.min(scaleX, scaleY) * 0.9; // 90% fit
+             this.view.scale = scale;
+             // Center
+             this.view.x = (this.canvas.width - this.bgImage.width * scale) / 2;
+             this.view.y = (this.canvas.height - this.bgImage.height * scale) / 2;
+        }
+        this.updateViewUI();
+        this.requestRender();
+    }
