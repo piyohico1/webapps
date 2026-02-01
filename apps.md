@@ -9,9 +9,9 @@
 **リンク:** [アプリを開く](./papps/xstitch/index.html)
 
 ## 🖼️ Composi
-**説明:** 2枚の画像を簡単に合成できます
+**説明:** 2枚の画像を簡単合成
 **制作日:** 2025年7月6日
-**更新日:** 2026年1月31日
+**更新日:** 2026年2月1日
 **英語:** Composi
 **英語説明:** Easily composite two images.
 **リンク:** [アプリを開く](./papps/composi/index.html)

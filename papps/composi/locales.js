@@ -34,9 +34,20 @@ const locales = {
         contrast: "コントラスト",
         saturation: "彩度",
         hue: "色相",
+        dropShadow: "ドロップシャドウ",
+        enableShadow: "有効にする",
+        shadowAngle: "角度",
+        shadowDistance: "距離",
+        shadowBlur: "ぼかし",
+        shadowOpacity: "不透明度",
+        shadowColor: "色",
         introText: "Composiで２枚の画像を簡単合成！",
         updates: "更新履歴",
         updateContent: `
+            <li><b>2026/02/01: 機能追加・UI改善</b><br>
+            ・ドロップシャドウ機能を追加<br>
+            ・UI改善: ボタンデザインの統一、操作性向上<br>
+            ・その他: 自動フィット挙動の調整など</li>
             <li><b>2026/01/31: Composi リリース</b><br>
             「簡単画像合成アプリ」から大幅リニューアルし、「Composi」として生まれ変わりました。<br>
             ・日本語/英語対応、UI全面刷新<br>
@@ -81,9 +92,20 @@ const locales = {
         contrast: "Contrast",
         saturation: "Saturation",
         hue: "Hue",
+        dropShadow: "Drop Shadow",
+        enableShadow: "Enable",
+        shadowAngle: "Angle",
+        shadowDistance: "Distance",
+        shadowBlur: "Blur",
+        shadowOpacity: "Opacity",
+        shadowColor: "Color",
         introText: "Easily composite two images with Composi!",
         updates: "Updates",
         updateContent: `
+            <li><b>2026/02/01: Feature Update</b><br>
+            - Added Drop Shadow tool<br>
+            - UI Improvements: Button design, usability<br>
+            - Misc: Auto-fit behavior adjustments</li>
             <li><b>2026/01/31: Composi Released</b><br>
             Major renewal from "Easy Image Compositor".<br>
             - JP/EN support, UI Redesign<br>

@@ -152,8 +152,8 @@
                 <div class="control-group">
                     <div class="control-label">
                         <span data-i18n="size">サイズ</span>
-                        <button class="btn-danger" onclick="app.resetTransform()"
-                            style="padding: 2px 6px; font-size: 0.7rem;" data-i18n="reset">リセット</button>
+                        <button class="btn-danger btn-small" onclick="app.resetTransform()"
+                            data-i18n="reset">リセット</button>
                     </div>
                     <div class="range-wrapper">
                         <input type="range" id="scaleSlider" min="10" max="300" value="100">
@@ -168,10 +168,7 @@
                     </div>
                 </div>
                 <div class="control-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="flipCheck">
-                        <span data-i18n="flipH">左右反転</span>
-                    </div>
+                    <button id="flipBtn" class="btn-toggle" style="width: 100%;" data-i18n="flipH">左右反転</button>
                 </div>
             </div>
         </div>
@@ -205,9 +202,9 @@
                     <div class="control-group">
                         <div class="control-label">
                             <span data-i18n="eraserSize">サイズ</span>
-                            <span id="eraserSizeVal">20px</span>
+                            <span id="eraserSizeVal">250px</span>
                         </div>
-                        <input type="range" id="eraserSizeSlider" min="5" max="500" value="20">
+                        <input type="range" id="eraserSizeSlider" min="5" max="500" value="250">
                     </div>
                     <div class="control-group">
                         <div class="control-label">
@@ -229,8 +226,7 @@
             </div>
             <div class="accordion-content">
                 <div style="text-align: right; margin-bottom: 10px;">
-                    <button class="btn-danger" onclick="app.resetFilters()" style="padding: 2px 6px; font-size: 0.7rem;"
-                        data-i18n="reset">リセット</button>
+                    <button class="btn-danger btn-small" onclick="app.resetFilters()" data-i18n="reset">リセット</button>
                 </div>
                 <div class="control-group">
                     <div class="control-label" data-i18n="opacity">透明度</div>
@@ -269,11 +265,63 @@
                 </div>
             </div>
         </div>
-        <div class="footer-note"
+
+        <div class="accordion-item" id="dropShadowAccordion">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+                <span data-i18n="dropShadow">ドロップシャドウ</span>
+                <span class="accordion-icon">▼</span>
+            </div>
+            <div class="accordion-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <button id="shadowBtn" class="btn-toggle" style="flex-grow: 1; margin-right: 10px;"
+                        data-i18n="enableShadow">有効にする</button>
+                    <button class="btn-danger btn-small" onclick="app.resetShadow()" data-i18n="reset">リセット</button>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="shadowAngle">角度</div>
+                    <div class="range-wrapper">
+                        <input type="range" id="shadowAngleSlider" min="0" max="360" value="45">
+                        <input type="number" id="shadowAngleInput" value="45">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="shadowDistance">距離</div>
+                    <div class="range-wrapper">
+                        <input type="range" id="shadowDistanceSlider" min="0" max="100" value="10">
+                        <input type="number" id="shadowDistanceInput" value="10">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="shadowBlur">ぼかし</div>
+                    <div class="range-wrapper">
+                        <input type="range" id="shadowBlurSlider" min="0" max="50" value="10">
+                        <input type="number" id="shadowBlurInput" value="10">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="shadowOpacity">不透明度</div>
+                    <div class="range-wrapper">
+                        <input type="range" id="shadowOpacitySlider" min="0" max="100" value="50">
+                        <input type="number" id="shadowOpacityInput" value="50">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label" data-i18n="shadowColor">色</div>
+                    <input type="color" id="shadowColorInput" value="#000000" style="width: 100%; height: 30px;">
+                </div>
+            </div>
+        </div>
+        <div class="footer-note desktop-only"
             style="margin-top: auto; padding: 20px 0 20px 0; text-align: center; font-size: 1.125rem; font-weight: bold; color: #666;">
             <a href="https://piyohico1.github.io/webapps/" target="_blank"
                 style="color: inherit; text-decoration: none;">@ piyohico apps</a>
         </div>
+    </div>
+
+    <div class="footer-note mobile-only"
+        style="padding: 20px 0; text-align: center; font-size: 1.125rem; font-weight: bold; color: #666; width: 100%;">
+        <a href="https://piyohico1.github.io/webapps/" target="_blank" style="color: inherit; text-decoration: none;">@
+            piyohico apps</a>
     </div>
 
 

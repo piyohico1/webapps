@@ -1,6 +1,14 @@
 // --- Utilities ---
 function toggleAccordion(header) {
-    header.parentElement.classList.toggle('active');
+    const item = header.parentElement;
+    const isActive = item.classList.toggle('active');
+
+    if (isActive && item.id === 'dropShadowAccordion') {
+        const appInstance = window.app;
+        if (appInstance) {
+            appInstance.enableShadowFromUI();
+        }
+    }
 }
 
 // --- History Manager ---
@@ -129,10 +137,19 @@ class ImageCompositor {
             hue: 0
         };
 
+        this.shadow = {
+            enabled: false,
+            angle: 45,
+            distance: 10,
+            blur: 10,
+            color: '#000000',
+            opacity: 0.5
+        };
+
         this.view = { scale: 1, x: 0, y: 0 };
         this.tool = 'move';
         this.eraser = {
-            size: 20,
+            size: 250,
             softness: 0,
             maskCanvas: null,
             maskCtx: null,
@@ -259,9 +276,32 @@ class ImageCompositor {
         bindControl('saturation', 'saturationVal', this.filters, 'saturation', 0.01);
         bindControl('hue', 'hueVal', this.filters, 'hue');
 
-        document.getElementById('flipCheck').onchange = (e) => {
+        // Shadow Controls
+        bindControl('shadowAngle', 'shadowAngleInput', this.shadow, 'angle');
+        bindControl('shadowDistance', 'shadowDistanceInput', this.shadow, 'distance');
+        bindControl('shadowBlur', 'shadowBlurInput', this.shadow, 'blur');
+        bindControl('shadowOpacity', 'shadowOpacityInput', this.shadow, 'opacity', 0.01);
+
+        document.getElementById('shadowBtn').onclick = (e) => {
             this.history.pushState();
-            this.transform.flipH = e.target.checked;
+            this.shadow.enabled = !this.shadow.enabled;
+            this.updateControlUI();
+            this.requestRender();
+        };
+
+        document.getElementById('shadowColorInput').oninput = (e) => {
+            this.shadow.color = e.target.value;
+            this.requestRender();
+        };
+        document.getElementById('shadowColorInput').onchange = (e) => {
+            this.history.pushState();
+            this.shadow.color = e.target.value; // In case oninput didn't fire (some browsers)
+        };
+
+        document.getElementById('flipBtn').onclick = (e) => {
+            this.history.pushState();
+            this.transform.flipH = !this.transform.flipH;
+            this.updateControlUI();
             this.requestRender();
         };
 
@@ -523,6 +563,27 @@ class ImageCompositor {
         this.requestRender();
     }
 
+    resetShadow() {
+        this.history.pushState();
+        this.shadow.enabled = false;
+        this.shadow.angle = 45;
+        this.shadow.distance = 10;
+        this.shadow.blur = 10;
+        this.shadow.opacity = 0.5;
+        this.shadow.color = '#000000';
+        this.updateControlUI();
+        this.requestRender();
+    }
+
+    enableShadowFromUI() {
+        if (!this.shadow.enabled) {
+            this.history.pushState();
+            this.shadow.enabled = true;
+            this.updateControlUI();
+            this.requestRender();
+        }
+    }
+
     resetMask() {
         if (this.eraser.maskCtx) {
             this.history.pushState();
@@ -531,6 +592,72 @@ class ImageCompositor {
             this.updateOverlayCache();
             this.requestRender();
         }
+    }
+
+    fitView() {
+        if (!this.bgImage) return;
+
+        let minX = 0;
+        let minY = 0;
+        let maxX = this.bgImage.width;
+        let maxY = this.bgImage.height;
+
+        // Overlay bounds inclusion
+        if (this.overlayImage) {
+            const w = this.overlayImage.width;
+            const h = this.overlayImage.height;
+            // 4 corners relative to center
+            const corners = [
+                { x: -w / 2, y: -h / 2 },
+                { x: w / 2, y: -h / 2 },
+                { x: w / 2, y: h / 2 },
+                { x: -w / 2, y: h / 2 }
+            ];
+
+            corners.forEach(p => {
+                // Apply transform
+                // Scale & Flip
+                let sx = p.x * this.transform.scale * (this.transform.flipH ? -1 : 1);
+                let sy = p.y * this.transform.scale;
+
+                // Rotate
+                const rad = this.transform.rotation * Math.PI / 180;
+                const rx = sx * Math.cos(rad) - sy * Math.sin(rad);
+                const ry = sx * Math.sin(rad) + sy * Math.cos(rad);
+
+                // Translate
+                const wx = rx + this.transform.x;
+                const wy = ry + this.transform.y;
+
+                if (wx < minX) minX = wx;
+                if (wx > maxX) maxX = wx;
+                if (wy < minY) minY = wy;
+                if (wy > maxY) maxY = wy;
+            });
+        }
+
+        const contentW = maxX - minX;
+        const contentH = maxY - minY;
+        const cx = minX + contentW / 2;
+        const cy = minY + contentH / 2;
+
+        const container = document.getElementById('canvasContainer');
+        const viewW = container.clientWidth;
+        const viewH = container.clientHeight;
+
+        const scaleX = viewW / contentW;
+        const scaleY = viewH / contentH;
+        this.view.scale = Math.min(scaleX, scaleY) * 0.9; // 90% fit
+
+        // Center the content
+        // Screen center = viewW/2, viewH/2
+        // ScreenPos = WorldPos * scale + offset
+        // offset = ScreenPos - WorldPos * scale
+        this.view.x = (viewW / 2) - cx * this.view.scale;
+        this.view.y = (viewH / 2) - cy * this.view.scale;
+
+        this.updateViewUI();
+        this.requestRender();
     }
 
     setTool(tool) {
@@ -873,6 +1000,23 @@ class ImageCompositor {
             this.ctx.globalAlpha = this.filters.opacity;
             this.ctx.filter = `brightness(${this.filters.brightness}) contrast(${this.filters.contrast}) saturate(${this.filters.saturation}) hue-rotate(${this.filters.hue}deg)`;
 
+            // Drop Shadow
+            if (this.shadow.enabled) {
+                const rad = this.shadow.angle * Math.PI / 180;
+                this.ctx.shadowBlur = this.shadow.blur;
+                const r = parseInt(this.shadow.color.slice(1, 3), 16);
+                const g = parseInt(this.shadow.color.slice(3, 5), 16);
+                const b = parseInt(this.shadow.color.slice(5, 7), 16);
+                this.ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${this.shadow.opacity})`;
+                this.ctx.shadowOffsetX = this.shadow.distance * Math.cos(rad);
+                this.ctx.shadowOffsetY = this.shadow.distance * Math.sin(rad);
+            } else {
+                this.ctx.shadowColor = 'transparent';
+                this.ctx.shadowBlur = 0;
+                this.ctx.shadowOffsetX = 0;
+                this.ctx.shadowOffsetY = 0;
+            }
+
             const w = this.overlayImage.width;
             const h = this.overlayImage.height;
             const ox = -w / 2;
@@ -891,6 +1035,10 @@ class ImageCompositor {
 
             if (this.tool === 'move') {
                 this.ctx.filter = 'none';
+                this.ctx.shadowColor = 'transparent';
+                this.ctx.shadowBlur = 0;
+                this.ctx.shadowOffsetX = 0;
+                this.ctx.shadowOffsetY = 0;
                 this.ctx.strokeStyle = '#6c5ce7';
                 this.ctx.lineWidth = 2 / this.transform.scale;
                 this.ctx.strokeRect(ox, oy, w, h);
@@ -927,7 +1075,7 @@ class ImageCompositor {
         document.getElementById('scaleInput').value = parseInt(this.transform.scale * 100);
         document.getElementById('rotateSlider').value = parseInt(this.transform.rotation);
         document.getElementById('rotateInput').value = parseInt(this.transform.rotation);
-        document.getElementById('flipCheck').checked = this.transform.flipH;
+        document.getElementById('flipBtn').classList.toggle('active', this.transform.flipH);
 
         // Filters
         document.getElementById('opacitySlider').value = parseInt(this.filters.opacity * 100);
@@ -940,6 +1088,18 @@ class ImageCompositor {
         document.getElementById('saturationInput').value = parseInt(this.filters.saturation * 100);
         document.getElementById('hueSlider').value = parseInt(this.filters.hue);
         document.getElementById('hueInput').value = parseInt(this.filters.hue);
+
+        // Shadow UI
+        document.getElementById('shadowAngleSlider').value = parseInt(this.shadow.angle);
+        document.getElementById('shadowAngleInput').value = parseInt(this.shadow.angle);
+        document.getElementById('shadowDistanceSlider').value = parseInt(this.shadow.distance);
+        document.getElementById('shadowDistanceInput').value = parseInt(this.shadow.distance);
+        document.getElementById('shadowBlurSlider').value = parseInt(this.shadow.blur);
+        document.getElementById('shadowBlurInput').value = parseInt(this.shadow.blur);
+        document.getElementById('shadowOpacitySlider').value = parseInt(this.shadow.opacity * 100);
+        document.getElementById('shadowOpacityInput').value = parseInt(this.shadow.opacity * 100);
+        document.getElementById('shadowColorInput').value = this.shadow.color;
+        document.getElementById('shadowBtn').classList.toggle('active', this.shadow.enabled);
     }
 
     updateViewUI() {
@@ -964,6 +1124,7 @@ class ImageCompositor {
         const state = {
             transform: { ...this.transform },
             filters: { ...this.filters },
+            shadow: { ...this.shadow },
             maskData: maskData
         };
         return state;
@@ -972,6 +1133,7 @@ class ImageCompositor {
     restoreState(state) {
         this.transform = { ...state.transform };
         this.filters = { ...state.filters };
+        if (state.shadow) this.shadow = { ...state.shadow };
 
         if (state.maskData && this.eraser.maskCtx) {
             this.eraser.maskCtx.putImageData(state.maskData, 0, 0);
@@ -1002,8 +1164,19 @@ class ImageCompositor {
             outCtx.rotate(this.transform.rotation * Math.PI / 180);
             outCtx.scale(this.transform.scale * (this.transform.flipH ? -1 : 1), this.transform.scale);
             outCtx.globalAlpha = this.filters.opacity;
-            outCtx.globalAlpha = this.filters.opacity;
             outCtx.filter = `brightness(${this.filters.brightness}) contrast(${this.filters.contrast}) saturate(${this.filters.saturation}) hue-rotate(${this.filters.hue}deg)`;
+
+            // Drop Shadow
+            if (this.shadow.enabled) {
+                const rad = this.shadow.angle * Math.PI / 180;
+                outCtx.shadowBlur = this.shadow.blur;
+                const r = parseInt(this.shadow.color.slice(1, 3), 16);
+                const g = parseInt(this.shadow.color.slice(3, 5), 16);
+                const b = parseInt(this.shadow.color.slice(5, 7), 16);
+                outCtx.shadowColor = `rgba(${r}, ${g}, ${b}, ${this.shadow.opacity})`;
+                outCtx.shadowOffsetX = this.shadow.distance * Math.cos(rad);
+                outCtx.shadowOffsetY = this.shadow.distance * Math.sin(rad);
+            }
             const w = this.overlayImage.width;
             const h = this.overlayImage.height;
             if (this.cachedOverlay.isValid) {
@@ -1035,8 +1208,19 @@ class ImageCompositor {
             outCtx.rotate(this.transform.rotation * Math.PI / 180);
             outCtx.scale(this.transform.scale * (this.transform.flipH ? -1 : 1), this.transform.scale);
             outCtx.globalAlpha = this.filters.opacity;
-            outCtx.globalAlpha = this.filters.opacity;
             outCtx.filter = `brightness(${this.filters.brightness}) contrast(${this.filters.contrast}) saturate(${this.filters.saturation}) hue-rotate(${this.filters.hue}deg)`;
+
+            // Drop Shadow
+            if (this.shadow.enabled) {
+                const rad = this.shadow.angle * Math.PI / 180;
+                outCtx.shadowBlur = this.shadow.blur;
+                const r = parseInt(this.shadow.color.slice(1, 3), 16);
+                const g = parseInt(this.shadow.color.slice(3, 5), 16);
+                const b = parseInt(this.shadow.color.slice(5, 7), 16);
+                outCtx.shadowColor = `rgba(${r}, ${g}, ${b}, ${this.shadow.opacity})`;
+                outCtx.shadowOffsetX = this.shadow.distance * Math.cos(rad);
+                outCtx.shadowOffsetY = this.shadow.distance * Math.sin(rad);
+            }
             const w = this.overlayImage.width;
             const h = this.overlayImage.height;
             if (this.cachedOverlay.isValid) {
@@ -1060,7 +1244,8 @@ class ImageCompositor {
     }
 }
 
-const app = new ImageCompositor();
+// Initialize
+window.app = new ImageCompositor();
 setInterval(() => {
     const btn = document.getElementById('downloadBtn');
     if (btn) btn.disabled = !app.bgImage;

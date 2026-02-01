@@ -143,6 +143,32 @@ button {
     background-color: rgba(255, 71, 87, 0.2);
 }
 
+.btn-small {
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    border-radius: 4px;
+}
+
+.btn-toggle {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    border: 1px solid transparent;
+}
+
+.btn-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.btn-toggle.active {
+    background-color: rgba(108, 92, 231, 0.2);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
 /* Left Panel - Layers/Uploads */
 .left-panel {
     background-color: var(--panel-bg);
@@ -359,6 +385,7 @@ canvas {
 
 input[type="range"] {
     -webkit-appearance: none;
+    appearance: none;
     width: 100%;
     height: 4px;
     background: var(--slider-bg);
@@ -368,6 +395,7 @@ input[type="range"] {
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     width: 16px;
     height: 16px;
     border-radius: 50%;
@@ -434,40 +462,82 @@ input[type="number"] {
     color: var(--accent-color);
 }
 
+/* Mobile Layout */
+.mobile-only {
+    display: none;
+    background-color: var(--panel-bg);
+    /* Match panel background */
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     body {
         grid-template-columns: 1fr;
-        grid-template-rows: 60px auto 1fr auto;
-        /* Header, Canvas, Right, Left */
+        grid-template-rows: auto auto 1fr auto auto;
+        /* Header, Canvas, Right, Left, Footer */
         overflow-y: auto;
     }
 
+    header {
+        flex-wrap: wrap;
+        padding: 10px 20px;
+        gap: 10px;
+    }
+
+    .mobile-only {
+        display: block;
+        order: 10;
+        /* Ensure it's at the bottom */
+        background-color: var(--panel-bg);
+        /* Match panel background */
+    }
+
+    .desktop-only {
+        display: none;
+    }
+
     .left-panel {
-        order: 4;
+        grid-row: 4;
         border-right: none;
-        border-top: 1px solid var(--border-color);
-        height: auto;
-        max-height: 300px;
+        border-top: 1px solid #333;
+        order: 4;
+        max-height: none;
+        overflow-y: visible;
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 15px;
+        padding: 20px;
     }
 
     .canvas-area {
+        grid-row: 2;
         order: 2;
         height: 50vh;
+        min-height: 300px;
     }
 
     .right-panel {
+        grid-row: 3;
         order: 3;
         border-left: none;
         border-top: 1px solid var(--border-color);
         height: auto;
-        max-height: 400px;
+        max-height: none;
+        /* Remove height constraint for better visibility */
+        min-height: 300px;
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 15px;
+        gap: 0;
+    }
+
+    .right-panel .accordion-item {
+        border-right: 1px solid var(--border-color);
+        /* Add vertical separator */
+    }
+
+    .right-panel .accordion-item:nth-child(2n) {
+        border-right: none;
+        /* Remove separator for right column */
     }
 }
 
