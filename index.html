@@ -114,12 +114,8 @@
                 // Markdownパーサー
                 allApps = parseAppsMarkdown(appsText);
 
-                // 日付（更新日優先）の降順でソート、ただしComposiは最優先
+                // 日付（更新日優先）の降順でソート
                 allApps.sort((a, b) => {
-                    // Composiを最優先（タイトルで判定）
-                    if (a.title === 'Composi') return -1;
-                    if (b.title === 'Composi') return 1;
-
                     const dateA = getDateObject(a.updateDate || a.date);
                     const dateB = getDateObject(b.updateDate || b.date);
                     return dateB - dateA;

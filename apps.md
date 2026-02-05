@@ -1,5 +1,12 @@
 # piyohico apps - アプリリスト
 
+## 🎥 Snap2Mov
+**説明:** 複数画像を入力して一つの動画を作成
+**制作日:** 2026年2月5日
+**英語:** Snap2Mov
+**英語説明:** Create a video from multiple images.
+**リンク:** [アプリを開く](./papps/snap2mov/index.html)
+
 ## 🧵 X-STITCH
 **説明:** Xの縦長画像を結合したり分割したり
 **制作日:** 2026年1月12日

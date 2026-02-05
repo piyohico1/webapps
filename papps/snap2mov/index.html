@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 16 16%22><text x=%220%22 y=%2214%22 font-size=%2216%22>&#x1f3c1;</text></svg>"
+        type="image/svg+xml">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-MSTVN0KCF9');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snap2Mov</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="background-animation">
+        <div class="neon-orb orb-1"></div>
+        <div class="neon-orb orb-2"></div>
+        <div class="neon-orb orb-3"></div>
+    </div>
+    <div class="app-container">
+        <header>
+            <div class="header-top">
+                <div class="title-group">
+                    <h1>Snap2Mov</h1>
+                    <p data-i18n="appDescription">複数画像を入力して一つの動画を作成します</p>
+                </div>
+                <div class="top-controls">
+                    <button id="lang-toggle-btn" class="icon-btn" aria-label="Switch Language">EN/JA</button>
+                    <button id="x-share-btn" class="icon-btn x-btn" aria-label="Share on X">
+                        <!-- Simple X logo SVG or text -->
+                        𝕏
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="upload-section" id="upload-area">
+                <input type="file" id="file-input" multiple accept="image/*" hidden>
+                <div class="upload-placeholder">
+                    <p data-i18n="dragDropText">ここに画像をドラッグ＆ドロップ</p>
+                    <button id="select-files-btn" class="secondary-btn" data-i18n="selectFilesBtn">ファイルを選択</button>
+                </div>
+            </section>
+
+            <section class="thumbnail-section" id="thumbnail-section" hidden>
+                <div class="thumbnail-header">
+                    <h3><span data-i18n="imagesLabel">Images</span> (<span id="thumbnail-count">0</span>)</h3>
+                    <button id="delete-all-btn" class="text-danger-btn" data-i18n="deleteAllBtn">全て削除</button>
+                </div>
+                <p class="subtitle" data-i18n="dragToReorder">ドラッグして順番を入れ替えられます</p>
+                <div id="thumbnail-grid" class="thumbnail-grid"></div>
+            </section>
+
+            <section class="settings-section">
+                <div class="setting-item">
+                    <label for="duration-input" data-i18n="videoDuration">動画の長さ (秒)</label>
+                    <input type="number" id="duration-input" value="5" min="1" step="0.1">
+                </div>
+                <div class="setting-item checkbox-item">
+                    <label for="fade-effect-input">
+                        <input type="checkbox" id="fade-effect-input">
+                        <span data-i18n="fadeEffect">フェード イン/アウト (各+1秒)</span>
+                    </label>
+                </div>
+                <div class="info-display">
+                    <p><span data-i18n="resolution">動画解像度</span>: <span id="resolution-display">-</span></p>
+                    <p><span data-i18n="totalImages">合計画像数</span>: <span id="image-count">0</span> <span
+                            data-i18n="imagesUnit">枚</span></p>
+                    <p><span data-i18n="frameRate">フレームレート</span>: <span id="fps-display">-</span> fps</p>
+                </div>
+            </section>
+
+            <section class="action-section">
+                <div class="format-selector">
+                    <label data-i18n="outputFormat">出力形式:</label>
+                    <button id="format-mp4-btn" class="format-btn active">MP4</button>
+                    <button id="format-webm-btn" class="format-btn">WebM</button>
+                </div>
+                <button id="generate-btn" class="primary-btn" disabled data-i18n="generateVideoBtn">動画を作成</button>
+            </section>
+
+            <section class="preview-section" hidden>
+                <!-- Canvas is hidden but used for generation -->
+                <canvas id="preview-canvas" hidden></canvas>
+
+                <div id="progress-container" hidden>
+                    <p data-i18n="generatingVideo">動画作成中...</p>
+                    <div id="progress-bar-bg">
+                        <div id="progress-bar"></div>
+                    </div>
+                    <span id="progress-text">0%</span>
+                </div>
+
+                <video id="result-video" controls hidden></video>
+                <a id="download-link" hidden data-i18n="downloadBtn">ダウンロード</a>
+            </section>
+        </main>
+
+        <footer>
+            <p>
+                <a href="https://piyohico1.github.io/webapps/" target="_blank">@ piyohico apps</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Modal for MP4 Warning -->
+    <div id="mp4-warning-modal" class="modal" hidden>
+        <div class="modal-content">
+            <p data-i18n="mp4Warning">お使いのブラウザはMP4出力をサポートしていません。WebMに切り替えてください。</p>
+            <button id="modal-close-btn" class="secondary-btn" data-i18n="closeBtn">閉じる</button>
+        </div>
+    </div>
+
+    <!-- Modal for Delete Confirmation -->
+    <div id="delete-confirm-modal" class="modal" hidden>
+        <div class="modal-content">
+            <p data-i18n="deleteConfirm">全ての画像を削除してもよろしいですか？</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button id="delete-cancel-btn" class="secondary-btn" data-i18n="cancelBtn">キャンセル</button>
+                <button id="delete-confirm-btn" class="primary-btn" style="background-color: var(--error-color);"
+                    data-i18n="deleteBtn">削除する</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

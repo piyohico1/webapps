@@ -1,0 +1,582 @@
+:root {
+    --bg-color: #121212;
+    --surface-color: #1e1e1e;
+    --border-color: #333;
+    --text-color: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --primary-color: #4a90e2;
+    --primary-hover: #357abd;
+    --error-color: #ff5252;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.app-container {
+    background-color: rgba(30, 30, 30, 0.7);
+    /* More transparent for glassmorphism */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    width: 100%;
+    max-width: 600px;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 10;
+}
+
+/* Neon Background Animation */
+.background-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+    background-color: #050505;
+}
+
+.neon-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.48;
+    animation: moveOrb 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1),
+        pulseOrb 7s infinite alternate ease-in-out;
+}
+
+.orb-1 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, #ff00ff, #800080);
+    top: -100px;
+    left: -100px;
+    animation-duration: 25s, 8s;
+}
+
+.orb-2 {
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, #00ffff, #008080);
+    bottom: -150px;
+    right: -150px;
+    animation-duration: 30s, 9s;
+    animation-delay: -5s, -2s;
+}
+
+.orb-3 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, #0000ff, #000080);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-duration: 35s, 10s;
+    animation-delay: -10s, -5s;
+}
+
+@keyframes moveOrb {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    25% {
+        transform: translate(20vw, 10vh) scale(1.1);
+    }
+
+    50% {
+        transform: translate(-10vw, 20vh) scale(0.9);
+    }
+
+    75% {
+        transform: translate(10vw, -10vh) scale(1.05);
+    }
+
+    100% {
+        transform: translate(-5vw, -5vh) scale(1);
+    }
+}
+
+@keyframes pulseOrb {
+    0% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+
+    100% {
+        opacity: 0.3;
+    }
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.title-group {
+    text-align: left;
+    flex-grow: 1;
+}
+
+.top-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.icon-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 6px;
+    padding: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.x-btn {
+    font-size: 1.2rem;
+    width: 36px;
+}
+
+h1 {
+    margin: 0 0 0.25rem 0;
+    font-weight: 700;
+}
+
+header p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+footer {
+    margin-top: 2rem;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+footer p {
+    font-weight: 700;
+    font-size: 1.125rem;
+    margin: 0;
+}
+
+footer a {
+    color: var(--text-color);
+    /* Match theme or use primary */
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+footer a:hover {
+    color: var(--primary-color);
+}
+
+.upload-section {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+    margin-bottom: 1.5rem;
+}
+
+.upload-section:hover,
+.upload-section.drag-over {
+    border-color: var(--primary-color);
+    background-color: rgba(74, 144, 226, 0.05);
+}
+
+.upload-placeholder p {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.settings-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.setting-item label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.setting-item.checkbox-item {
+    flex-direction: row;
+    align-items: center;
+}
+
+.setting-item.checkbox-item label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: var(--text-color);
+    /* Brighten label for checkbox */
+    font-size: 0.9rem;
+}
+
+.setting-item.checkbox-item input[type="checkbox"] {
+    accent-color: var(--primary-color);
+    width: 16px;
+    height: 16px;
+}
+
+input[type="number"] {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.5rem;
+    border-radius: 4px;
+    width: 80px;
+}
+
+.info-display p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: right;
+}
+
+.info-display span {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.primary-btn,
+.secondary-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.primary-btn:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+}
+
+.primary-btn:disabled {
+    background-color: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* Format Selector */
+.format-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+}
+
+.format-selector label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.format-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background-color: var(--surface-color);
+    color: var(--text-color);
+    transition: all 0.2s;
+}
+
+.format-btn.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.format-btn:not(.active):hover {
+    background-color: #333;
+}
+
+/* Thumbnail Delete Button */
+.thumbnail-delete-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgba(255, 50, 50, 0.8);
+    border: none;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: auto;
+}
+
+.thumbnail-item:hover .thumbnail-delete-btn {
+    opacity: 1;
+}
+
+.thumbnail-delete-btn:hover {
+    background-color: rgba(255, 50, 50, 1);
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--surface-color);
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 400px;
+    border: 1px solid var(--border-color);
+}
+
+.modal-content p {
+    margin-bottom: 1.5rem;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.secondary-btn {
+    background-color: #333;
+    color: var(--text-color);
+    width: auto;
+}
+
+.secondary-btn:hover {
+    background-color: #444;
+}
+
+#preview-canvas {
+    max-width: 100%;
+    margin-top: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-image: linear-gradient(45deg, #222 25%, transparent 25%), linear-gradient(-45deg, #222 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #222 75%), linear-gradient(-45deg, transparent 75%, #222 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+#result-video {
+    width: 100%;
+    margin-top: 1rem;
+    border-radius: 4px;
+}
+
+#progress-container {
+    width: 100%;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+#progress-container p {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+#progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+#progress-bar {
+    height: 100%;
+    background-color: var(--primary-color);
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+#progress-text {
+    display: block;
+    text-align: right;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    color: var(--text-secondary);
+}
+
+/* Thumbnail Grid */
+.thumbnail-section {
+    margin-bottom: 1.5rem;
+}
+
+.thumbnail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.thumbnail-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.text-danger-btn {
+    background: none;
+    border: none;
+    color: var(--error-color);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.text-danger-btn:hover {
+    color: #ff8080;
+}
+
+.subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0 0 1rem 0;
+}
+
+.thumbnail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    /* Increased min-width slightly */
+    gap: 1rem;
+    /* Increased gap */
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.thumbnail-item {
+    display: flex;
+    flex-direction: column;
+    cursor: grab;
+    position: relative;
+    border-radius: 4px;
+    transition: transform 0.2s;
+}
+
+.thumbnail-item img {
+    width: 100%;
+    aspect-ratio: 1;
+    /* Force square image */
+    object-fit: cover;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+    background-color: #000;
+    pointer-events: none;
+}
+
+.thumbnail-name {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    /* Or left/right depending on preference, center looks okay usually */
+    width: 100%;
+    direction: rtl;
+    /* Truncate start, show end */
+    text-align: center;
+    /* Keep center alignment if possible, otherwise it aligns right due to RTL */
+}
+
+.thumbnail-item:hover img {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.thumbnail-item:hover {
+    transform: translateY(-2px);
+}
+
+.thumbnail-item.dragging {
+    opacity: 0.5;
+}
+
+.thumbnail-item.dragging img {
+    border-color: var(--primary-color);
+}
+
+.thumbnail-item.drag-over img {
+    border-left: 3px solid var(--primary-color);
+    border-color: transparent transparent transparent var(--primary-color);
+    /* Reset other borders if needed, or just left */
+}
