@@ -651,7 +651,7 @@ const translations = {
 };
 
 // Initial Language Load from LocalStorage
-let currentLang = localStorage.getItem('snap2mov_lang') || 'ja';
+let currentLang = localStorage.getItem('snap2v_lang') || 'ja';
 // Apply initial language immediately
 updateLanguage(currentLang);
 
@@ -660,7 +660,7 @@ const xShareBtn = document.getElementById('x-share-btn');
 
 function updateLanguage(lang) {
     currentLang = lang;
-    localStorage.setItem('snap2mov_lang', lang); // Save preference
+    localStorage.setItem('snap2v_lang', lang); // Save preference
     const t = translations[lang];
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -691,11 +691,11 @@ langToggleBtn.addEventListener('click', () => {
 
 xShareBtn.addEventListener('click', () => {
     const intro = currentLang === 'ja' ?
-        "ブラウザで画像を動画に変換！" :
-        "Convert images to video in your browser!";
+        "Snap2Vで画像を動画にしました！" :
+        "Snap2V created a video from images!";
 
-    const hashtags = "Snap2Mov";
-    const shareUrl = "https://piyohico1.github.io/webapps/snap2mov/";
+    const hashtags = "Snap2V";
+    const shareUrl = "https://piyohico1.github.io/webapps/snap2v/";
 
     const tweetText = `${intro}\n${shareUrl}\n#${hashtags}`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
