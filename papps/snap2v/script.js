@@ -695,7 +695,7 @@ xShareBtn.addEventListener('click', () => {
         "Snap2V created a video from images!";
 
     const hashtags = "Snap2V";
-    const shareUrl = "https://piyohico1.github.io/webapps/snap2v/";
+    const shareUrl = "https://piyohico1.github.io/webapps/papps/snap2v/";
 
     const tweetText = `${intro}\n${shareUrl}\n#${hashtags}`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
