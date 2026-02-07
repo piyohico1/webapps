@@ -682,13 +682,9 @@ input[type="number"] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-align: center;
-    /* Or left/right depending on preference, center looks okay usually */
     width: 100%;
     direction: rtl;
-    /* Truncate start, show end */
-    text-align: center;
-    /* Keep center alignment if possible, otherwise it aligns right due to RTL */
+    text-align: right;
 }
 
 .thumbnail-item:hover img {

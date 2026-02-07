@@ -235,7 +235,11 @@ function renderThumbnails() {
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'thumbnail-name';
-        nameSpan.textContent = img.dataset.filename || `Image ${index + 1}`;
+        // Wrap text in LTR span to prevent punctuation flipping in RTL container (used for left-truncation)
+        const nameText = document.createElement('span');
+        nameText.dir = 'ltr';
+        nameText.textContent = img.dataset.filename || `Image ${index + 1}`;
+        nameSpan.appendChild(nameText);
 
         // Delete button
         const deleteBtn = document.createElement('button');
@@ -822,9 +826,10 @@ const historyData = {
     ja: [
         {
             date: "2026-02-07", content: `<ul>
-            <li>高速書き出しモード追加（WebCodecs採用で約3倍高速化）</li>
+            <li>高速書き出しモード追加（WebCodecs採用で約15倍高速化）</li>
             <li>書き出し解像度の選択機能追加</li>
             <li>UIデザインの調整</li>
+            <li>ファイル名表示の修正（長いファイル名の末尾が表示されるように）</li>
         </ul>
         <div class="history-note">
             ※WebCodecsが動作しない環境では自動的に従来モードになります<br>
@@ -836,9 +841,10 @@ const historyData = {
     en: [
         {
             date: "2026-02-07", content: `<ul>
-            <li>High-speed export added (Approx 3x faster)</li>
+            <li>High-speed export added (Approx 15x faster)</li>
             <li>Output resolution selector</li>
             <li>Updated UI design</li>
+            <li>Fixed filename display (Show end of long filenames)</li>
         </ul>
         <div class="history-note">
             *Falls back to heavy mode if WebCodecs is unavailable<br>
