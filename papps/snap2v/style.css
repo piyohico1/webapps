@@ -131,6 +131,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    position: relative;
 }
 
 .title-group {
@@ -141,6 +142,85 @@ header {
 .top-controls {
     display: flex;
     gap: 0.5rem;
+}
+
+/* History Link Container (Center of Header) */
+.history-link-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+}
+
+.text-link-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0.25rem 0.5rem;
+    transition: color 0.2s;
+}
+
+.text-link-btn:hover {
+    color: var(--primary-color);
+}
+
+/* History Modal Content */
+.history-modal-content {
+    max-width: 500px;
+    text-align: left;
+}
+
+.history-modal-content h3 {
+    margin: 0 0 1rem 0;
+    text-align: center;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Hide horizontal scrollbar */
+}
+
+.history-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.history-list .date {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: 0.25rem;
+    text-align: left;
+}
+
+.history-list ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin: 0.25rem 0;
+    color: var(--text-color);
+}
+
+.history-list ul li {
+    border-bottom: none;
+    padding: 0.1rem 0;
+    font-size: 0.85rem;
+}
+
+.history-note {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    line-height: 1.4;
 }
 
 .icon-btn {
@@ -244,25 +324,69 @@ footer a:hover {
     color: var(--text-secondary);
 }
 
-.setting-item.checkbox-item {
-    flex-direction: row;
-    align-items: center;
-}
-
-.setting-item.checkbox-item label {
+/* Toggle Switch */
+.setting-item.toggle-item {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 0.5rem;
-    cursor: pointer;
-    color: var(--text-color);
-    /* Brighten label for checkbox */
-    font-size: 0.9rem;
 }
 
-.setting-item.checkbox-item input[type="checkbox"] {
-    accent-color: var(--primary-color);
-    width: 16px;
-    height: 16px;
+.toggle-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--text-secondary);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+input:checked+.slider:before {
+    transform: translateX(24px);
+    background-color: white;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px var(--primary-color);
 }
 
 input[type="number"] {
@@ -314,15 +438,23 @@ input[type="number"] {
 }
 
 /* Format Selector */
-.format-selector {
+.selectors-row {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.format-selector,
+.resolution-selector {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 1rem;
-    justify-content: center;
 }
 
-.format-selector label {
+.format-selector label,
+.resolution-selector label {
     font-size: 0.9rem;
     color: var(--text-secondary);
 }

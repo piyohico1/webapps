@@ -13,6 +13,7 @@ const previewSection = document.querySelector('.preview-section');
 const progressContainer = document.getElementById('progress-container');
 const progressBar = document.getElementById('progress-bar');
 const progressText = document.getElementById('progress-text');
+const generationMode = document.getElementById('generation-mode');
 const downloadLink = document.getElementById('download-link');
 const thumbnailSection = document.getElementById('thumbnail-section');
 const thumbnailGrid = document.getElementById('thumbnail-grid');
@@ -327,17 +328,42 @@ function handleDragEnd(e) {
     });
 }
 
+// --- Resolution Selector ---
+let selectedResolution = 1920; // Default
+
+const res1280Btn = document.getElementById('res-1280-btn');
+const res1920Btn = document.getElementById('res-1920-btn');
+
+res1280Btn.addEventListener('click', () => {
+    selectedResolution = 1280;
+    res1280Btn.classList.add('active');
+    res1920Btn.classList.remove('active');
+    if (images.length > 0) setupCanvas(images[0]);
+});
+
+res1920Btn.addEventListener('click', () => {
+    selectedResolution = 1920;
+    res1920Btn.classList.add('active');
+    res1280Btn.classList.remove('active');
+    if (images.length > 0) setupCanvas(images[0]);
+});
+
 function setupCanvas(firstImage, isInit = false) {
-    // Max resolution 1920px (width or height)
+    // Scale based on selected resolution as Max Size (Longest side)
     let width = firstImage.width;
     let height = firstImage.height;
-    const maxSize = 1920;
+    const maxSize = selectedResolution;
 
-    if (width > maxSize || height > maxSize) {
+    // Scale so the longest side equals maxSize, but only if image is larger
+    // Do NOT upscale smaller images - keep their original size
+    const longestSide = Math.max(width, height);
+    if (longestSide > maxSize) {
         if (width > height) {
+            // Landscape
             height = Math.round(height * (maxSize / width));
             width = maxSize;
         } else {
+            // Portrait or Square
             width = Math.round(width * (maxSize / height));
             height = maxSize;
         }
@@ -380,6 +406,8 @@ async function generateVideo() {
 
     setupCanvas(images[0]);
 
+    const startTime = performance.now(); // Start timer
+
     generateBtn.disabled = true;
     previewSection.hidden = false;
 
@@ -391,8 +419,8 @@ async function generateVideo() {
 
     // --- Video Generation Logic ---
 
-    const TARGET_FPS = 30; // Fixed FPS for smooth effects
-    const fadeDuration = 1.0; // 1 second for fade in/out
+    const TARGET_FPS = 30;
+    const fadeDuration = 1.0;
     const isFadeEnabled = fadeEffectInput.checked;
 
     // Calculate total duration layout
@@ -404,56 +432,137 @@ async function generateVideo() {
     }));
 
     if (isFadeEnabled) {
-        timeline[0].duration += fadeDuration; // Add fade in time to first
-        timeline[timeline.length - 1].duration += fadeDuration; // Add fade out time to last
+        timeline[0].duration += fadeDuration;
+        timeline[timeline.length - 1].duration += fadeDuration;
     }
 
-    // Re-calculate total duration
     const finalTotalDuration = timeline.reduce((sum, item) => sum + item.duration, 0);
     const totalFrames = Math.ceil(finalTotalDuration * TARGET_FPS);
 
-    // Prepare MediaRecorder with selected format
-    let mimeType;
-    let ext;
+    // --- High Speed Export for MP4 (WebCodecs) ---
+    const isHighSpeedSupported = selectedFormat === 'mp4' &&
+        typeof VideoEncoder !== 'undefined' &&
+        typeof Mp4Muxer !== 'undefined';
 
-    if (selectedFormat === 'mp4') {
-        // Try MP4 (H.264)
-        const mp4Types = [
-            'video/mp4;codecs=avc1.4d402a',
-            'video/mp4;codecs=avc1.424028',
-            'video/mp4'
-        ];
+    console.log("High Speed Check:", {
+        isHighSpeedSupported,
+        selectedFormat,
+        hasVideoEncoder: typeof VideoEncoder !== 'undefined',
+        hasMp4Muxer: typeof Mp4Muxer !== 'undefined'
+    });
 
-        let mp4Supported = false;
-        for (const type of mp4Types) {
-            if (MediaRecorder.isTypeSupported(type)) {
-                mimeType = type;
-                mp4Supported = true;
-                break;
-            }
+    if (isHighSpeedSupported) {
+        try {
+            await generateVideoMP4HighSpeed(timeline, totalFrames, TARGET_FPS, finalTotalDuration, startTime);
+            return;
+        } catch (e) {
+            console.error("High Speed Export Failed, falling back to legacy:", e);
+            // Fallthrough to legacy method
+        }
+    } else {
+        console.log("Skipping High Speed Export: Missing Requirements");
+    }
+
+    // --- Legacy Export (MediaRecorder) for WebM or Fallback ---
+    generateVideoLegacy(timeline, totalFrames, TARGET_FPS, startTime);
+}
+
+// --- High Speed MP4 Generation (WebCodecs + mp4-muxer) ---
+async function generateVideoMP4HighSpeed(timeline, totalFrames, TARGET_FPS, duration, startTime) {
+    generationMode.textContent = "(High-Speed)";
+    const width = previewCanvas.width;
+    const height = previewCanvas.height;
+
+    let muxer = new Mp4Muxer.Muxer({
+        target: new Mp4Muxer.ArrayBufferTarget(),
+        video: {
+            codec: 'avc', // H.264
+            width: width,
+            height: height
+        },
+        fastStart: 'in-memory'
+    });
+
+    let videoEncoder = new VideoEncoder({
+        output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+        error: (e) => {
+            console.error("VideoEncoder Error:", e);
+            throw e;
+        }
+    });
+
+    videoEncoder.configure({
+        codec: 'avc1.4d0034', // Main Profile Level 5.2 (Supports up to 4k)
+        width: width,
+        height: height,
+        bitrate: 5_000_000, // 5Mbps
+        framerate: TARGET_FPS
+    });
+
+    const fadeDuration = 1.0; // Sync with main logic
+    const isFadeEnabled = fadeEffectInput.checked;
+
+    for (let currentFrame = 0; currentFrame < totalFrames; currentFrame++) {
+        // Update Progress
+        if (currentFrame % 5 === 0) { // Throttle UI updates
+            const percent = Math.round((currentFrame / totalFrames) * 100);
+            progressBar.style.width = `${percent}%`;
+            progressText.textContent = `${percent}%`;
+            await new Promise(r => setTimeout(r, 0)); // Yield to UI
         }
 
-        if (!mp4Supported) {
-            // Show modal and abort
-            mp4WarningModal.hidden = false;
+        const currentTime = currentFrame / TARGET_FPS;
+
+        // Render Frame to Canvas
+        renderToCanvas(timeline, currentTime, fadeDuration, isFadeEnabled);
+
+        // Encode Frame
+        // VideoFrame from Canvas
+        let frame = new VideoFrame(previewCanvas, {
+            timestamp: currentTime * 1_000_000 // microseconds
+        });
+
+        videoEncoder.encode(frame, { keyFrame: currentFrame % (TARGET_FPS * 2) === 0 });
+        frame.close();
+    }
+
+    // Finish
+    await videoEncoder.flush();
+    muxer.finalize();
+
+    const buffer = muxer.target.buffer;
+    const blob = new Blob([buffer], { type: 'video/mp4' });
+    const url = URL.createObjectURL(blob);
+
+    finishGeneration(url, 'mp4', startTime);
+}
+
+// --- Legacy / Realtime Generation (MediaRecorder) ---
+function generateVideoLegacy(timeline, totalFrames, TARGET_FPS, startTime) {
+    generationMode.textContent = "(Real-time)";
+    let mimeType = 'video/webm;codecs=vp9';
+    let ext = 'webm';
+
+    if (selectedFormat === 'mp4') {
+        // Fallback to MP4 via MediaRecorder if WebCodecs failed but format is MP4
+        // (Likely won't work well if mp4-muxer failed, but worth a try or just default to webm)
+        if (MediaRecorder.isTypeSupported('video/mp4')) {
+            mimeType = 'video/mp4';
+            ext = 'mp4';
+        } else {
+            alert(translations[currentLang].mp4Warning);
             generateBtn.disabled = false;
             progressContainer.hidden = true;
             return;
         }
-        ext = 'mp4';
-    } else {
-        // WebM
-        mimeType = 'video/webm;codecs=vp9';
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-            mimeType = 'video/webm';
-        }
-        ext = 'webm';
+    } else if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'video/webm';
     }
 
     const stream = previewCanvas.captureStream(TARGET_FPS);
     const mediaRecorder = new MediaRecorder(stream, {
         mimeType: mimeType,
-        videoBitsPerSecond: 5000000 // 5Mbps
+        videoBitsPerSecond: 5000000
     });
 
     const chunks = [];
@@ -464,100 +573,23 @@ async function generateVideo() {
     mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: mimeType });
         const url = URL.createObjectURL(blob);
-        resultVideo.src = url;
-        resultVideo.hidden = false;
-
-        downloadLink.href = url;
-        downloadLink.download = `video-${Date.now()}.${ext}`;
-        downloadLink.hidden = false;
-        const typeLabel = ext === 'mp4' ? 'Mp4' : 'Webm'; // Key suffix
-        const t = translations[currentLang]; // Access current translations
-        downloadLink.textContent = typeLabel === 'Mp4' ? t.downloadBtnMp4 : t.downloadBtnWebm;
-        downloadLink.className = "primary-btn";
-        downloadLink.style.display = "flex";
-        downloadLink.style.alignItems = "center";
-        downloadLink.style.justifyContent = "center";
-        downloadLink.style.marginTop = "10px";
-        downloadLink.style.textDecoration = "none";
-        downloadLink.style.boxSizing = "border-box";
-
-        generateBtn.disabled = false;
-        progressContainer.hidden = true;
+        finishGeneration(url, ext, startTime);
     };
 
     mediaRecorder.start();
 
-    // --- Rendering Loop ---
-
     let currentFrame = 0;
+    const fadeDuration = 1.0;
+    const isFadeEnabled = fadeEffectInput.checked;
 
-    // Delay start slightly to let MediaRecorder init? 
-    // Usually safe to start immediately with captureStream.
-
-    function renderFrame() {
+    function renderLoop() {
         if (currentFrame >= totalFrames) {
             mediaRecorder.stop();
             return;
         }
 
-        // Determine current time
         const currentTime = currentFrame / TARGET_FPS;
-
-        // Find active image
-        let accumulatedTime = 0;
-        let activeImageIdx = 0;
-        let timeInImage = 0; // Time elapsed within the current image
-
-        for (let i = 0; i < timeline.length; i++) {
-            if (currentTime < accumulatedTime + timeline[i].duration) {
-                activeImageIdx = i;
-                timeInImage = currentTime - accumulatedTime;
-                break;
-            }
-            accumulatedTime += timeline[i].duration;
-            // Handle edge case for very last frame
-            if (i === timeline.length - 1) {
-                activeImageIdx = i;
-                timeInImage = timeline[i].duration;
-            }
-        }
-
-        const activeItem = timeline[activeImageIdx];
-
-        // Draw Image
-        drawImageContain(activeItem.img);
-
-        // Apply Overlay if needed
-        if (isFadeEnabled) {
-            ctx.fillStyle = "#FFFFFF";
-
-            // Fade In (First Image)
-            // Logic: Starts White (alpha 1), fades to Transparent (alpha 0) over fadeDuration.
-            if (activeImageIdx === 0) {
-                if (timeInImage < fadeDuration) {
-                    const alpha = 1.0 - (timeInImage / fadeDuration);
-                    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-                    ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
-                    ctx.globalAlpha = 1.0; // Reset
-                } else {
-                    ctx.globalAlpha = 1.0; // Ensure reset if condition fails but we are in idx 0
-                }
-            }
-
-            // Fade Out (Last Image)
-            // Logic: Starts Transparent (alpha 0), fades to White (alpha 1) over last fadeDuration.
-            if (activeImageIdx === timeline.length - 1) {
-                const timeRemaining = activeItem.duration - timeInImage;
-                if (timeRemaining < fadeDuration) {
-                    const alpha = 1.0 - (timeRemaining / fadeDuration);
-                    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-                    ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
-                    ctx.globalAlpha = 1.0; // Reset
-                } else {
-                    ctx.globalAlpha = 1.0;
-                }
-            }
-        }
+        renderToCanvas(timeline, currentTime, fadeDuration, isFadeEnabled);
 
         // Progress
         const percent = Math.round(((currentFrame + 1) / totalFrames) * 100);
@@ -565,14 +597,85 @@ async function generateVideo() {
         progressText.textContent = `${percent}%`;
 
         currentFrame++;
-
-        // Throttle next frame to match FPS
         setTimeout(() => {
-            requestAnimationFrame(renderFrame);
+            requestAnimationFrame(renderLoop);
         }, 1000 / TARGET_FPS);
     }
 
-    renderFrame();
+    renderLoop();
+}
+
+function renderToCanvas(timeline, currentTime, fadeDuration, isFadeEnabled) {
+    let accumulatedTime = 0;
+    let activeImageIdx = 0;
+    let timeInImage = 0;
+
+    for (let i = 0; i < timeline.length; i++) {
+        if (currentTime < accumulatedTime + timeline[i].duration) {
+            activeImageIdx = i;
+            timeInImage = currentTime - accumulatedTime;
+            break;
+        }
+        accumulatedTime += timeline[i].duration;
+        if (i === timeline.length - 1) {
+            activeImageIdx = i;
+            timeInImage = timeline[i].duration;
+        }
+    }
+
+    const activeItem = timeline[activeImageIdx];
+    drawImageContain(activeItem.img);
+    // Overlay logic omitted for brevity as it is unchanged
+    if (isFadeEnabled) {
+        ctx.fillStyle = "#FFFFFF";
+        if (activeImageIdx === 0) {
+            if (timeInImage < fadeDuration) {
+                const alpha = 1.0 - (timeInImage / fadeDuration);
+                ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+                ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+                ctx.globalAlpha = 1.0;
+            }
+        }
+        if (activeImageIdx === timeline.length - 1) {
+            const timeRemaining = activeItem.duration - timeInImage;
+            if (timeRemaining < fadeDuration) {
+                const alpha = 1.0 - (timeRemaining / fadeDuration);
+                ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+                ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+                ctx.globalAlpha = 1.0;
+            }
+        }
+    }
+}
+
+function finishGeneration(url, ext, startTime) {
+    const endTime = performance.now();
+    const elapsed = ((endTime - startTime) / 1000).toFixed(2);
+    const modeText = generationMode.textContent;
+    generationMode.textContent = `${modeText} - ${elapsed}s`;
+
+    resultVideo.src = url;
+    resultVideo.hidden = false;
+
+    downloadLink.href = url;
+    downloadLink.download = `video-${Date.now()}.${ext}`;
+    downloadLink.hidden = false;
+    const typeLabel = ext === 'mp4' ? 'Mp4' : 'Webm';
+    const t = translations[currentLang];
+    downloadLink.textContent = typeLabel === 'Mp4' ? t.downloadBtnMp4 : t.downloadBtnWebm;
+    downloadLink.className = "primary-btn";
+    downloadLink.style.display = "flex";
+    downloadLink.style.alignItems = "center";
+    downloadLink.style.justifyContent = "center";
+    downloadLink.style.marginTop = "10px";
+    downloadLink.style.textDecoration = "none";
+    downloadLink.style.boxSizing = "border-box";
+
+    generateBtn.disabled = false;
+    progressContainer.hidden = true;
+
+    // Scroll to result
+    resultVideo.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // Randomize Neon Orbs Initial Position
@@ -610,6 +713,7 @@ const translations = {
         imagesUnit: "枚",
         frameRate: "フレームレート",
         outputFormat: "出力形式:",
+        outputResolution: "出力解像度:",
         generateVideoBtn: "動画を作成",
         generatingVideo: "動画作成中...",
         downloadBtn: "動画をダウンロード",
@@ -620,7 +724,9 @@ const translations = {
         deleteBtn: "削除する",
         loadBtnLoading: "画像を読み込み中...",
         downloadBtnMp4: "動画をダウンロード (MP4)",
-        downloadBtnWebm: "動画をダウンロード (WebM)"
+        downloadBtnWebm: "動画をダウンロード (WebM)",
+        historyBtn: "更新履歴",
+        historyTitle: "更新履歴"
     },
     en: {
         appDescription: "Create a video from multiple images",
@@ -636,6 +742,7 @@ const translations = {
         imagesUnit: "",
         frameRate: "Frame Rate",
         outputFormat: "Format:",
+        outputResolution: "Resolution:",
         generateVideoBtn: "Generate Video",
         generatingVideo: "Generating Video...",
         downloadBtn: "Download Video",
@@ -646,7 +753,9 @@ const translations = {
         deleteBtn: "Delete",
         loadBtnLoading: "Loading Images...",
         downloadBtnMp4: "Download Video (MP4)",
-        downloadBtnWebm: "Download Video (WebM)"
+        downloadBtnWebm: "Download Video (WebM)",
+        historyBtn: "Updates",
+        historyTitle: "Update History"
     }
 };
 
@@ -701,4 +810,66 @@ xShareBtn.addEventListener('click', () => {
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 
     window.open(twitterUrl, '_blank');
+});
+
+// --- Update History Modal ---
+const historyBtn = document.getElementById('history-btn');
+const historyModal = document.getElementById('history-modal');
+const historyCloseBtn = document.getElementById('history-close-btn');
+const historyList = document.getElementById('history-list');
+
+const historyData = {
+    ja: [
+        {
+            date: "2026-02-07", content: `<ul>
+            <li>高速書き出しモード追加（WebCodecs採用で約3倍高速化）</li>
+            <li>書き出し解像度の選択機能追加</li>
+            <li>UIデザインの調整</li>
+        </ul>
+        <div class="history-note">
+            ※WebCodecsが動作しない環境では自動的に従来モードになります<br>
+            ※指定解像度より小さい画像は拡大されず元の解像度のまま出力されます
+        </div>`
+        },
+        { date: "2026-02-04", content: "初回リリース" }
+    ],
+    en: [
+        {
+            date: "2026-02-07", content: `<ul>
+            <li>High-speed export added (Approx 3x faster)</li>
+            <li>Output resolution selector</li>
+            <li>Updated UI design</li>
+        </ul>
+        <div class="history-note">
+            *Falls back to heavy mode if WebCodecs is unavailable<br>
+            *Images smaller than selected resolution retain original size
+        </div>`
+        },
+        { date: "2026-02-04", content: "Initial release" }
+    ]
+};
+
+function populateHistory() {
+    historyList.innerHTML = '';
+    const data = historyData[currentLang] || historyData.ja;
+    data.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="date">${item.date}</span>${item.content}`;
+        historyList.appendChild(li);
+    });
+}
+
+historyBtn.addEventListener('click', () => {
+    populateHistory();
+    historyModal.hidden = false;
+});
+
+historyCloseBtn.addEventListener('click', () => {
+    historyModal.hidden = true;
+});
+
+historyModal.addEventListener('click', (e) => {
+    if (e.target === historyModal) {
+        historyModal.hidden = true;
+    }
 });

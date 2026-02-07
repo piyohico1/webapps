@@ -34,6 +34,9 @@
                     <h1>Snap2V</h1>
                     <p data-i18n="appDescription">複数画像を入力して一つの動画を作成します</p>
                 </div>
+                <div class="history-link-container">
+                    <button id="history-btn" class="text-link-btn" data-i18n="historyBtn">更新履歴</button>
+                </div>
                 <div class="top-controls">
                     <button id="lang-toggle-btn" class="icon-btn" aria-label="Switch Language">EN/JA</button>
                     <button id="x-share-btn" class="icon-btn x-btn" aria-label="Share on X">
@@ -65,12 +68,14 @@
             <section class="settings-section">
                 <div class="setting-item">
                     <label for="duration-input" data-i18n="videoDuration">動画の長さ (秒)</label>
-                    <input type="number" id="duration-input" value="5" min="1" step="0.1">
+                    <input type="number" id="duration-input" value="5" min="1" step="1">
                 </div>
-                <div class="setting-item checkbox-item">
-                    <label for="fade-effect-input">
+                <!-- Fade Toggle -->
+                <div class="setting-item toggle-item">
+                    <span data-i18n="fadeEffect" class="toggle-label">フェード イン/アウト (各+1秒)</span>
+                    <label class="toggle-switch">
                         <input type="checkbox" id="fade-effect-input">
-                        <span data-i18n="fadeEffect">フェード イン/アウト (各+1秒)</span>
+                        <span class="slider"></span>
                     </label>
                 </div>
                 <div class="info-display">
@@ -82,10 +87,17 @@
             </section>
 
             <section class="action-section">
-                <div class="format-selector">
-                    <label data-i18n="outputFormat">出力形式:</label>
-                    <button id="format-mp4-btn" class="format-btn active">MP4</button>
-                    <button id="format-webm-btn" class="format-btn">WebM</button>
+                <div class="selectors-row">
+                    <div class="resolution-selector">
+                        <label data-i18n="outputResolution">出力解像度:</label>
+                        <button id="res-1280-btn" class="format-btn">1280px</button>
+                        <button id="res-1920-btn" class="format-btn active">1920px</button>
+                    </div>
+                    <div class="format-selector">
+                        <label data-i18n="outputFormat">出力形式:</label>
+                        <button id="format-mp4-btn" class="format-btn active">MP4</button>
+                        <button id="format-webm-btn" class="format-btn">WebM</button>
+                    </div>
                 </div>
                 <button id="generate-btn" class="primary-btn" disabled data-i18n="generateVideoBtn">動画を作成</button>
             </section>
@@ -100,6 +112,11 @@
                         <div id="progress-bar"></div>
                     </div>
                     <span id="progress-text">0%</span>
+                </div>
+
+                <div class="result-info" style="text-align: center; margin: 10px 0;">
+                    <span id="generation-mode"
+                        style="font-size: 0.9rem; color: var(--neon-color); font-weight: bold;"></span>
                 </div>
 
                 <video id="result-video" controls hidden></video>
@@ -134,6 +151,19 @@
         </div>
     </div>
 
+    <!-- Modal for Update History -->
+    <div id="history-modal" class="modal" hidden>
+        <div class="modal-content history-modal-content">
+            <h3 data-i18n="historyTitle">更新履歴</h3>
+            <ul class="history-list" id="history-list">
+                <!-- Content will be populated by JS -->
+            </ul>
+            <button id="history-close-btn" class="secondary-btn" data-i18n="closeBtn">閉じる</button>
+        </div>
+    </div>
+
+    <!-- MP4 Muxer for High Speed Export -->
+    <script src="https://cdn.jsdelivr.net/npm/mp4-muxer/build/mp4-muxer.min.js"></script>
     <script src="script.js"></script>
 </body>
 
