@@ -826,7 +826,7 @@ const historyData = {
     ja: [
         {
             date: "2026-02-07", content: `<ul>
-            <li>高速書き出しモード追加（WebCodecs採用で約15倍高速化）</li>
+            <li>高速書き出しモード追加（WebCodecs採用で約3倍高速化）</li>
             <li>書き出し解像度の選択機能追加</li>
             <li>UIデザインの調整</li>
             <li>ファイル名表示の修正（長いファイル名の末尾が表示されるように）</li>
@@ -841,7 +841,7 @@ const historyData = {
     en: [
         {
             date: "2026-02-07", content: `<ul>
-            <li>High-speed export added (Approx 15x faster)</li>
+            <li>High-speed export added (Approx 3x faster)</li>
             <li>Output resolution selector</li>
             <li>Updated UI design</li>
             <li>Fixed filename display (Show end of long filenames)</li>
