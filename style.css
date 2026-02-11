@@ -425,7 +425,7 @@ body {
 .update-item {
     display: flex;
     gap: 1rem;
-    padding: 1rem 0;
+    padding: 0.5rem 0;
     border-bottom: 1px solid #f3f4f6;
 }
 

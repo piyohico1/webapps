@@ -128,11 +128,25 @@
 
                 renderApps(allApps);
 
+                // アプリリストから履歴用アイテムを生成（作成日と更新日を分離）
+                const appHistoryItems = [];
+                allApps.forEach(app => {
+                    // 作成日アイテム
+                    if (app.date) {
+                        appHistoryItems.push({ ...app, historyDate: app.date, isUpdate: false });
+                    }
+                    // 更新日アイテム（あれば）
+                    if (app.updateDate) {
+                        appHistoryItems.push({ ...app, historyDate: app.updateDate, isUpdate: true });
+                    }
+                });
+
                 // 履歴リストの結合とソート
-                const combinedHistory = [...allApps, ...historyItems];
+                const combinedHistory = [...appHistoryItems, ...historyItems];
                 combinedHistory.sort((a, b) => {
-                    const dateA = getDateObject(a.updateDate || a.date);
-                    const dateB = getDateObject(b.updateDate || b.date);
+                    // historyItemsは date/updateDate を持つ。appHistoryItemsは historyDate を持つ。
+                    const dateA = getDateObject(a.historyDate || a.updateDate || a.date);
+                    const dateB = getDateObject(b.historyDate || b.updateDate || b.date);
                     return dateB - dateA;
                 });
 
@@ -264,7 +278,12 @@
             // Populate List
             // Populate List
             list.innerHTML = apps.map(app => {
-                const date = app.updateDate || app.date;
+                // historyDate (appHistoryItems) or updateDate/date (historyItems)
+                let date = app.historyDate || app.updateDate || app.date;
+                // 年月日をスラッシュに置換
+                if (date) {
+                    date = date.replace(/年/g, '/').replace(/月/g, '/').replace(/日/g, '');
+                }
                 const safeDate = escapeHtml(date);
 
                 // アプリか履歴かで表示を分ける
@@ -284,8 +303,10 @@
                     `;
                 } else {
                     // アプリ
-                    const dateLabel = app.updateDate ? 'UPDATED' : 'CREATED';
-                    const badgeClass = app.updateDate ? 'updated' : 'created';
+                    // isUpdate フラグがあればそれを使う。なければ従来の判定（後方互換）
+                    const isUpdate = app.hasOwnProperty('isUpdate') ? app.isUpdate : !!app.updateDate;
+                    const dateLabel = isUpdate ? 'UPDATED' : 'CREATED';
+                    const badgeClass = isUpdate ? 'updated' : 'created';
                     const safeTitle = escapeHtml(app.title);
                     const safeIcon = app.icon;
 

@@ -35,6 +35,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const labelInput1 = document.getElementById('label-input-1');
     const labelInput2 = document.getElementById('label-input-2');
 
+
+    // --- Helper for Backdrop Click ---
+    const setupBackdropClose = (modal) => {
+        let mouseDownTarget = null;
+        modal.addEventListener('mousedown', (e) => {
+            mouseDownTarget = e.target;
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal && mouseDownTarget === modal) {
+                modal.close();
+            }
+            mouseDownTarget = null;
+        });
+    };
+
+    // Changelog
+    const changelogBtn = document.getElementById('changelog-btn');
+    const changelogModal = document.getElementById('changelog-modal');
+    const closeChangelogBtn = document.getElementById('close-changelog-modal');
+
+    if (changelogBtn && changelogModal) {
+        changelogBtn.addEventListener('click', () => changelogModal.showModal());
+        closeChangelogBtn.addEventListener('click', () => changelogModal.close());
+        setupBackdropClose(changelogModal);
+    }
+
     // Confirm Modal Elements
     const confirmModal = document.getElementById('confirm-modal');
     const closeConfirmModalBtn = document.getElementById('close-confirm-modal');
@@ -159,19 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     initDB();
 
-    // --- Helper for Backdrop Click ---
-    const setupBackdropClose = (modal) => {
-        let mouseDownTarget = null;
-        modal.addEventListener('mousedown', (e) => {
-            mouseDownTarget = e.target;
-        });
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal && mouseDownTarget === modal) {
-                modal.close();
-            }
-            mouseDownTarget = null;
-        });
-    };
+
+
 
     // --- History Modal ---
     archiveBtn.addEventListener('click', () => { updateHistoryList(); historyModal.showModal(); });
@@ -341,7 +356,13 @@ document.addEventListener('DOMContentLoaded', () => {
             defaultAfter: "After",
             replace1: "Replace Image 1",
             replace2: "Replace Image 2",
-            shareIntro: "Easily compare images with iDiff"
+            shareIntro: "Easily compare images with iDiff",
+            changelogBtn: "Updates",
+            changelogTitle: "Changelog",
+            initialRelease: "Initial Release",
+            cl_paste: "Implemented Image Paste support (Ctrl+V)",
+            cl_sidebyside: "Implemented Side-by-Side mode",
+            cl_aspectRatio: "Fixed aspect ratio of the second image"
         },
         ja: {
             toggleLabels: "ラベル表示切替",
@@ -373,11 +394,17 @@ document.addEventListener('DOMContentLoaded', () => {
             opacity: "不透明度:",
             fitView: "全体表示",
             resetView: "リセット",
-            defaultBefore: "変更前",
-            defaultAfter: "変更後",
+            defaultBefore: "Before",
+            defaultAfter: "After",
             replace1: "画像1を置換",
             replace2: "画像2を置換",
-            shareIntro: "画像比較ツール「iDiff」で画像を比較！"
+            shareIntro: "画像比較ツール「iDiff」で画像を比較！",
+            changelogBtn: "更新履歴",
+            changelogTitle: "更新履歴",
+            initialRelease: "初回リリース",
+            cl_paste: "画像のコピペ入力に対応 (Ctrl+V)",
+            cl_sidebyside: "横並びモードを実装",
+            cl_aspectRatio: "2枚目が違う画像比率でも比率を維持"
         }
     };
 
@@ -534,45 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const fitVal = getFitZoomVal();
 
         if (prevMode && state.mode !== prevMode) {
-            // Check if we are effectively "at fit" before conversion
-            // Tolerance for floating point/layout minor shifts
-            const epsilon = 0.05; // 5% tolerance
-            let isAtFit = false;
-
-            if (prevMode === 'side-by-side') {
-                // Was at fit if zoom is close to 1.0 (Side fit)
-                if (Math.abs(state.zoom - 1.0) < epsilon) isAtFit = true;
-            } else {
-                // Was at fit if zoom is close to fitVal (Slider fit)
-                if (Math.abs(state.zoom - fitVal) < epsilon) isAtFit = true;
-            }
-
-            if (isAtFit) {
-                // Snap to new fit
-                if (state.mode === 'side-by-side') {
-                    // Fit in Side mode is 1.0
-                    state.zoom = 1.0;
-                } else {
-                    // Fit in Slider mode is fitVal
-                    state.zoom = fitVal;
-                }
-            } else {
-                // Standard conversion for non-fit states
-                if (prevMode === 'side-by-side' && state.mode !== 'side-by-side') {
-                    // Side (1.0 = Fit) -> Slider (FitVal = Fit)
-                    // NewZoom = OldZoom * FitVal
-                    state.zoom = state.zoom * fitVal;
-                } else if (prevMode !== 'side-by-side' && state.mode === 'side-by-side') {
-                    // Slider (FitVal = Fit) -> Side (1.0 = Fit)
-                    // NewZoom = OldZoom / FitVal
-                    state.zoom = state.zoom / fitVal;
-                }
-            }
-
-            // Clamp zoom to reasonable limits
-            state.zoom = Math.max(0.1, Math.min(50, state.zoom));
-
-            // Reset Pan to center for simplicity as coordinate systems differ wildly
+            // Reset Pan when switching modes
             state.panX = 0;
             state.panY = 0;
         }
@@ -580,12 +569,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add current mode class
         if (state.mode === 'side-by-side') {
             comparisonContainer.classList.add('mode-side');
+            // Match image2 height to image1
+            if (image1.naturalHeight > 0) {
+                image2.style.height = image1.naturalHeight + 'px';
+                image2.style.width = 'auto';
+            }
             updateTransform();
         } else if (state.mode === 'slider') {
+            // Reset image2 sizing for overlay mode
+            image2.style.height = '';
+            image2.style.width = '';
             comparisonContainer.classList.add('mode-slider');
             updateSliderVisuals();
             updateTransform();
         } else if (state.mode === 'difference') {
+            // Reset image2 sizing for overlay mode
+            image2.style.height = '';
+            image2.style.width = '';
             comparisonContainer.classList.add('mode-diff');
             updateTransform();
         }
@@ -701,4 +701,41 @@ document.addEventListener('DOMContentLoaded', () => {
     setLanguage(state.lang); // Initialize language logic
     if (fileInput1.files.length) handleFile(fileInput1.files[0], image1, dropZone1, true);
     if (fileInput2.files.length) handleFile(fileInput2.files[0], image2, dropZone2, false);
+    // --- Paste Support ---
+    document.addEventListener('paste', (e) => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let index in items) {
+            const item = items[index];
+            if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+                const blob = item.getAsFile();
+
+                // Determine target
+                // Priority: Empty slot 1 -> Empty slot 2 -> Toggle (default to 1)
+                let isImg1 = true;
+
+                if (!state.img1Loaded) {
+                    isImg1 = true;
+                } else if (!state.img2Loaded) {
+                    isImg1 = false;
+                } else {
+                    // Both loaded, use toggle state or default to 1
+                    isImg1 = state.nextPasteTarget !== 2;
+                }
+
+                // Update next target for cycling behavior
+                state.nextPasteTarget = isImg1 ? 2 : 1;
+
+                const imgElement = isImg1 ? image1 : image2;
+                const dropZone = isImg1 ? dropZone1 : dropZone2;
+
+                handleFile(blob, imgElement, dropZone, isImg1);
+
+                // If we are showing only one dropzone/upload section, ensure we don't get stuck?
+                // handleFile handles UI updates (hiding upload section if both ready)
+                e.preventDefault(); // Prevent default paste behavior
+                break; // Only paste one image at a time
+            }
+        }
+    });
+
 });

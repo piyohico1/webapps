@@ -220,6 +220,7 @@ body {
     width: 100%;
     height: 100%;
     z-index: 2;
+    object-fit: contain;
 }
 
 /* Slider Handle - uses --zoom for counter-scaling */
@@ -459,29 +460,22 @@ body {
 }
 
 .mode-side .image-wrapper {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    display: flex;
     gap: 4px;
-    width: 100%;
-    height: 100%;
-    align-items: center;
-    justify-items: center;
-    padding: 20px;
+    align-items: flex-start;
 }
 
-.mode-side .image-wrapper #image1,
+.mode-side .image-wrapper #image1 {
+    position: relative;
+    /* natural size like slider mode */
+}
+
 .mode-side .image-wrapper #image2 {
     position: relative;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    width: 100%;
-    height: 100%;
-    inset: auto;
-    /* Reset top/left from absolute */
-}
-
-.mode-side .image-wrapper #image2 {
+    top: auto;
+    left: auto;
+    width: auto;
+    height: auto;
     mix-blend-mode: normal;
     clip-path: none !important;
 }
@@ -889,13 +883,7 @@ body {
     }
 
     /* Side-by-Side Mobile */
-    .side-by-side .image-wrapper {
+    .mode-side .image-wrapper {
         flex-direction: column;
-    }
-
-    .side-by-side #image1,
-    .side-by-side #image2 {
-        max-width: 100%;
-        max-height: 50%;
     }
 }

@@ -26,6 +26,10 @@
         <header class="app-header">
             <div class="header-left">
                 <h1>iDiff</h1>
+                <button id="changelog-btn" class="icon-btn" title="View Changelog" data-i18n-title="changelogBtn"
+                    style="margin-left: 10px; width: auto; padding: 0 12px; font-size: 0.813rem; font-weight: 600;">
+                    <span data-i18n="changelogBtn">Updates</span>
+                </button>
             </div>
             <div class="header-center">
                 <button id="text-btn" class="icon-btn text-toggle-btn" title="Toggle Labels">
@@ -53,6 +57,32 @@
                 </button>
             </div>
         </header>
+
+        <dialog id="changelog-modal" class="modal">
+            <div class="modal-header">
+                <h2 data-i18n="changelogTitle">Changelog</h2>
+                <button id="close-changelog-modal" class="icon-btn">✕</button>
+            </div>
+            <div class="modal-content" style="max-height: 60vh; overflow-y: auto;">
+                <ul class="changelog-list"
+                    style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 16px;">
+                    <li class="changelog-item">
+                        <div style="font-weight: 600; margin-bottom: 4px;">2026-02-11</div>
+                        <ul style="padding-left: 20px; color: var(--text-secondary);">
+                            <li data-i18n="cl_paste">Implemented Image Paste support (Ctrl+V)</li>
+                            <li data-i18n="cl_sidebyside">Implemented Side-by-Side mode</li>
+                            <li data-i18n="cl_aspectRatio">Fixed aspect ratio in Slider/Difference modes</li>
+                        </ul>
+                    </li>
+                    <li class="changelog-item">
+                        <div style="font-weight: 600; margin-bottom: 4px;">2026-01-27</div>
+                        <ul style="padding-left: 20px; color: var(--text-secondary);">
+                            <li data-i18n="initialRelease">Initial Release</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </dialog>
 
         <dialog id="history-modal" class="modal">
             <div class="modal-header">
@@ -154,8 +184,7 @@
                 <label data-i18n="mode">Mode:</label>
                 <div class="mode-switcher">
                     <button class="mode-btn active" data-mode="slider" data-i18n="modeSlider">Slider</button>
-                    <button class="mode-btn" data-mode="side-by-side" data-i18n="modeSide"
-                        style="display: none;">Side-by-Side</button>
+                    <button class="mode-btn" data-mode="side-by-side" data-i18n="modeSide">Side-by-Side</button>
                     <button class="mode-btn" data-mode="difference" data-i18n="modeDiff">Difference</button>
                 </div>
             </div>
