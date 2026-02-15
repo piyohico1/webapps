@@ -1,5 +1,13 @@
 # piyohico apps - アプリリスト
 
+## 🎞️ Media Info
+**説明:** 画像・動画・音声のメタデータ解析。生成AIのプロンプト情報も確認
+**制作日:** 2026年2月5日
+**更新日:** 2026年2月15日
+**英語:** Media Info
+**英語説明:** Drag & drop image/media files to check metadata and AI generation info.
+**リンク:** [アプリを開く](./papps/mediainfo/index.html)
+
 ## 🎥 Snap2V
 **説明:** 複数画像を入力して一つの動画を作成。
 **制作日:** 2026年2月5日
@@ -19,7 +27,7 @@
 ## 🖼️ Composi
 **説明:** 2枚の画像を簡単合成
 **制作日:** 2025年7月6日
-**更新日:** 2026年2月1日
+**更新日:** 2026年2月15日
 **英語:** Composi
 **英語説明:** Easily composite two images.
 **リンク:** [アプリを開く](./papps/composi/index.html)
