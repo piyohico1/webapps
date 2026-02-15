@@ -44,6 +44,9 @@ const locales = {
         introText: "Composiで２枚の画像を簡単合成！",
         updates: "更新履歴",
         updateContent: `
+            <li><b>2026/02/15: 機能改善・バグ修正</b><br>
+            ・クリップボードコピー時の通知を改善 (トースト表示)<br>
+            ・アンドゥ後の挙動に関するバグを修正</li>
             <li><b>2026/02/01: 機能追加・UI改善</b><br>
             ・ドロップシャドウ機能を追加<br>
             ・UI改善: ボタンデザインの統一、操作性向上<br>
@@ -102,6 +105,9 @@ const locales = {
         introText: "Easily composite two images with Composi!",
         updates: "Updates",
         updateContent: `
+            <li><b>2026/02/15: Improvement & Bug Fix</b><br>
+            - Improved "Copy to Clipboard" feedback (Toast notification)<br>
+            - Fixed bug in behavior after Undo</li>
             <li><b>2026/02/01: Feature Update</b><br>
             - Added Drop Shadow tool<br>
             - UI Improvements: Button design, usability<br>

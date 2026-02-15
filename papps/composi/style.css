@@ -647,3 +647,51 @@ input[type="number"] {
         opacity: 1;
     }
 }
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+/* Toast Modal */
+.toast-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Dim background */
+    animation: fadeIn 0.3s;
+}
+
+.toast-modal.show {
+    display: flex;
+}
+
+.toast-modal.fade-out {
+    animation: fadeOut 0.5s forwards;
+}
+
+.toast-content {
+    background-color: var(--panel-bg);
+    padding: 20px 40px;
+    border: 1px solid var(--accent-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: center;
+    animation: slideIn 0.3s;
+    max-width: 80%;
+}

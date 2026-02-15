@@ -1131,9 +1131,9 @@ class ImageCompositor {
     }
 
     restoreState(state) {
-        this.transform = { ...state.transform };
-        this.filters = { ...state.filters };
-        if (state.shadow) this.shadow = { ...state.shadow };
+        Object.assign(this.transform, state.transform);
+        Object.assign(this.filters, state.filters);
+        if (state.shadow) Object.assign(this.shadow, state.shadow);
 
         if (state.maskData && this.eraser.maskCtx) {
             this.eraser.maskCtx.putImageData(state.maskData, 0, 0);
@@ -1193,7 +1193,7 @@ class ImageCompositor {
         link.click();
     }
 
-    copyToClipboard() {
+    async copyToClipboard() {
         if (!this.bgImage) return;
         const outCanvas = document.createElement('canvas');
         outCanvas.width = this.bgImage.width;
@@ -1232,15 +1232,43 @@ class ImageCompositor {
         }
         // ------------------------------
 
-        outCanvas.toBlob(blob => {
-            navigator.clipboard.write([
+        try {
+            const blob = await new Promise(resolve => outCanvas.toBlob(resolve, 'image/png'));
+            if (!blob) throw new Error('Blob generation failed');
+
+            await navigator.clipboard.write([
                 new ClipboardItem({ 'image/png': blob })
-            ]).then(() => {
-                // Clipboard copy successful
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
-            });
-        });
+            ]);
+
+            // Success Feedback
+            this.showToast(this.currentLang === 'ja' ? "クリップボードにコピーしました！" : "Copied to clipboard!");
+
+        } catch (err) {
+            console.error('Copy failed:', err);
+            this.showToast((this.currentLang === 'ja' ? "コピーに失敗しました: " : "Copy failed: ") + err.message);
+        }
+    }
+
+    showToast(message, duration = 2000) {
+        const toast = document.getElementById('toastModal');
+        const msg = document.getElementById('toastMessage');
+        msg.textContent = message;
+
+        // Reset classes
+        toast.classList.remove('fade-out');
+        toast.classList.add('show');
+
+        // Clear existing timeout if any
+        if (this.toastTimeout) clearTimeout(this.toastTimeout);
+
+        this.toastTimeout = setTimeout(() => {
+            toast.classList.add('fade-out');
+            // Wait for animation to finish before hiding
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.classList.remove('fade-out');
+            }, 500); // Match CSS animation duration
+        }, duration);
     }
 }
 
