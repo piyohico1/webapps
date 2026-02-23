@@ -564,3 +564,67 @@ main {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     vertical-align: middle;
 }
+
+/* Generation Meta Grid */
+.gen-meta-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.gen-meta-source-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-sm) 0;
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.gen-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.gen-meta-cell {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.gen-meta-cell.full-width {
+    grid-column: 1 / -1;
+}
+
+.gen-meta-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.gen-meta-value {
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    word-break: break-word;
+    white-space: pre-wrap;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.gen-meta-value::-webkit-scrollbar {
+    width: 6px;
+}
+
+.gen-meta-value::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 6px;
+}

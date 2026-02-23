@@ -44,7 +44,8 @@ const translations = {
         errorLoad: 'エラー: MediaInfoライブラリの読み込みに失敗しました。',
         errorFactory: 'エラー: MediaInfoファクトリ関数が見つかりません。',
         ready: '準備完了',
-        loading: 'MediaInfo読み込み中...'
+        loading: 'MediaInfo読み込み中...',
+        updateHistory: '更新履歴'
     },
     en: {
         title: 'Media Info',
@@ -75,7 +76,8 @@ const translations = {
         errorLoad: 'Error: MediaInfo library failed to load.',
         errorFactory: 'Error: MediaInfo factory function not found.',
         ready: 'Ready',
-        loading: 'MediaInfo loading...'
+        loading: 'MediaInfo loading...',
+        updateHistory: 'Update History'
     }
 };
 
@@ -89,8 +91,9 @@ const updateLanguage = (lang) => {
     document.getElementById('app-title').textContent = t.title;
     document.getElementById('app-desc').textContent = t.desc;
     document.getElementById('drop-text-main').textContent = t.dropMain;
-    document.getElementById('drop-text-sub').textContent = t.dropSub;
+    document.getElementById('drop-text-sub').textContent = t.dropMain;
     document.getElementById('modal-title').textContent = t.modalTitle;
+    document.getElementById('history-btn').setAttribute('aria-label', t.updateHistory);
     document.getElementById('lang-toggle').textContent = lang === 'ja' ? 'EN' : 'JP';
 
     // Update status message if it's strictly one of the static messages
@@ -129,6 +132,49 @@ const updateXShareLink = () => {
 document.getElementById('lang-toggle').addEventListener('click', () => {
     updateLanguage(currentLang === 'ja' ? 'en' : 'ja');
 });
+
+document.getElementById('history-btn').addEventListener('click', () => {
+    try {
+        const historyElement = document.getElementById(`history-data-${currentLang}`);
+        if (!historyElement) throw new Error(`History data for ${currentLang} not found`);
+        const text = historyElement.textContent.trim();
+        const html = convertMarkdownToHtml(text);
+        openModal(translations[currentLang].updateHistory, html);
+    } catch (error) {
+        console.error(error);
+        openModal(translations[currentLang].updateHistory, `<p style="color:var(--danger-color)">${error.message}</p>`);
+    }
+});
+
+const convertMarkdownToHtml = (markdown) => {
+    const lines = markdown.split('\n');
+    let html = '<div class="markdown-body">';
+
+    lines.forEach(line => {
+        line = line.trim();
+        if (!line) return;
+
+        // Headers
+        if (line.startsWith('### ')) {
+            html += `<h4>${escapeHtml(line.slice(4))}</h4>`;
+        } else if (line.startsWith('## ')) {
+            html += `<h3 class="details-section-title">${escapeHtml(line.slice(3))}</h3>`;
+        } else if (line.startsWith('# ')) {
+            html += `<h2 style="color:var(--accent-color);margin-bottom:var(--spacing-md);font-size:1.2rem;">${escapeHtml(line.slice(2))}</h2>`;
+        }
+        // Lists
+        else if (line.startsWith('- ') || line.startsWith('* ')) {
+            html += `<li style="margin-left:var(--spacing-md);margin-bottom:4px;list-style-type:disc;">${escapeHtml(line.slice(2))}</li>`;
+        }
+        // Paragraph
+        else {
+            html += `<p style="margin-bottom:var(--spacing-sm);">${escapeHtml(line)}</p>`;
+        }
+    });
+
+    html += '</div>';
+    return html;
+};
 
 // Init
 updateLanguage(currentLang);
@@ -586,16 +632,158 @@ const getGenerationInfo = (generalTrack, pngMeta) => {
     return found ? info : null;
 };
 
-const showGenerationModal = (fileName, genInfo) => {
-    let html = '';
+const parseA1111Metadata = (text) => {
+    const result = {};
+    if (typeof text !== 'string') return null;
 
-    for (const [key, value] of Object.entries(genInfo)) {
-        html += `<div class="details-section-title">${key}</div>`;
-        html += `<pre class="code-block">${escapeHtml(value)}</pre>`;
+    let prompt = "";
+    let negativePrompt = "";
+    let settings = "";
+
+    const splitNeg = text.split(/Negative prompt:\s*/i);
+    if (splitNeg.length > 1) {
+        prompt = splitNeg[0].trim();
+        const splitSteps = splitNeg[1].split(/Steps:\s*/i);
+        if (splitSteps.length > 1) {
+            negativePrompt = splitSteps[0].trim();
+            settings = "Steps: " + splitSteps[1].trim();
+        } else {
+            negativePrompt = splitNeg[1].trim();
+        }
+    } else {
+        const splitSteps = text.split(/Steps:\s*/i);
+        if (splitSteps.length > 1) {
+            prompt = splitSteps[0].trim();
+            settings = "Steps: " + splitSteps[1].trim();
+        } else {
+            return null; // Not A1111 format
+        }
     }
 
-    openModal(fileName + ' - Generation Info', html);
+    if (prompt) result["Prompt"] = prompt;
+    if (negativePrompt) result["Negative prompt"] = negativePrompt;
+
+    if (settings) {
+        const pairs = [];
+        let currentToken = "";
+        let inQuotes = false;
+        let escape = false;
+
+        for (let i = 0; i < settings.length; i++) {
+            const char = settings[i];
+
+            if (char === '\\' && !escape) {
+                escape = true;
+                currentToken += char;
+                continue;
+            }
+            if (char === '"' && !escape) {
+                inQuotes = !inQuotes;
+            }
+
+            if (char === ',' && !inQuotes) {
+                pairs.push(currentToken.trim());
+                currentToken = "";
+            } else {
+                currentToken += char;
+            }
+
+            escape = false;
+        }
+        if (currentToken.trim()) {
+            pairs.push(currentToken.trim());
+        }
+
+        pairs.forEach(pair => {
+            const colonIdx = pair.indexOf(':');
+            if (colonIdx > -1) {
+                const k = pair.substring(0, colonIdx).trim();
+                let v = pair.substring(colonIdx + 1).trim();
+                if (v.startsWith('"') && v.endsWith('"') && v.length >= 2) {
+                    v = v.substring(1, v.length - 1);
+                }
+                result[k] = v;
+            } else {
+                result["Settings"] = (result["Settings"] ? result["Settings"] + ", " : "") + pair;
+            }
+        });
+    }
+
+    return Object.keys(result).length > 0 ? result : null;
 };
+
+const showGenerationModal = (fileName, genInfo) => {
+    let html = '<div class="gen-meta-container">';
+
+    for (const [key, rawValue] of Object.entries(genInfo)) {
+        html += `<div class="gen-meta-source-title">${escapeHtml(key)}</div>`;
+
+        let parsed = null;
+        if (typeof rawValue === 'string') {
+            const trimmed = rawValue.trim();
+            if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                try {
+                    parsed = JSON.parse(trimmed);
+                } catch (e) { }
+            }
+            if (!parsed && trimmed.includes('Steps:')) {
+                parsed = parseA1111Metadata(trimmed);
+            }
+        }
+
+        if (parsed && typeof parsed === 'object') {
+            html += `<div class="gen-meta-grid">`;
+
+            // Group specific keys (Model + Hash, VAE + Hash)
+            const processed = [];
+            const keysToSkip = new Set();
+            const entries = Object.entries(parsed);
+
+            // Determine which keys to skip (standalone hash keys)
+            if (parsed['Model'] && parsed['Model hash']) keysToSkip.add('Model hash');
+            if (parsed['VAE'] && parsed['VAE hash']) keysToSkip.add('VAE hash');
+
+            entries.forEach(([k, v]) => {
+                if (keysToSkip.has(k)) return;
+
+                if (k === 'Model' && parsed['Model hash']) {
+                    processed.push(['Model', `${v} (${parsed['Model hash']})`]);
+                } else if (k === 'VAE' && parsed['VAE hash']) {
+                    processed.push(['VAE', `${v} (${parsed['VAE hash']})`]);
+                } else {
+                    processed.push([k, v]);
+                }
+            });
+
+            for (const [subKey, subVal] of processed) {
+                const isObject = typeof subVal === 'object' && subVal !== null;
+                const isLongText = typeof subVal === 'string' && subVal.length > 60;
+                const isPrompt = subKey.toLowerCase().includes('prompt');
+                const cellClass = (isLongText || isObject || isPrompt) ? 'gen-meta-cell full-width' : 'gen-meta-cell';
+
+                let displayVal = subVal;
+                if (isObject) {
+                    displayVal = JSON.stringify(subVal, null, 2);
+                }
+
+                html += `
+                    <div class="${cellClass}">
+                        <div class="gen-meta-label">${escapeHtml(subKey)}</div>
+                        <div class="gen-meta-value">${escapeHtml(String(displayVal))}</div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+        } else {
+            html += `<pre class="code-block">${escapeHtml(String(rawValue))}</pre>`;
+        }
+    }
+
+    html += '</div>';
+
+    openModal('Generation Info', html);
+};
+
 
 const escapeHtml = (unsafe) => {
     return unsafe
@@ -632,7 +820,7 @@ const showDetailsModal = (fileName, tracks) => {
         html += '</tbody></table>';
     });
 
-    openModal(fileName, html);
+    openModal(translations[currentLang].modalTitle || 'Track Details', html);
 };
 
 // Utils

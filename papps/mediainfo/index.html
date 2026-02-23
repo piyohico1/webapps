@@ -33,6 +33,9 @@
                 <div class="header-top">
                     <h1 id="app-title">Media Info</h1>
                     <div class="header-controls">
+                        <button id="history-btn" class="icon-btn" aria-label="Update History">
+                            <span class="material-symbols-outlined">history</span>
+                        </button>
                         <button id="lang-toggle" class="icon-btn" aria-label="Switch Language">EN</button>
                         <a id="x-share-btn" href="#" target="_blank" class="icon-btn x-share-btn"
                             aria-label="Post to X">
@@ -88,6 +91,26 @@
             </div>
         </div>
     </div>
+
+    <!-- Embedded History Data -->
+    <script id="history-data-ja" type="text/markdown">
+## 2026-02-23
+- 更新履歴表示機能を追加
+- 生成画像のMetaDataをカテゴリ表示に
+- 生成InfoでModelとHash値を統合し、単体のHash表示を非表示にするように改善
+
+## 2026-02-15
+- リリース
+    </script>
+    <script id="history-data-en" type="text/markdown">
+## 2026-02-23
+- Added update history display feature
+- Categorized generation metadata display for images
+- Improved Generation Info to merge Model/Hash and hide standalone Hash entries
+
+## 2026-02-15
+- Initial Release
+    </script>
 
     <script src="mediainfo.min.js"></script>
     <script src="script.js"></script>
