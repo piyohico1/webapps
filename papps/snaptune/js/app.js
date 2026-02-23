@@ -41,6 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
             portrait: "縦",
             free: "フリー",
             applyCrop: "切り抜き適用",
+            blurArea: "プライバシー・ぼかし",
+            applyBlur: "選択範囲をぼかす",
             alertLoadFail: "画像の読み込みに失敗しました。",
             alertCopyFail: "コピーに失敗しました。\nブラウザの権限設定を確認してください。",
             shareText: "ブラウザで画像編集「SNAPTUNE」を使ってみました！",
@@ -77,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
             portrait: "Portrait",
             free: "Free",
             applyCrop: "Apply Crop",
+            blurArea: "Privacy & Blur",
+            applyBlur: "Blur Selection",
             alertLoadFail: "Failed to load image.",
             alertCopyFail: "Failed to copy.\nPlease check browser permissions.",
             shareText: "Tried 'SNAPTUNE' for image editing in the browser!",
@@ -222,16 +226,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const undoBtn = document.getElementById('undo-btn');
-    undoBtn.addEventListener('click', async () => {
+    // Undo function logic extracted for reuse
+    async function performUndo() {
+        if (!processor.canUndo()) return;
         const success = await processor.undo();
         if (success) {
             render();
-            // Maybe we want to keep filters? processor.undo() keeps params as is.
-            // If undoing crop, the new image might have different dim.
-            // CropManager overlay might need reset.
             cropManager.hide();
             updateUndoButton();
+        }
+    }
+
+    const undoBtn = document.getElementById('undo-btn');
+    undoBtn.addEventListener('click', performUndo);
+
+    // Keyboard Shortcuts (Ctrl+Z)
+    document.addEventListener('keydown', (e) => {
+        // Ctrl+Z or Cmd+Z
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            e.preventDefault();
+            performUndo();
         }
     });
 
@@ -244,7 +258,18 @@ document.addEventListener('DOMContentLoaded', () => {
     downloadBtn.addEventListener('click', () => {
         if (!processor.originalImage) return;
         const link = document.createElement('a');
-        link.download = 'edited-image.png';
+
+        // Generate timestamp YYMMDD_HHMMSS
+        const now = new Date();
+        const yy = String(now.getFullYear()).slice(-2);
+        const MM = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        const timestamp = `${yy}${MM}${dd}_${hh}${mm}${ss}`;
+
+        link.download = `snaptune_${timestamp}.png`;
         link.href = processor.export();
         link.click();
     });
@@ -338,6 +363,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('zoom-out').addEventListener('click', () => updateZoom(-0.1));
     document.getElementById('fit-screen').addEventListener('click', fitToScreen);
 
+    // Mouse Wheel Zoom
+    canvasContainer.addEventListener('wheel', (e) => {
+        if (!processor.originalImage) return;
+        e.preventDefault();
+
+        // Adjust zoom speed based on deltaY. Typical scroll is ~100
+        const zoomDelta = e.deltaY < 0 ? 0.05 : -0.05;
+        updateZoom(zoomDelta);
+    }, { passive: false });
+
     // Orientation & Crop
     const cropManager = new CropManager(
         document.getElementById('crop-overlay'),
@@ -415,6 +450,147 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = croppedDataUrl;
     });
 
+    // Apply Blur (Drag-to-blur Mode)
+    let isBlurMode = false;
+    let isDraggingBlur = false;
+    let blurStart = { x: 0, y: 0 };
+    const blurBtn = document.getElementById('apply-blur');
+    const blurOverlay = document.getElementById('blur-overlay');
+
+    blurBtn.addEventListener('click', () => {
+        isBlurMode = !isBlurMode;
+        if (isBlurMode) {
+            document.body.classList.add('blur-mode-active');
+            blurBtn.classList.add('blur-active');
+            cropManager.hide(); // Hide crop overlay to prevent interference
+        } else {
+            document.body.classList.remove('blur-mode-active');
+            blurBtn.classList.remove('blur-active');
+            isDraggingBlur = false;
+            blurOverlay.classList.add('hidden');
+        }
+    });
+
+    // Helper: get offset between canvas and its container (same as CropManager)
+    function getCanvasOffset() {
+        const containerRect = canvasContainer.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        return {
+            x: canvasRect.left - containerRect.left,
+            y: canvasRect.top - containerRect.top
+        };
+    }
+
+    // Handle Mousedown/move/up for Drag-to-Blur on canvas container
+    canvasContainer.addEventListener('mousedown', (e) => {
+        if (!isBlurMode || !processor.originalImage) return;
+
+        // Only start drag if we click directly on the canvas or container (not buttons etc inside)
+        if (e.target !== canvas && e.target !== canvasContainer) return;
+
+        isDraggingBlur = true;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const offset = getCanvasOffset();
+        // Record start position relative to the visual canvas element
+        blurStart.x = e.clientX - canvasRect.left;
+        blurStart.y = e.clientY - canvasRect.top;
+
+        // Position overlay relative to canvas-container, add offset
+        blurOverlay.style.left = `${blurStart.x + offset.x}px`;
+        blurOverlay.style.top = `${blurStart.y + offset.y}px`;
+        blurOverlay.style.width = `0px`;
+        blurOverlay.style.height = `0px`;
+        blurOverlay.classList.remove('hidden');
+
+        e.preventDefault();
+        e.stopPropagation(); // Prevent image move
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDraggingBlur) return;
+        e.preventDefault();
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const offset = getCanvasOffset();
+        let currentX = e.clientX - canvasRect.left;
+        let currentY = e.clientY - canvasRect.top;
+
+        // Clamp to canvas display rect
+        currentX = Math.max(0, Math.min(currentX, canvasRect.width));
+        currentY = Math.max(0, Math.min(currentY, canvasRect.height));
+
+        const width = Math.abs(currentX - blurStart.x);
+        const height = Math.abs(currentY - blurStart.y);
+        const left = Math.min(currentX, blurStart.x);
+        const top = Math.min(currentY, blurStart.y);
+
+        // Position overlay relative to canvas-container, add offset
+        blurOverlay.style.left = `${left + offset.x}px`;
+        blurOverlay.style.top = `${top + offset.y}px`;
+        blurOverlay.style.width = `${width}px`;
+        blurOverlay.style.height = `${height}px`;
+    });
+
+    document.addEventListener('mouseup', async (e) => {
+        if (!isDraggingBlur) return;
+        isDraggingBlur = false;
+
+        const rect = canvas.getBoundingClientRect();
+
+        blurOverlay.classList.add('hidden');
+
+        // Do not exit blur mode automatically (keep it as a toggle)
+        // isBlurMode = false;
+        // document.body.classList.remove('blur-mode-active');
+        // blurBtn.classList.remove('blur-active');
+
+        const widthStr = blurOverlay.style.width;
+        const widthPx = widthStr ? parseInt(widthStr, 10) : 0;
+
+        // Prevent accidental micro-drags
+        if (widthPx < 10) return;
+
+        const leftPx = parseInt(blurOverlay.style.left, 10);
+        const topPx = parseInt(blurOverlay.style.top, 10);
+        const heightPx = parseInt(blurOverlay.style.height, 10);
+
+        // Overlay position includes canvas offset; subtract it for canvas-relative coords
+        const offset = getCanvasOffset();
+        const canvasLeft = leftPx - offset.x;
+        const canvasTop = topPx - offset.y;
+
+        // Convert Display Pixels to Internal Canvas Pixels
+        const dw = rect.width;
+        const dh = rect.height;
+        const iw = canvas.width;
+        const ih = canvas.height;
+        const scaleX = iw / dw;
+        const scaleY = ih / dh;
+
+        const cropData = {
+            x: canvasLeft * scaleX,
+            y: canvasTop * scaleY,
+            w: widthPx * scaleX,
+            h: heightPx * scaleY
+        };
+
+        const blurredDataUrl = processor.exportWithBlur(cropData, 15);
+
+        if (!blurredDataUrl) return;
+
+        const img = new Image();
+        img.onload = () => {
+            processor.originalImage = img;
+            processor.resetParams();
+            processor.saveState(); // Save new state
+
+            render();
+            updateUndoButton();
+        };
+        img.src = blurredDataUrl;
+    });
+
     function render() {
         if (!processor.originalImage) return;
         processor.render(canvas);
@@ -472,10 +648,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fit whole image
         let scale = Math.min(scaleW, scaleH);
 
-        // If image is smaller than screen, maybe don't upscale? 
-        // Usually "Fit" means "Show All". If small, 1.0 is fine.
-        // If large, scale down.
-        if (scale > 1) scale = 1.0;
+        // Allow image to upscale past 1.0 to fit screen if needed.
+        // if (scale > 1) scale = 1.0;
 
         // Don't go too small
         if (scale < zoomMin) scale = zoomMin;
@@ -493,13 +667,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateHistory = [
         {
-            date: '2026.01.13',
+            date: '2026.02.23',
             desc: {
-                ja: '入力画像が画面外にはみ出てたのを解消\nトリミング操作の安定性を向上',
-                en: 'Fixed issue where input images extended off-screen\nImproved crop stability'
+                ja: '・プライバシー・ぼかし機能の追加（ドラッグで範囲指定）\n・「元に戻す」のキーボードショートカット (Ctrl+Z / Cmd+Z) を追加\n・マウスホイール回転による画像の拡大縮小に対応\n・画像拡大時に見切れる表示領域の問題を解消',
+                en: '・Added Privacy Blur feature (drag to select area)\n・Added keyboard shortcut for Undo (Ctrl+Z / Cmd+Z)\n・Added mouse wheel support for zooming\n・Fixed display clipping issue when zooming in'
             }
         },
-        { date: '2026.01.08', desc: { ja: 'リリース！', en: 'Initial Release!' } }
+        {
+            date: '2026.01.13',
+            desc: {
+                ja: '・入力画像が画面外にはみ出てたのを解消\n・トリミング操作の安定性を向上',
+                en: '・Fixed issue where input images extended off-screen\n・Improved crop stability'
+            }
+        },
+        { date: '2026.01.08', desc: { ja: '・リリース！', en: '・Initial Release!' } }
     ];
 
     function renderUpdates() {

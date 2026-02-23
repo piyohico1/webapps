@@ -10,3 +10,59 @@
     justify-content: center;
     gap: 6px;
 }
+
+/* ===== Blur Mode ===== */
+
+/* Drag preview box */
+.blur-overlay {
+    position: absolute;
+    border: 2px dashed rgba(255, 255, 255, 0.85);
+    background-color: rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 9;
+    transition: none;
+}
+
+.blur-overlay.hidden {
+    display: none;
+}
+
+/* ON-state button styling */
+#apply-blur.blur-active {
+    background: var(--accent-primary);
+    color: #fff;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+    animation: blur-btn-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes blur-btn-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 18px rgba(99, 102, 241, 0.7);
+    }
+}
+
+/* Canvas crosshair cursor when blur mode is active */
+.blur-mode-active .canvas-container,
+.blur-mode-active .canvas-container canvas {
+    cursor: crosshair !important;
+}
+
+/* Lock image movement during blur mode */
+.blur-mode-active .canvas-container {
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: auto;
+}
+
+.blur-mode-active .canvas-container canvas {
+    pointer-events: none;
+}

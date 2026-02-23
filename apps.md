@@ -2,7 +2,7 @@
 
 ## 🎞️ Media Info
 **説明:** 画像・動画・音声のメタデータ解析。生成AIのプロンプト情報も確認
-**制作日:** 2026年2月5日
+**制作日:** 2026年2月15日
 **更新日:** 2026年2月23日
 **英語:** Media Info
 **英語説明:** Drag & drop image/media files to check metadata and AI generation info.
@@ -11,7 +11,7 @@
 ## 🎥 Snap2V
 **説明:** 複数画像を入力して一つの動画を作成。
 **制作日:** 2026年2月5日
-**更新日:** 2026年2月7日
+**更新日:** 2026年2月23日
 **英語:** Snap2V
 **英語説明:** Create a video from multiple images.
 **リンク:** [アプリを開く](./papps/snap2v/index.html)

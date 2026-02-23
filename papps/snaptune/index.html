@@ -132,6 +132,8 @@
                     <div class="crop-handle sw"></div>
                     <div class="crop-handle se"></div>
                 </div>
+                <!-- Blur overlay for drag-to-blur mode -->
+                <div id="blur-overlay" class="blur-overlay hidden"></div>
             </div>
 
             <div class="zoom-controls">
@@ -233,6 +235,12 @@
                 </div>
                 <button id="apply-crop" class="btn primary-btn full-width" data-i18n="applyCrop">切り抜き適用</button>
             </div>
+
+            <div class="control-group">
+                <h3 data-i18n="blurArea">プライバシー・ぼかし</h3>
+                <button id="apply-blur" class="btn secondary-btn full-width" data-i18n="applyBlur">選択範囲をぼかす</button>
+            </div>
+
             <div class="sidebar-footer">
                 <a href="https://piyohico1.github.io/webapps/" target="_blank" rel="noopener noreferrer"
                     class="copyright-link">&copy; piyohico apps</a>

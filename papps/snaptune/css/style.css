@@ -150,7 +150,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
+    overflow: visible;
+    /* Changed from hidden to allow zoomed canvas to expand past initial bounds */
 }
 
 .canvas-container.hidden {

@@ -188,4 +188,37 @@ class ImageProcessor {
 
         return tempCanvas.toDataURL('image/png');
     }
+
+    /**
+     * Allows exporting the current state as a data URL, with the specified area blurred
+     * @param {Object} cropRect blur rectangle {x, y, w, h}
+     * @param {number} blurRadius
+     */
+    exportWithBlur(cropRect, blurRadius = 15) {
+        if (!this.originalImage) return null;
+
+        // Render base image
+        const baseCanvas = document.createElement('canvas');
+        this.render(baseCanvas);
+
+        // Render blurred image
+        const blurCanvas = document.createElement('canvas');
+        blurCanvas.width = baseCanvas.width;
+        blurCanvas.height = baseCanvas.height;
+        const blurCtx = blurCanvas.getContext('2d');
+
+        blurCtx.filter = `blur(${blurRadius}px)`;
+        blurCtx.drawImage(baseCanvas, 0, 0);
+
+        // Apply blur only to crop region on base canvas
+        const ctx = baseCanvas.getContext('2d');
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+        ctx.clip();
+        ctx.drawImage(blurCanvas, 0, 0);
+        ctx.restore();
+
+        return baseCanvas.toDataURL('image/png');
+    }
 }
