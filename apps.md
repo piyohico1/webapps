@@ -43,7 +43,7 @@
 ## 🔳 SNAPTUNE
 **説明:** シンプルな画像編集。簡易フィルター、トリミング、回転、反転
 **制作日:** 2026年1月8日
-**更新日:** 2026年1月23日
+**更新日:** 2026年2月23日
 **英語:** SNAPTUNE
 **英語説明:** Simple image editor. Filter, trim, rotate, flip.
 **リンク:** [アプリを開く](./papps/snaptune/index.html)
