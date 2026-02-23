@@ -81,7 +81,8 @@ const translations = {
     }
 };
 
-let currentLang = localStorage.getItem('mediaInfoLang') || 'ja';
+let savedLang = localStorage.getItem('mediaInfoLang') || 'ja';
+let currentLang = savedLang.startsWith('ja') ? 'ja' : (savedLang.startsWith('en') ? 'en' : 'ja');
 
 const updateLanguage = (lang) => {
     currentLang = lang;
