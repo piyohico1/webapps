@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MSTVN0KCF9"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-MSTVN0KCF9');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SizeComp</title>
+    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">
+                    <span class="material-symbols-outlined logo-icon">deployed_code</span>
+                    SizeComp
+                </h1>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="sidebar-section">
+                <div class="search-box">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="product-search" placeholder="製品を検索...">
+                    <button id="clear-search-btn" class="clear-search-btn" title="入力をクリア">
+                        <span class="material-symbols-outlined">cancel</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="sidebar-section">
+                <div class="category-tabs">
+                    <button class="category-tab active" data-category="all">All</button>
+                    <button class="category-tab" data-category="apple">Apple</button>
+                    <button class="category-tab" data-category="console">Console</button>
+                    <button class="category-tab" data-category="other">Other</button>
+                </div>
+            </div>
+
+            <!-- Product List -->
+            <div class="sidebar-section product-list-section">
+                <div class="section-title">製品リスト</div>
+                <div id="product-list" class="product-list">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Active Items -->
+            <div class="resize-handle" id="resize-handle" title="ドラッグで高さ変更">
+                <span class="resize-grip">···</span>
+            </div>
+            <div class="sidebar-section active-items-section">
+                <div class="section-title">
+                    <span>シーン上のアイテム</span>
+                    <button id="clear-all-btn" class="btn-icon-sm" title="すべてクリア">
+                        <span class="material-symbols-outlined">delete_sweep</span>
+                    </button>
+                </div>
+                <div id="active-list" class="active-list">
+                    <div class="empty-message">製品をクリックして追加</div>
+                </div>
+            </div>
+
+            <!-- View Options -->
+            <div class="sidebar-section view-options-section">
+                <div class="section-title">表示設定</div>
+                <div class="settings-group">
+                    <div class="settings-row">
+                        <span class="settings-label">配置モード</span>
+                        <div class="mode-selector">
+                            <button class="mode-btn active" data-mode="side" title="並べる">
+                                <span class="material-symbols-outlined">splitscreen</span>
+                            </button>
+                            <button class="mode-btn" data-mode="stack" title="積む">
+                                <span class="material-symbols-outlined">layers</span>
+                            </button>
+                            <button class="mode-btn" data-mode="overlay" title="重ねる">
+                                <span class="material-symbols-outlined">filter_none</span>
+                            </button>
+                        </div>
+                    </div>
+                    <label class="settings-row">
+                        <span class="settings-label">グリッド表示</span>
+                        <span class="toggle-wrap">
+                            <input type="checkbox" id="toggle-grid">
+                            <span class="toggle-slider"></span>
+                        </span>
+                    </label>
+                    <label class="settings-row">
+                        <span class="settings-label">ラベル表示</span>
+                        <span class="toggle-wrap">
+                            <input type="checkbox" id="toggle-labels" checked>
+                            <span class="toggle-slider"></span>
+                        </span>
+                    </label>
+                    <label class="settings-row">
+                        <span class="settings-label">透過表示</span>
+                        <span class="toggle-wrap">
+                            <input type="checkbox" id="toggle-transparent">
+                            <span class="toggle-slider"></span>
+                        </span>
+                    </label>
+                    <label class="settings-row">
+                        <span class="settings-label">寸法表示</span>
+                        <span class="toggle-wrap">
+                            <input type="checkbox" id="toggle-dimensions">
+                            <span class="toggle-slider"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Desk Settings -->
+            <div class="sidebar-section desk-settings-section">
+                <div class="section-title">机の設定</div>
+                <div class="settings-group">
+                    <div class="settings-row">
+                        <span class="settings-label">天板</span>
+                        <div class="desk-material-row">
+                            <label class="radio-pill">
+                                <input type="radio" name="desk-material" value="white">
+                                <span>ホワイト</span>
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="desk-material" value="wood" checked>
+                                <span>木目調</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">サイズ</span>
+                        <div class="desk-presets">
+                            <button class="desk-preset-btn" data-w="160" data-d="80">160×80</button>
+                            <button class="desk-preset-btn active" data-w="120" data-d="60">120×60</button>
+                        </div>
+                    </div>
+                    <div class="settings-row desk-custom-row">
+                        <span class="settings-label">カスタム</span>
+                        <div class="desk-input-group">
+                            <label>W<input type="number" id="desk-width-input" class="form-input-sm" value="120"
+                                    min="60" max="300"></label>
+                            <label>D<input type="number" id="desk-depth-input" class="form-input-sm" value="60" min="40"
+                                    max="200"></label>
+                            <button id="desk-apply-btn" class="btn-sm">適用</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="sidebar-section"
+                style="margin-top: auto; text-align: center; border-bottom: none; padding-top: var(--spacing-lg); padding-bottom: var(--spacing-lg);">
+                <a href="https://piyohico1.github.io/webapps/" target="_blank" rel="noopener"
+                    style="font-weight: bold; font-size: 1.125rem; color: var(--text-secondary); text-decoration: none;">@
+                    piyohico apps</a>
+            </div>
+        </aside>
+
+        <!-- Main 3D View -->
+        <main class="main-view">
+            <div id="canvas-container">
+                <!-- Three.js canvas will be inserted here -->
+            </div>
+            <!-- X Share Button (Independent) -->
+            <div class="share-x-corner-wrap">
+                <button id="share-x-btn" class="canvas-btn" title="X (Twitter) に投稿">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1227" width="20" height="20"
+                        fill="currentColor">
+                        <path
+                            d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Canvas Controls -->
+            <div class="canvas-controls-top">
+                <button id="top-view-btn" class="canvas-btn" title="上から見る (Top View)">
+                    <span class="material-symbols-outlined">square</span>
+                </button>
+                <button id="front-view-btn" class="canvas-btn" title="前から見る (Front View)">
+                    <span class="material-symbols-outlined">view_stream</span>
+                </button>
+                <button id="night-mode-btn" class="canvas-btn" title="夜モード切替">
+                    <span class="material-symbols-outlined">dark_mode</span>
+                </button>
+            </div>
+            <!-- Labels overlay -->
+            <div id="labels-overlay"></div>
+
+            <!-- Info bar at bottom -->
+            <div class="info-bar">
+                <div class="info-item">
+                    <span class="material-symbols-outlined">mouse</span>
+                    <span>ドラッグ: 回転</span>
+                </div>
+                <div class="info-item">
+                    <span class="material-symbols-outlined">pinch_zoom_in</span>
+                    <span>スクロール: ズーム</span>
+                </div>
+                <div class="info-item">
+                    <span class="material-symbols-outlined">right_click</span>
+                    <span>右ドラッグ: パン</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Custom Product Modal -->
+    <div id="custom-product-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>カスタム製品を追加</h3>
+                <button class="modal-close-btn" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="custom-name">製品名</label>
+                    <input type="text" id="custom-name" class="form-input" placeholder="例: My Device">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="custom-width">幅 (mm)</label>
+                        <input type="number" id="custom-width" class="form-input" placeholder="幅">
+                    </div>
+                    <div class="form-group">
+                        <label for="custom-height">高さ (mm)</label>
+                        <input type="number" id="custom-height" class="form-input" placeholder="高さ">
+                    </div>
+                    <div class="form-group">
+                        <label for="custom-depth">奥行き (mm)</label>
+                        <input type="number" id="custom-depth" class="form-input" placeholder="奥行き">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="modal-add" class="btn btn-primary">追加</button>
+                <button id="modal-cancel" class="btn btn-secondary">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+                "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+            }
+        }
+    </script>
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Top Face -->
+  <path d="M32 4 L60 18 L32 32 L4 18 Z" fill="#7a85e6" />
+  <!-- Left Face -->
+  <path d="M4 18 L32 32 L32 60 L4 46 Z" fill="#5e6ad2" />
+  <!-- Right Face -->
+  <path d="M32 32 L60 18 L60 46 L32 60 Z" fill="#40488f" />
+</svg>
