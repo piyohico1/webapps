@@ -1,5 +1,12 @@
 # piyohico apps - アプリリスト
 
+## 📏 SizeComp
+**説明:** 製品サイズを3D立方体で視覚的に比較
+**制作日:** 2026年3月4日
+**英語:** SizeComp
+**英語説明:** Compare product sizes visually with 3D cubes.
+**リンク:** [アプリを開く](./papps/sizecomp/index.html)
+
 ## 🎞️ Media Info
 **説明:** 画像・動画・音声のメタデータ解析。生成AIのプロンプト情報も確認
 **制作日:** 2026年2月15日
@@ -9,7 +16,7 @@
 **リンク:** [アプリを開く](./papps/mediainfo/index.html)
 
 ## 🎥 Snap2V
-**説明:** 複数画像を入力して一つの動画を作成。
+**説明:** 複数画像を入力して一つの動画を作成
 **制作日:** 2026年2月5日
 **更新日:** 2026年2月7日
 **英語:** Snap2V
