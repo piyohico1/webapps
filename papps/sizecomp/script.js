@@ -773,8 +773,20 @@ function removeProductFromScene(productId) {
 
     // Remove mesh
     state.scene.remove(item.mesh);
-    item.mesh.geometry.dispose();
-    item.mesh.material.dispose();
+    item.mesh.traverse(child => {
+        if (child.isMesh || child.isLine) {
+            if (child.geometry) {
+                child.geometry.dispose();
+            }
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(m => m.dispose());
+                } else {
+                    child.material.dispose();
+                }
+            }
+        }
+    });
 
     // Remove label
     item.labelEl.remove();
@@ -784,8 +796,14 @@ function removeProductFromScene(productId) {
         state.scene.remove(item.dimGroup);
         item.dimGroup.traverse(c => {
             if (c.isMesh || c.isLine) {
-                c.geometry.dispose();
-                if (c.material) c.material.dispose();
+                if (c.geometry) c.geometry.dispose();
+                if (c.material) {
+                    if (Array.isArray(c.material)) {
+                        c.material.forEach(m => m.dispose());
+                    } else {
+                        c.material.dispose();
+                    }
+                }
             }
         });
     }
@@ -814,15 +832,31 @@ function clearAllItems() {
             state.physicsWorld.removeBody(item.body);
         }
         state.scene.remove(item.mesh);
-        item.mesh.geometry.dispose();
-        item.mesh.material.dispose();
+        item.mesh.traverse(child => {
+            if (child.isMesh || child.isLine) {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => m.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            }
+        });
         item.labelEl.remove();
         if (item.dimGroup) {
             state.scene.remove(item.dimGroup);
             item.dimGroup.traverse(c => {
                 if (c.isMesh || c.isLine) {
-                    c.geometry.dispose();
-                    if (c.material) c.material.dispose();
+                    if (c.geometry) c.geometry.dispose();
+                    if (c.material) {
+                        if (Array.isArray(c.material)) {
+                            c.material.forEach(m => m.dispose());
+                        } else {
+                            c.material.dispose();
+                        }
+                    }
                 }
             });
         }
@@ -986,6 +1020,7 @@ function syncBodiesToMeshes() {
             // On desk -> kinematic (fixed)
             body.type = CANNON.Body.KINEMATIC;
             body.mass = 0;
+            body.updateMassProperties();
             body.velocity.setZero();
             body.angularVelocity.setZero();
         }
@@ -1028,11 +1063,15 @@ function updatePhysics() {
 function updateMaterials() {
     const isTranslucent = state.transparent;
     state.activeItems.forEach(item => {
-        const mat = item.mesh.material;
-        mat.transparent = isTranslucent;
-        mat.opacity = isTranslucent ? 0.55 : 1.0;
-        mat.depthWrite = !isTranslucent;
-        mat.needsUpdate = true;
+        item.mesh.traverse(child => {
+            if (child.isMesh && child.material) {
+                const mat = child.material;
+                mat.transparent = isTranslucent;
+                mat.opacity = isTranslucent ? 0.55 : 1.0;
+                mat.depthWrite = !isTranslucent;
+                mat.needsUpdate = true;
+            }
+        });
     });
 }
 
