@@ -1,5 +1,12 @@
 # piyohico apps - アプリリスト
 
+## 📄 CSV Viewer
+**説明:** ドラッグ&ドロップで表示出来る、シンプルなCSVビューワー
+**制作日:** 2026年3月9日
+**英語:** CSV Viewer
+**英語説明:** Fast and Simple CSV viewer. Supports large files, Shift-JIS, and PDF export.
+**リンク:** [アプリを開く](./papps/csvviewer/index.html)
+
 ## 📏 SizeComp
 **説明:** 製品サイズを3D立方体で視覚的に比較
 **制作日:** 2026年3月4日
