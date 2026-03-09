@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // X (Twitter) Share Listener
     xShareBtn.addEventListener('click', () => {
         const currentUrl = encodeURIComponent(window.location.href);
-        const text = encodeURIComponent("ドラッグ&ドロップで表示出来る、シンプルCSVビューワー");
+        const text = encodeURIComponent("ドラッグ&ドロップで表示出来る、シンプルCSVビューワー\n");
         const xUrl = `https://twitter.com/intent/tweet?text=${text}&url=${currentUrl}&hashtags=CSVViewer`;
         window.open(xUrl, '_blank', 'noopener,noreferrer');
     });
